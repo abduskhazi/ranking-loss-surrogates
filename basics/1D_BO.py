@@ -17,7 +17,7 @@ def objective(x, noise=0.1):
 # Returns the approx maximizer and the maxima of the objective function
 # This is only for testing. It does not exist in the real world.
 def get_maxima(obj_func):
-    X = np.linspace(0.0, 1.0, 3000)
+    X = np.linspace(0.0, 1.0, 5000)
     Y = [objective(x, 0.0) for x in X]
     i = np.argmax(Y)
     maximizer = X[i]
@@ -38,9 +38,7 @@ def surrogate(model, X):
 def acquisition(X, X_samples, model):
     Y_hat, _ = surrogate(model, X)
     best = np.max(Y_hat)
-
     mean, std = surrogate(model, X_samples)
-
     return norm.cdf((mean - best) / (std + 1E-9))
 
 
@@ -67,18 +65,30 @@ def plot(X, Y, model):
 
 
 maximizer, maxima = get_maxima(objective)
+print("Actual values:")
 print("Maximizer =", maximizer, ", maxima =", maxima)
 
-# Taking random samples from the domain.
-# Reason - In the actual problems we have access to only random samples and their objective evaluations
-X = np.random.random(100)
+# Fit a GP model with random samples.
+# Reason for random samples
+#     - In the actual problems we have access to only random samples and their objective evaluations
+X = np.random.random(50)
 Y = np.array([objective(x) for x in X])  # Noisy evaulations.
-
 model = GaussianProcessRegressor()
 X = X.reshape((-1, 1))
 model.fit(X, Y)
 plot(X, Y, model)
 
-# Now doing 1 optimization
-best = opt_aquisition(X, model)
-print(best)
+# Now the optimization cycle.
+for _ in range(100):
+    x = opt_aquisition(X, model)
+    y = objective(x)
+    x = x.reshape((1, 1))
+
+    X = np.append(X, x, axis=0)
+    Y = np.append(Y, y, axis=0)
+
+    model.fit(X, Y)
+
+print("After optimization")
+print("Maximizer =", X[np.argmax(Y), 0], ", Maxima =", np.max(Y))
+plot(X, Y, model)
