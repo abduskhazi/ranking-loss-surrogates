@@ -1,0 +1,91 @@
+Source:
+https://www.borealisai.com/en/blog/tutorial-8-bayesian-optimization/
+
+Problem Setup: Find the maximizer of f(x) in some domain X.
+
+Core Idea:
+    Build the model of the objective function f(x).
+    This will include known {x, f(x)} pairs + uncertainity around these points.
+    Sample next optimiser, i.e x' that optimises f(x').
+    Update the model with pari {x', f(x')} and repeat the process.
+
+Basic strategies:
+    Grid Search
+    Random Search
+    Sequential Search
+        Bayesian Search.
+
+Bayesian optimization components
+    Probabilistic model of the function.
+    Acquisition function.
+
+Probabilistic models:
+    Gaussian processes
+        https://arxiv.org/pdf/2009.10862.pdf
+        https://www.youtube.com/watch?v=4vGiHC35j9s
+        This is itself a predictive ML model. (Just with very few observations)
+        1. Joint normal distribution of all observations made. (NOT THE DIMENSIONS OF THE INPUT)
+        2. The prior is the set of functions that pass through given observations. Uncertainty at any point is
+           modelled as a gaussian.
+
+        Essential idea used in gaussing processes - Functions are vectors of infinite dimentions.
+        A gaussian process uses this idea to sample function priors.
+        The only restriction is that the input dimentions (or independent variables) must be of joint gaussian distribution
+          because the input points that are close to each other should have similar outputs.
+
+Kernels:
+    They are functions that define the closeness (similarity) of 2 points in a given input set X.
+    They are defined as k(x,x') -> R. Here x and x' belong to the same set in the most abstract sense.
+    E.g. x belongs to R^{I+} where the input domain is eucledian.
+    RBF kernel is an example of a kernel.
+    RBF kernels - Squared Exponential Kernel. (aka Gaussian Kernel)
+
+Learning Kernel parameters i.e hyper-hyperparameters. !!!!!! COULD NOT UNDERSTAND !!!!!!
+    Maximum Likelihood.
+    Full bayesian approach 
+
+Personal points:
+    Variance measures how much the point varies from the mean.
+    If the variable is a scalar the variance is a scalar.
+    If the variable is a vector, then each dimention can be considered a random variable.
+    Covariance measures the degree of similarity between 2 random variables.
+    The complete variance of a vector random variable can only be obtained if variance w.r.t each dimention is measured.
+    This results in nC2 pairs = Upper triangular values of a matrix + diagonal matrix is measured.
+    The diagonal matrix is for calculation of variance of variables with respect to themselves.
+
+Gaussian Distributions:
+    The probability density function of a gaussian is at +1 higher dimension than the actual distribution itself.
+    The indifinite integral of the pdf is always 1. (Again this is a hypervolume with a dimension +1).
+
+Acquisition functions:
+    We are trying to find the maximiser of the function and not model the objective. Hence should not worry solely
+       about sampling from unknown areas in the domain (exploration). We also have to do exploitation.
+    Thomson sampling is like sampling a whole function from the posterir.
+    Getting the best x value for the acquisition is itself an optimization problem. However, 
+        1. This is very cheap
+        2. The function is known
+        3. It can be optimized with standard optimization methods.
+    PI - Area under the curve of a gauusian is probability.
+         Area under the curve after a particular point is the probability of getting a value above that point.
+         The probability with which we can get better values than the best so far is the aquisition function.
+
+    EI - Given a gaussian distribution at a new input point, it finds the expectation of improvement
+            i.e (f(x) - f_max) over the part of normal that is greater than f_max.
+
+Descrete Variables:
+    When there is noise in the output bayesian optimization helps.
+    For multiple descrete variable try to treat them as continous.
+    Otherwise use different probabilitic models.
+
+
+Random Forest model:
+    Prediction of a set of trees can yeild mean and variance.
+    It can handle both continous and decrete variables without any modification
+    It handles conditional variables by keeping the values together in a leaf.
+
+Doubts:
+    Unable to understand GP parameters finding in the tutorial 1.
+    How to understand the full bayesian approach.
+    Did not understand parallelizing bayesian optimization.
+    Skipped beta bernolli bandit.
+    Could not understand Tree parzen estimators.
