@@ -24,12 +24,6 @@ print("Accuracy score =", metrics.accuracy_score(Y_test, Y_hat))
 # print("Recall score =", metrics.recall_score(Y_test, Y_hat))
 
 # Doing the hyperparameter optmization using GPs.
-# Search Space
-#    C -> 0.01 to 10 (float)
-#    kernel -> Categorical {‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’}
-#              But we will use an RBF kernel by default.
-#    degree -> Integer 1 to 5.
-#    gamma -> Categorail {‘scale’, ‘auto’}
 search_space = [
             spc.Real(1e-3, 100, name='C'),
             spc.Categorical(categories=['linear', 'poly', 'rbf', 'sigmoid'], name='kernel'),
