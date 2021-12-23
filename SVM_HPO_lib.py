@@ -8,8 +8,8 @@ import skopt.space as spc
 import numpy as np
 
 # Obtain data and split it
-cancer = datasets.load_breast_cancer()
-#cancer = datasets.load_iris()
+#cancer = datasets.load_breast_cancer()
+cancer = datasets.load_iris()
 print(cancer.data.shape)
 
 X_train, X_test, Y_train, Y_test = train_test_split(cancer.data, cancer.target, test_size=0.15)
@@ -44,11 +44,11 @@ def objective(**params):
     if params['decision_function_shape'] == 'ovo':
         params['break_ties'] = False
     print(params)
-    clf.set_params(**params)
+    clf.set_params(max_iter=1e8, **params)
     scores = cross_val_score(clf, X_train, Y_train, cv=5, n_jobs=-1, scoring='accuracy')
     mean = np.mean(scores)
     return 1.0 - mean
 
-res = gp_minimize(objective, search_space, n_calls=1000, verbose=True)
+res = gp_minimize(objective, search_space, n_calls=400, verbose=True, n_jobs=-1)
 print("Best Accuracy =", 1.0 - res.fun)
 print("Best HP config =", res.x)
