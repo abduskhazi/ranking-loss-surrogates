@@ -30,7 +30,8 @@ def get_maxima(obj_func):
     return maximizer, maxima
 
 
-# Implementing a single neural network
+# Implementing a single neural network that estimates uncertainty
+# Uncertainty can be estimated using a mean and a variance.
 class Estimator(nn.Module):
     def __init__(self):
         super(Estimator, self).__init__()
@@ -40,7 +41,9 @@ class Estimator(nn.Module):
         self.fc3 = nn.Linear(20, 30)
         self.fc4 = nn.Linear(30, 20)
         self.fc5 = nn.Linear(20, 10)
-        self.fc6 = nn.Linear(10, 1)  # Output dimension of the objective function = 1
+        # For mean and variance the output dimension is 2.
+        # First output is the mean, second output is the variance
+        self.fc6 = nn.Linear(10, 2)
 
     def forward(self, x):
         x = self.fc1(x)
@@ -60,6 +63,10 @@ class Estimator(nn.Module):
 
         x = self.fc6(x)
 
+        # Enforcing the positivity of the variance as mentioned in the paper.
+        # Also adding 1e-6 for numerical stability
+        x[:, 1] = torch.log(1 + torch.exp(x[:, 1])) + 1e-6
+
         return x
 
 
@@ -69,26 +76,29 @@ print("Maximizer =", maximizer, ", maxima =", maxima)
 
 # Reason for random samples
 #     - In the actual problems we have access to only random samples and their objective evaluations
-X = np.array(np.random.random(500), dtype=np.float32)
+X = np.array(np.random.random(1000), dtype=np.float32)
 Y = np.array([objective(x) for x in X], dtype=np.float32)  # Noisy evaluations.
-
-# Plotting for debugging
-pyplot.scatter(X, Y, marker='.')
-pyplot.savefig("actual.png")
-pyplot.show()
+X_copy = np.copy(X)
+Y_copy = np.copy(Y)
 
 estim = Estimator()
 optimizer = optim.Adam(estim.parameters(), lr=0.01)
-criterion = nn.MSELoss()
+# Defining the criterion proposed in the paper instead of using MSE for regression task.
+def criterion(predicted, Y):
+    mean, variance = predicted[:, 0], predicted[:, 1]
+    mean = mean[:, None]
+    variance = variance[:, None]
+    vals = torch.log(variance) / 2 + torch.pow(Y - mean, 2) / (2 * variance)
+    return torch.mean(vals)
 
 X = X.reshape((-1, 1))
 Y = Y.reshape((-1, 1))
 
 # Training the estimator for the objective function for 100 epochs
-for _ in range(500):
+for _ in range(1000):
     print("epoch", _)
     X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
-    batch_size = 25
+    batch_size = 50
     i = 0
     while i < X.shape[0]:
         optimizer.zero_grad()
@@ -107,12 +117,16 @@ for _ in range(500):
         #  Update the parameters using optimizer.
         optimizer.step()
 
-X = np.array(np.random.random(500), dtype=np.float32)
-Y = estim(torch.from_numpy(X.reshape(-1, 1)))
+# Plotting the results
+pyplot.scatter(X_copy, Y_copy, marker='.')
+X = np.array(np.linspace(0.0, 1.0, 1000), dtype=np.float32)
+Y = np.array([objective(x, 0.0) for x in X], dtype=np.float32)
+pyplot.plot(X, Y)
 
-# Plotting the values obtained from the estimator
-pyplot.scatter(X, Y.detach().numpy(), marker='.')
-pyplot.savefig("estimator.png")
+Y_NN = estim(torch.from_numpy(X.reshape(-1, 1)))
+mean_NN = Y_NN[:, 0].detach().numpy() # Getting the mean out
+pyplot.plot(X, mean_NN)
+pyplot.savefig("results.png")
 pyplot.show()
 
 # Implementing Deep Ensembles.
