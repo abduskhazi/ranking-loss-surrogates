@@ -11,6 +11,7 @@ import sklearn
 
 rng = np.random.default_rng()
 
+
 # Objective function
 def objective(x, noise=0.1):
     y = x ** 2 * math.sin(5 * math.pi * x) ** 6
@@ -28,6 +29,7 @@ def get_maxima(obj_func):
     maxima = Y[i]
     return maximizer, maxima
 
+
 # Implementing a single neural network
 class Estimator(nn.Module):
     def __init__(self):
@@ -41,7 +43,6 @@ class Estimator(nn.Module):
         self.fc6 = nn.Linear(10, 1)  # Output dimension of the objective function = 1
 
     def forward(self, x):
-        # Layer 1
         x = self.fc1(x)
         x = F.relu(x)
 
@@ -61,14 +62,15 @@ class Estimator(nn.Module):
 
         return x
 
+
 maximizer, maxima = get_maxima(objective)
 print("Actual values:")
 print("Maximizer =", maximizer, ", maxima =", maxima)
 
 # Reason for random samples
 #     - In the actual problems we have access to only random samples and their objective evaluations
-X = np.array(np.random.random(5000), dtype=np.float32)
-Y = np.array([objective(x, 0.0) for x in X], dtype=np.float32)  # Noisy evaulations.
+X = np.array(np.random.random(500), dtype=np.float32)
+Y = np.array([objective(x) for x in X], dtype=np.float32)  # Noisy evaluations.
 
 # Plotting for debugging
 pyplot.scatter(X, Y, marker='.')
@@ -79,20 +81,14 @@ estim = Estimator()
 optimizer = optim.Adam(estim.parameters(), lr=0.01)
 criterion = nn.MSELoss()
 
-#  i = torch.tensor(0.343)
-#  i = i.unsqueeze(0)
-#  y = estim(i)
-#  estim.zero_grad()
-#  y.backward()
-
 X = X.reshape((-1, 1))
 Y = Y.reshape((-1, 1))
 
 # Training the estimator for the objective function for 100 epochs
-for _ in range(1000):
+for _ in range(500):
     print("epoch", _)
-    X, Y = sklearn.utils.shuffle(X, Y)  #  Randomly shuffle the data for each epoch
-    batch_size = 50
+    X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
+    batch_size = 25
     i = 0
     while i < X.shape[0]:
         optimizer.zero_grad()
@@ -104,24 +100,20 @@ for _ in range(1000):
         i = i + batch_size
         #  Calculate the output
         Y_pred = estim(X_batch)
-        #  Calcuate the MSE loss
+        #  Calculate the MSE loss
         loss = criterion(Y_pred, Y_batch)
-        #  back propogate the loss
+        #  back propagate the loss
         loss.backward()
         #  Update the parameters using optimizer.
         optimizer.step()
 
-X = np.array(np.random.random(5000), dtype=np.float32)
+X = np.array(np.random.random(500), dtype=np.float32)
 Y = estim(torch.from_numpy(X.reshape(-1, 1)))
 
-# Plotting for debugging
-#pyplot.scatter(X, Y, marker='.')
+# Plotting the values obtained from the estimator
 pyplot.scatter(X, Y.detach().numpy(), marker='.')
 pyplot.savefig("estimator.png")
 pyplot.show()
 
 # Implementing Deep Ensembles.
-M = 5 # Number of Neural Networks
-
-
-
+M = 5  # Number of Neural Networks
