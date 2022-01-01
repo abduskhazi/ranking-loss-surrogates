@@ -1,0 +1,39 @@
+Research Paper: https://arxiv.org/pdf/1612.01474.pdf
+
+Problem: How can we use DNN to quantify uncertainity in a prediction?
+
+Solutions Previously:
+    1. Bayesian neural networks.
+       A prior over weights and biases is specified. Given the data, a posterior is calculated.
+       Hard and complex to train.
+
+    2. Ensemble approach. E.g Using Dropout during evaluation.
+
+Evaluation of Predictive uncertainities:
+    Caliberation & scoring rules
+    Out of distribution uncertainity
+
+Contributions by authors:
+    Non Bayesian approach.
+    Ensemble of neural networks.
+    Adversarial training for smooth predictions.
+
+
+Proposed Implementation:
+    Given theta are NN parameters, we need to predict p_theta(y|x).
+    p = distribution over real values in regression
+    p = Discrete probabalistic distribution for classification.
+
+    3 step approach - Proper scoring rules, adversarial training and ensemble of NNs.
+
+Understanding proper scoring rules:
+    A scoring function gives a numerical value to the predictive distribution.
+    The better the predicitive distribution caliberated to the actual distribution the better the score.
+    Compare p (prediction distribution) and q (original distribution). The closer p and q are the better the score.
+
+Observations:
+   How to combine regression and classification problems in deep enembles - This is possible by having the correct loss function. For example addition of different parameters.
+   Understand the intuition behind the adversarial examples y = nn(x). We assume that nn is a smooth function hence the small
+    change in x should only have a small change in y. Hence nn( neighbourhood(x) ) = y
+  For good training use 2^N examples for neighbourhood. 
+
