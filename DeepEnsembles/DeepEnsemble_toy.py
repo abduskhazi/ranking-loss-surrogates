@@ -36,14 +36,12 @@ class Estimator(nn.Module):
     def __init__(self):
         super(Estimator, self).__init__()
         # Here fc is an abbreviation fully connected
-        self.fc1 = nn.Linear(1, 10)  # Input dimension of the objective function = 1
-        self.fc2 = nn.Linear(10, 20)
-        self.fc3 = nn.Linear(20, 30)
-        self.fc4 = nn.Linear(30, 20)
-        self.fc5 = nn.Linear(20, 10)
+        self.fc1 = nn.Linear(1, 15)  # Input dimension of the objective function = 1
+        self.fc2 = nn.Linear(15, 25)
+        self.fc3 = nn.Linear(25, 15)
         # For mean and variance the output dimension is 2.
         # First output is the mean, second output is the variance
-        self.fc6 = nn.Linear(10, 2)
+        self.fc4 = nn.Linear(15, 2)
 
     def forward(self, x):
         x = self.fc1(x)
@@ -56,12 +54,6 @@ class Estimator(nn.Module):
         x = F.relu(x)
 
         x = self.fc4(x)
-        x = F.relu(x)
-
-        x = self.fc5(x)
-        x = F.relu(x)
-
-        x = self.fc6(x)
 
         # Enforcing the positivity of the variance as mentioned in the paper.
         # Also adding 1e-6 for numerical stability
