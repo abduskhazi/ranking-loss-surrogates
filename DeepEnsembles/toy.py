@@ -52,9 +52,7 @@ pyplot.scatter(X_copy, Y_copy, marker='.')
 X = np.array(np.linspace(0.0, 1.0, 1000), dtype=np.float32)
 Y = np.array([objective(x, 0.0) for x in X], dtype=np.float32)
 pyplot.plot(X, Y)
-
 mean, variance = DE.predict(torch.from_numpy(X.reshape(-1, 1)))
-
 mean = mean.detach().numpy()
 std_dev = torch.sqrt(variance).detach().numpy()
 pyplot.plot(X, mean)

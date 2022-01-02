@@ -32,7 +32,7 @@ def surrogate(model, X):
 
 
 # Using probability of improvement for the acquisition function.
-#    1. Calculate the best sampel so far.
+#    1. Calculate the best sample so far.
 #    2. Use the mean and std of all samples to calculate the respective PIs
 #    3. PI = cumulative probability.
 def acquisition(X, X_samples, model):
