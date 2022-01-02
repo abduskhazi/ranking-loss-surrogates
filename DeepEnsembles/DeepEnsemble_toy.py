@@ -116,8 +116,11 @@ Y = np.array([objective(x, 0.0) for x in X], dtype=np.float32)
 pyplot.plot(X, Y)
 
 Y_NN = estim(torch.from_numpy(X.reshape(-1, 1)))
-mean_NN = Y_NN[:, 0].detach().numpy() # Getting the mean out
+mean_NN = Y_NN[:, 0].detach().numpy()  # Getting the mean out
+variance_NN = Y_NN[:, 1]
+std_dev = torch.sqrt(variance_NN).detach().numpy()
 pyplot.plot(X, mean_NN)
+pyplot.fill_between(X, mean_NN - std_dev, mean_NN + std_dev, alpha=0.45)
 pyplot.savefig("results.png")
 pyplot.show()
 
