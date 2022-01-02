@@ -60,7 +60,7 @@ class Estimator(nn.Module):
     # Training the estimator (with uncertainty) for the objective function
     def train(self, X, Y, optimizer, epochs=1000, batch_size=50):
         for _ in range(epochs):
-            print("Epoch", _)
+            # print("Epoch", _)
             X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
             i = 0
             while i < X.shape[0]:
