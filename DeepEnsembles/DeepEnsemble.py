@@ -3,6 +3,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 import sklearn
 
+
+# Defining the criterion proposed in the paper instead of using MSE for regression task.
+def regression_criterion(predicted, Y):
+    mean, variance = predicted[:, 0], predicted[:, 1]
+    mean = mean[:, None]
+    variance = variance[:, None]
+    return_vals = torch.log(variance) / 2 + torch.pow(Y - mean, 2) / (2 * variance)
+    return torch.mean(return_vals)
+
+
 # Implementing a single neural network that estimates uncertainty
 # Uncertainty can be estimated using a mean and a variance.
 class Estimator(nn.Module):
@@ -56,11 +66,3 @@ class Estimator(nn.Module):
                 loss.backward()
                 #  Update the parameters using optimizer.
                 optimizer.step()
-
-# Defining the criterion proposed in the paper instead of using MSE for regression task.
-def regression_criterion(predicted, Y):
-    mean, variance = predicted[:, 0], predicted[:, 1]
-    mean = mean[:, None]
-    variance = variance[:, None]
-    return_vals = torch.log(variance) / 2 + torch.pow(Y - mean, 2) / (2 * variance)
-    return torch.mean(return_vals)
