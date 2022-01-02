@@ -6,7 +6,7 @@ import torch
 import torch.optim as optim
 from matplotlib import pyplot
 
-from DeepEnsemble import Estimator
+from DeepEnsemble import DeepEnsemble
 
 rng = np.random.default_rng()
 
@@ -42,9 +42,10 @@ Y_copy = np.copy(Y)
 
 X = X.reshape((-1, 1))
 Y = Y.reshape((-1, 1))
-estim = Estimator()
-optimizer = optim.Adam(estim.parameters(), lr=0.01)
-estim.train(X, Y, optimizer)
+# Implementing Deep Ensembles.
+DE = DeepEnsemble(M=5)  # M = Number of Neural Networks
+DE.train(X, Y)
+
 
 # Plotting the results
 pyplot.scatter(X_copy, Y_copy, marker='.')
@@ -52,14 +53,11 @@ X = np.array(np.linspace(0.0, 1.0, 1000), dtype=np.float32)
 Y = np.array([objective(x, 0.0) for x in X], dtype=np.float32)
 pyplot.plot(X, Y)
 
-Y_NN = estim(torch.from_numpy(X.reshape(-1, 1)))
-mean_NN = Y_NN[:, 0].detach().numpy()  # Getting the mean out
-variance_NN = Y_NN[:, 1]
-std_dev = torch.sqrt(variance_NN).detach().numpy()
-pyplot.plot(X, mean_NN)
-pyplot.fill_between(X, mean_NN - std_dev, mean_NN + std_dev, alpha=0.45)
-pyplot.savefig("results.png")
-pyplot.show()
+mean, variance = DE.predict(torch.from_numpy(X.reshape(-1, 1)))
 
-# Implementing Deep Ensembles.
-M = 5  # Number of Neural Networks
+mean = mean.detach().numpy()
+std_dev = torch.sqrt(variance).detach().numpy()
+pyplot.plot(X, mean)
+pyplot.fill_between(X, mean - std_dev, mean + std_dev, alpha=0.45)
+pyplot.savefig("results_deep_ensemble.png")
+pyplot.show()

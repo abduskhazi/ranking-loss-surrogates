@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
 import sklearn
 
 
@@ -81,3 +82,40 @@ class Estimator(nn.Module):
                 loss = regression_criterion(Y_pred, Y_batch)
                 loss.backward()
                 optimizer.step()
+
+class DeepEnsemble():
+    def __init__(self, M=5):
+        self.M = M
+        self.nn_list = []
+        for _ in range(self.M):
+            self.nn_list += [Estimator()]
+
+    def train(self, X, Y):
+        for nn in self.nn_list:
+            optimizer = optim.Adam(nn.parameters(), lr=0.01)
+            nn.train(X, Y, optimizer)
+
+    def predict(self, X):
+        mean_list = []
+        variance_list = []
+
+        for nn in self.nn_list:
+            Y_NN = nn(X)
+            mean_NN = Y_NN[:, 0]  # Getting the mean out
+            variance_NN = Y_NN[:, 1]
+            mean_list += [mean_NN]
+            variance_list += [variance_NN]
+
+        # Returning the mean of the gaussian mixture
+        sum = mean_list[0]
+        for i in range(1, self.M):
+            sum = sum + mean_list[i]
+        mean = sum / self.M
+
+        # Returning variance of the gaussian mixture
+        sum = variance_list[0] + torch.pow(mean_list[0], 2)
+        for i in range(1, self.M):
+            sum = sum + variance_list[i] + torch.pow(mean_list[i], 2)
+        variance = sum / self.M - torch.pow(mean, 2)
+
+        return mean, variance
