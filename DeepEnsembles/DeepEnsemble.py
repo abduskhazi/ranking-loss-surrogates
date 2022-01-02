@@ -90,10 +90,10 @@ class DeepEnsemble():
         for _ in range(self.M):
             self.nn_list += [Estimator()]
 
-    def train(self, X, Y):
+    def train(self, X, Y, batch_size=50):
         for nn in self.nn_list:
             optimizer = optim.Adam(nn.parameters(), lr=0.01)
-            nn.train(X, Y, optimizer, batch_size=X.shape[0]//10)
+            nn.train(X, Y, optimizer, batch_size=batch_size)
 
     def predict(self, X):
         mean_list = []
