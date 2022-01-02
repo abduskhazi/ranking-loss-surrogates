@@ -71,13 +71,24 @@ def acquisition_PI(Y, X_samples, surrogate_model):
     std_dev = torch.sqrt(variance).detach().numpy()
     return norm.cdf((mean - best_y) / (std_dev + 1E-9))
 
+# Upper Confidence Bound acquisistion function
+def acquisition_UCB(X_samples, surrogate_models):
+    mean, variance = surrogate_models.predict(X_samples)
+    mean = mean.detach().numpy()
+    std_dev = torch.sqrt(variance).detach().numpy()
+    ucb = mean + 2 * std_dev
+    return ucb
+
+
 # Defining a routine that finds the next best input sample according to the acquisition function.
 def optimize_acquisition(Y, surrogate_model):
     X_samples = np.array(np.random.random(10000), dtype=np.float32)
     X_samples = torch.from_numpy(X_samples.reshape(-1, 1))
-    scores = acquisition_PI(Y, X_samples, surrogate_model)
+    # scores = acquisition_PI(Y, X_samples, surrogate_model)
+    scores = acquisition_UCB(X_samples, surrogate_model)
     ind = np.argmax(scores)
     return X_samples[ind]
+
 
 # Plotting just before the optmization cycle
 plot(np.copy(X), np.copy(Y), DE)
@@ -98,8 +109,8 @@ for _ in range(100):
     # Training the neural networks only for a small number of epochs
     # Rationale - Most of the training has been completed, only slight modification needs to
     #             be done due to an additional data point.
-    DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=100, batch_size=10)
-    if _ % 25 == 0:
+    DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=100, batch_size=20)
+    if _ % 10 == 0:
         plot(np.copy(X), np.copy(Y), DE)
 
 print()
