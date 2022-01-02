@@ -44,6 +44,18 @@ class Estimator(nn.Module):
 
         return x
 
+    # Generation of adversarial examples
+    # Using eps as 1% as recommended in the paper
+    def get_adversarial(self, X_batch, Y_batch, eps=0.01):
+        # Setting requires grad to true for the input tensor
+        X_batch.requires_grad = True
+        Y_pred = self.forward(X_batch)
+        loss = regression_criterion(Y_pred, Y_batch)
+        loss.backward()
+        X_batch_adv = X_batch + eps * torch.sign(X_batch.grad.data)
+
+        return X_batch_adv
+
     # Training the estimator (with uncertainty) for the objective function
     def train(self, X, Y, optimizer, epochs=1000, batch_size=50):
         for _ in range(epochs):
@@ -51,18 +63,21 @@ class Estimator(nn.Module):
             X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
             i = 0
             while i < X.shape[0]:
-                optimizer.zero_grad()
-                #  Sample a Mini-batch of 50 points
+                #  Sample a Mini-batch of data points based on batch size
                 X_batch = X[i: i + batch_size]
                 Y_batch = Y[i: i + batch_size]
                 X_batch = torch.from_numpy(X_batch)
                 Y_batch = torch.from_numpy(Y_batch)
                 i = i + batch_size
-                #  Calculate the output
+
+                # Get the adversarial batch, append the adv to the X_batch
+                X_batch_adv = self.get_adversarial(X_batch.clone().detach(), Y_batch.clone().detach())
+                X_batch = torch.cat((X_batch, X_batch_adv))
+                Y_batch = torch.cat((Y_batch, Y_batch))
+
+                # Run the optmization procedure on the whole data
+                optimizer.zero_grad()
                 Y_pred = self.forward(X_batch)
-                #  Calculate the MSE loss
                 loss = regression_criterion(Y_pred, Y_batch)
-                #  back propagate the loss
                 loss.backward()
-                #  Update the parameters using optimizer.
                 optimizer.step()
