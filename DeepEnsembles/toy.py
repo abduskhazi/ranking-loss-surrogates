@@ -30,6 +30,29 @@ def get_maxima(obj_func):
     return maximizer, maxima
 
 
+# Training the estimator (with uncertainty) for the objective function
+def train_estimator(estim, X, Y, optimizer, epochs=1000, batch_size=50):
+    for _ in range(epochs):
+        print("Epoch", _)
+        X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
+        i = 0
+        while i < X.shape[0]:
+            optimizer.zero_grad()
+            #  Sample a Mini-batch of 50 points
+            X_batch = X[i: i + batch_size]
+            Y_batch = Y[i: i + batch_size]
+            X_batch = torch.from_numpy(X_batch)
+            Y_batch = torch.from_numpy(Y_batch)
+            i = i + batch_size
+            #  Calculate the output
+            Y_pred = estim(X_batch)
+            #  Calculate the MSE loss
+            loss = regression_criterion(Y_pred, Y_batch)
+            #  back propagate the loss
+            loss.backward()
+            #  Update the parameters using optimizer.
+            optimizer.step()
+
 maximizer, maxima = get_maxima(objective)
 print("Actual values:")
 print("Maximizer =", maximizer, ", maxima =", maxima)
@@ -41,34 +64,11 @@ Y = np.array([objective(x) for x in X], dtype=np.float32)  # Noisy evaluations.
 X_copy = np.copy(X)
 Y_copy = np.copy(Y)
 
-estim = Estimator()
-optimizer = optim.Adam(estim.parameters(), lr=0.01)
-
 X = X.reshape((-1, 1))
 Y = Y.reshape((-1, 1))
-
-# Training the estimator (with uncertainty) for the objective function
-for _ in range(1000):
-    print("epoch", _)
-    X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
-    batch_size = 50
-    i = 0
-    while i < X.shape[0]:
-        optimizer.zero_grad()
-        #  Sample a Mini-batch of 50 points
-        X_batch = X[i: i + batch_size]
-        Y_batch = Y[i: i + batch_size]
-        X_batch = torch.from_numpy(X_batch)
-        Y_batch = torch.from_numpy(Y_batch)
-        i = i + batch_size
-        #  Calculate the output
-        Y_pred = estim(X_batch)
-        #  Calculate the MSE loss
-        loss = regression_criterion(Y_pred, Y_batch)
-        #  back propagate the loss
-        loss.backward()
-        #  Update the parameters using optimizer.
-        optimizer.step()
+estim = Estimator()
+optimizer = optim.Adam(estim.parameters(), lr=0.01)
+train_estimator(estim, X, Y, optimizer)
 
 # Plotting the results
 pyplot.scatter(X_copy, Y_copy, marker='.')
