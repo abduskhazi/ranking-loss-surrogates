@@ -6,7 +6,7 @@ import torch
 import torch.optim as optim
 from matplotlib import pyplot
 
-from DeepEnsemble import Estimator, regression_criterion, train_estimator
+from DeepEnsemble import Estimator
 
 rng = np.random.default_rng()
 
@@ -44,7 +44,7 @@ X = X.reshape((-1, 1))
 Y = Y.reshape((-1, 1))
 estim = Estimator()
 optimizer = optim.Adam(estim.parameters(), lr=0.01)
-train_estimator(estim, X, Y, optimizer)
+estim.train(X, Y, optimizer)
 
 # Plotting the results
 pyplot.scatter(X_copy, Y_copy, marker='.')
