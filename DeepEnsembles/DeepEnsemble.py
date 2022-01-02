@@ -93,7 +93,7 @@ class DeepEnsemble():
     def train(self, X, Y):
         for nn in self.nn_list:
             optimizer = optim.Adam(nn.parameters(), lr=0.01)
-            nn.train(X, Y, optimizer)
+            nn.train(X, Y, optimizer, batch_size=X.shape[0]//10)
 
     def predict(self, X):
         mean_list = []
