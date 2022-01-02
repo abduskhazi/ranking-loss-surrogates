@@ -5,9 +5,8 @@ import numpy as np
 import torch
 import torch.optim as optim
 from matplotlib import pyplot
-import sklearn
 
-from DeepEnsemble import Estimator, regression_criterion
+from DeepEnsemble import Estimator, regression_criterion, train_estimator
 
 rng = np.random.default_rng()
 
@@ -29,29 +28,6 @@ def get_maxima(obj_func):
     maxima = Y[i]
     return maximizer, maxima
 
-
-# Training the estimator (with uncertainty) for the objective function
-def train_estimator(estim, X, Y, optimizer, epochs=1000, batch_size=50):
-    for _ in range(epochs):
-        print("Epoch", _)
-        X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
-        i = 0
-        while i < X.shape[0]:
-            optimizer.zero_grad()
-            #  Sample a Mini-batch of 50 points
-            X_batch = X[i: i + batch_size]
-            Y_batch = Y[i: i + batch_size]
-            X_batch = torch.from_numpy(X_batch)
-            Y_batch = torch.from_numpy(Y_batch)
-            i = i + batch_size
-            #  Calculate the output
-            Y_pred = estim(X_batch)
-            #  Calculate the MSE loss
-            loss = regression_criterion(Y_pred, Y_batch)
-            #  back propagate the loss
-            loss.backward()
-            #  Update the parameters using optimizer.
-            optimizer.step()
 
 maximizer, maxima = get_maxima(objective)
 print("Actual values:")

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import sklearn
 
 # Implementing a single neural network that estimates uncertainty
 # Uncertainty can be estimated using a mean and a variance.
@@ -41,3 +42,26 @@ def regression_criterion(predicted, Y):
     variance = variance[:, None]
     return_vals = torch.log(variance) / 2 + torch.pow(Y - mean, 2) / (2 * variance)
     return torch.mean(return_vals)
+
+# Training the estimator (with uncertainty) for the objective function
+def train_estimator(estim, X, Y, optimizer, epochs=1000, batch_size=50):
+    for _ in range(epochs):
+        print("Epoch", _)
+        X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
+        i = 0
+        while i < X.shape[0]:
+            optimizer.zero_grad()
+            #  Sample a Mini-batch of 50 points
+            X_batch = X[i: i + batch_size]
+            Y_batch = Y[i: i + batch_size]
+            X_batch = torch.from_numpy(X_batch)
+            Y_batch = torch.from_numpy(Y_batch)
+            i = i + batch_size
+            #  Calculate the output
+            Y_pred = estim(X_batch)
+            #  Calculate the MSE loss
+            loss = regression_criterion(Y_pred, Y_batch)
+            #  back propagate the loss
+            loss.backward()
+            #  Update the parameters using optimizer.
+            optimizer.step()
