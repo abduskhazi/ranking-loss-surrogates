@@ -1,4 +1,4 @@
-# This is the first step to implement Deep Emsemble surrogate for a toy example.
+# This is the first step to implement Deep Ensemble surrogate for a toy example.
 
 import math
 import numpy as np
@@ -7,7 +7,7 @@ import torch.optim as optim
 from matplotlib import pyplot
 import sklearn
 
-from DeepEnsemble import Estimator
+from DeepEnsemble import Estimator, regression_criterion
 
 rng = np.random.default_rng()
 
@@ -43,18 +43,11 @@ Y_copy = np.copy(Y)
 
 estim = Estimator()
 optimizer = optim.Adam(estim.parameters(), lr=0.01)
-# Defining the criterion proposed in the paper instead of using MSE for regression task.
-def criterion(predicted, Y):
-    mean, variance = predicted[:, 0], predicted[:, 1]
-    mean = mean[:, None]
-    variance = variance[:, None]
-    vals = torch.log(variance) / 2 + torch.pow(Y - mean, 2) / (2 * variance)
-    return torch.mean(vals)
 
 X = X.reshape((-1, 1))
 Y = Y.reshape((-1, 1))
 
-# Training the estimator for the objective function for 100 epochs
+# Training the estimator (with uncertainty) for the objective function
 for _ in range(1000):
     print("epoch", _)
     X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
@@ -71,7 +64,7 @@ for _ in range(1000):
         #  Calculate the output
         Y_pred = estim(X_batch)
         #  Calculate the MSE loss
-        loss = criterion(Y_pred, Y_batch)
+        loss = regression_criterion(Y_pred, Y_batch)
         #  back propagate the loss
         loss.backward()
         #  Update the parameters using optimizer.

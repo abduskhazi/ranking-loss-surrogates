@@ -32,3 +32,12 @@ class Estimator(nn.Module):
         x[:, 1] = torch.log(1 + torch.exp(x[:, 1])) + 1e-6
 
         return x
+
+
+# Defining the criterion proposed in the paper instead of using MSE for regression task.
+def regression_criterion(predicted, Y):
+    mean, variance = predicted[:, 0], predicted[:, 1]
+    mean = mean[:, None]
+    variance = variance[:, None]
+    return_vals = torch.log(variance) / 2 + torch.pow(Y - mean, 2) / (2 * variance)
+    return torch.mean(return_vals)
