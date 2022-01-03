@@ -44,7 +44,7 @@ Y = np.array([objective(x) for x in X], dtype=np.float32)  # Noisy evaluations o
 
 # Deep Ensembles = surrogate for our optimization problem.
 DE = DeepEnsemble(M=5)  # M = Number of Neural Networks
-DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=100, batch_size=10)
+DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=1000, batch_size=50)
 
 def plot(X, Y, model):
     # Plotting the results after the optimisation cycle.
@@ -110,10 +110,11 @@ for _ in range(100):
     # Rationale - Most of the training has been completed, only slight modification needs to
     #             be done due to an additional data point.
     DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=100, batch_size=20)
-    #if _ % 10 == 0:
+    # if _ % 10 == 0:
     #    plot(np.copy(X), np.copy(Y), DE)
 
-plot(np.copy(X), np.copy(Y), DE)
 print()
 print("After optimization")
 print("Maximizer =", X[np.argmax(Y)], ", Maxima =", np.max(Y))
+
+plot(np.copy(X), np.copy(Y), DE)
