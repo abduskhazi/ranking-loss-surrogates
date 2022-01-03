@@ -110,9 +110,10 @@ for _ in range(100):
     # Rationale - Most of the training has been completed, only slight modification needs to
     #             be done due to an additional data point.
     DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=100, batch_size=20)
-    if _ % 10 == 0:
-        plot(np.copy(X), np.copy(Y), DE)
+    #if _ % 10 == 0:
+    #    plot(np.copy(X), np.copy(Y), DE)
 
+plot(np.copy(X), np.copy(Y), DE)
 print()
 print("After optimization")
 print("Maximizer =", X[np.argmax(Y)], ", Maxima =", np.max(Y))
