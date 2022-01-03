@@ -17,10 +17,10 @@ def regression_criterion(predicted, Y):
 # Implementing a single neural network that estimates uncertainty
 # Uncertainty can be estimated using a mean and a variance.
 class Estimator(nn.Module):
-    def __init__(self):
+    def __init__(self, input_dim=1):
         super(Estimator, self).__init__()
         # Here fc is an abbreviation fully connected
-        self.fc1 = nn.Linear(1, 15)  # Input dimension of the objective function = 1
+        self.fc1 = nn.Linear(input_dim, 15)  # Input dimension of the objective function = 1
         self.fc2 = nn.Linear(15, 25)
         self.fc3 = nn.Linear(25, 15)
         # For mean and variance the output dimension is 2.
@@ -84,11 +84,11 @@ class Estimator(nn.Module):
                 optimizer.step()
 
 class DeepEnsemble():
-    def __init__(self, M=5):
+    def __init__(self, input_dim=1, M=5):
         self.M = M
         self.nn_list = []
         for _ in range(self.M):
-            self.nn_list += [Estimator()]
+            self.nn_list += [Estimator(input_dim)]
 
     def train(self, X, Y, epochs=1000, batch_size=50):
         for nn in self.nn_list:
