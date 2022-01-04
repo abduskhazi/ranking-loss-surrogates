@@ -100,5 +100,5 @@ score = model.score(X_test, Y_test)
 print("Accuracy with the best HPO on the test data = ", score)
 
 # Obtained the following result when I ran the above code
-#     Maximizer =  [ 6.23428843e+00 -1.39746673e+01  3.32921053e-03]
-#     Accuracy with the best HPO on the test data =  0.9651162790697675
+# Maximizer =  [ 7.47422034e-01 -1.05591509e+01  8.60451524e-03]
+# Accuracy with the best HPO on the test data =  0.9767441860465116
