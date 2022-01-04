@@ -94,7 +94,10 @@ for _ in range(1000):
     # Training the neural networks only for a small number of epochs
     # Rationale - Most of the training has been completed, only slight modification needs to
     #             be done due to an additional data point.
-    DE.train(theta_X, theta_Y.reshape(-1, 1), epochs=100, batch_size=20)
+    batch_size = theta_X.shape[0] // 10
+    if batch_size < 50:
+        batch_size = 50
+    DE.train(theta_X, theta_Y.reshape(-1, 1), epochs=100, batch_size=batch_size)
 
 print()
 print("After optimization")
