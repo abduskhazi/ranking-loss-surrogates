@@ -47,18 +47,19 @@ class Estimator(nn.Module):
 
     # Generation of adversarial examples
     # Using eps as 1% as recommended in the paper
-    def get_adversarial(self, X_batch, Y_batch, eps=0.01):
+    # input_space_range = torch tensor that specifies the range in each dimension
+    def get_adversarial(self, X_batch, Y_batch, search_space_range=1, eps=0.01):
         # Setting requires grad to true for the input tensor
         X_batch.requires_grad = True
         Y_pred = self.forward(X_batch)
         loss = regression_criterion(Y_pred, Y_batch)
         loss.backward()
-        X_batch_adv = X_batch + eps * torch.sign(X_batch.grad.data)
+        X_batch_adv = X_batch + eps * search_space_range * torch.sign(X_batch.grad.data)
 
         return X_batch_adv
 
     # Training the estimator (with uncertainty) for the objective function
-    def train(self, X, Y, optimizer, epochs=1000, batch_size=50):
+    def train(self, X, Y, optimizer, search_space_range=1, epochs=1000, batch_size=50):
         for _ in range(epochs):
             # print("Epoch", _)
             X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
@@ -72,7 +73,7 @@ class Estimator(nn.Module):
                 i = i + batch_size
 
                 # Get the adversarial batch, append the adv to the X_batch
-                X_batch_adv = self.get_adversarial(X_batch.clone().detach(), Y_batch.clone().detach())
+                X_batch_adv = self.get_adversarial(X_batch.clone().detach(), Y_batch.clone().detach(), search_space_range)
                 X_batch = torch.cat((X_batch, X_batch_adv))
                 Y_batch = torch.cat((Y_batch, Y_batch))
 
@@ -90,10 +91,10 @@ class DeepEnsemble():
         for _ in range(self.M):
             self.nn_list += [Estimator(input_dim)]
 
-    def train(self, X, Y, epochs=1000, batch_size=50):
+    def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=50):
         for nn in self.nn_list:
             optimizer = optim.Adam(nn.parameters(), lr=0.01)
-            nn.train(X, Y, optimizer, epochs=epochs, batch_size=batch_size)
+            nn.train(X, Y, optimizer, search_space_range, epochs=epochs, batch_size=batch_size)
 
     def predict(self, X):
         mean_list = []
