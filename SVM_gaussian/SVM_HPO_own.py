@@ -1,8 +1,8 @@
-# This file implements SVM Hyperparameters without using skopt library functions.
-# Only continous hyperparameters were optmized as optmizing decrete parameters needs the development of custom kernels.
-# Custom kernel development is out of scope for this task.
+# This file implements SVM Hyper-Parameters without using skopt library functions. Only continous Hyper-Parameters were
+# optimized as optimizing discrete parameters needs the development of custom kernels. Custom kernel development is
+# out of scope for this task.
 
-# Three Hyperparameters optimized (We have a 3 dimensional input search space):
+# Three Hyper-Parameters optimized (We have a 3 dimensional input search space):
 # 1. C - Log Scale [E-5 to E15]
 # 2. gamma - Log Scale [E-15 to E3]
 # 4. tol - [E-4 to E-2]
@@ -29,7 +29,7 @@ def objective(param_list):
     gamma = math.exp(param_list[1])
     tol = param_list[2]
 
-    # Further diving the data into training and validation sets to evaluate the HPs.
+    # Further dividing the data into training and validation sets to evaluate the HPs.
     X_t, X_v, Y_t, Y_v = train_test_split(X_train, Y_train, test_size=0.20)
     model.set_params(C=C, gamma=gamma, tol=tol)
     model.fit(X_t, Y_t)

@@ -10,7 +10,7 @@ Solutions Previously:
     2. Ensemble approach. E.g Using Dropout during evaluation.
 
 Evaluation of Predictive uncertainities:
-    Caliberation & scoring rules
+    Calibration & scoring rules
     Out of distribution uncertainity
 
 Contributions by authors:
@@ -28,12 +28,16 @@ Proposed Implementation:
 
 Understanding proper scoring rules:
     A scoring function gives a numerical value to the predictive distribution.
-    The better the predicitive distribution caliberated to the actual distribution the better the score.
+    The better the predictive distribution calibrated to the actual distribution the better the score.
     Compare p (prediction distribution) and q (original distribution). The closer p and q are the better the score.
 
 Observations:
-   How to combine regression and classification problems in deep enembles - This is possible by having the correct loss function. For example addition of different parameters.
+   How to combine regression and classification problems in deep ensembles - This is possible by having the correct loss function. For example addition of different parameters.
    Understand the intuition behind the adversarial examples y = nn(x). We assume that nn is a smooth function hence the small
     change in x should only have a small change in y. Hence nn( neighbourhood(x) ) = y
-  For good training use 2^N examples for neighbourhood. 
+   For good training use 2^N examples for neighbourhood.
+
+For Using Deep Ensembles for HPO:
+    We can only use the regression version of the research because the objective scoring is a real valued number
+    How to model discrete input dimensions as inputs into the Deep Ensemble?
 

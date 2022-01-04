@@ -72,8 +72,8 @@ def acquisition_PI(Y, X_samples, surrogate_model):
     return norm.cdf((mean - best_y) / (std_dev + 1E-9))
 
 # Upper Confidence Bound acquisistion function
-def acquisition_UCB(X_samples, surrogate_models):
-    mean, variance = surrogate_models.predict(X_samples)
+def acquisition_UCB(X_samples, surrogate_model):
+    mean, variance = surrogate_model.predict(X_samples)
     mean = mean.detach().numpy()
     std_dev = torch.sqrt(variance).detach().numpy()
     ucb = mean + 2 * std_dev
