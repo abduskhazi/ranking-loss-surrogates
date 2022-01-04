@@ -59,7 +59,7 @@ class Estimator(nn.Module):
         return X_batch_adv
 
     # Training the estimator (with uncertainty) for the objective function
-    def train(self, X, Y, optimizer, search_space_range=1, epochs=1000, batch_size=50):
+    def train(self, X, Y, optimizer, search_space_range=1, epochs=1000, batch_size=100):
         for _ in range(epochs):
             # print("Epoch", _)
             X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
@@ -89,11 +89,13 @@ class DeepEnsemble():
         self.M = M
         self.nn_list = []
         for _ in range(self.M):
+            # Using the default weight initialization in pytorch according to the paper.
             self.nn_list += [Estimator(input_dim)]
 
-    def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=50):
+    def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=100):
         for nn in self.nn_list:
-            optimizer = optim.Adam(nn.parameters(), lr=0.01)
+            # Using adam optimiser with a learning rate of 0.1 as in the paper.
+            optimizer = optim.Adam(nn.parameters(), lr=0.1)
             nn.train(X, Y, optimizer, search_space_range, epochs=epochs, batch_size=batch_size)
 
     def predict(self, X):

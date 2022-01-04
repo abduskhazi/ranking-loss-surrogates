@@ -84,7 +84,7 @@ print("Training finished")
 
 #  Optimization cycle.
 print("Running optimisation cycle")
-for _ in range(1000):
+for _ in range(100):
     print("Iteration:", _, end="\r")
     tx_opt = optimize_acquisition(DE)
     ty_opt = np.array([objective(tx_opt)])
@@ -94,15 +94,18 @@ for _ in range(1000):
     # Training the neural networks only for a small number of epochs
     # Rationale - Most of the training has been completed, only slight modification needs to
     #             be done due to an additional data point.
-    batch_size = theta_X.shape[0] // 10
-    if batch_size < 50:
-        batch_size = 50
-    DE.train(theta_X, theta_Y.reshape(-1, 1), epochs=100, batch_size=batch_size)
+    DE.train(theta_X, theta_Y.reshape(-1, 1), epochs=100, batch_size=100)
+    # Using a fixed batch size of 100 as defined in the paper
 
 print()
 print("After optimization")
 print("Maximizer =", theta_X[np.argmax(theta_Y)], ", Maxima =", np.max(theta_Y))
 
 # Results obtained after running one optmisation
-# After optimization
+# After optimization (100 iterations) ADAM(0.01), Batch Size = 20
 # Maximizer = [-1.7665786e+00 -7.2858520e+00  4.9927384e-03] , Maxima = 0.979381443298969
+# After optimization (1000 iterations) ADAM(0.01), Batch size adaptive >= 50
+# Maximizer = [-1.6634938  -8.352619    0.00887886] , Maxima = 0.979381443298969
+
+# Results obtained by using parameters of the paper
+# Maximizer = [ 1.3411719e+01 -1.4029912e+01  2.7184824e-03] , Maxima = 0.9896907216494846
