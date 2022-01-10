@@ -3,17 +3,17 @@ https://www.borealisai.com/en/blog/tutorial-8-bayesian-optimization/
 
 Problem Setup: Find the maximizer of f(x) in some domain X.
 
-Core Idea:
-    Build the model of the objective function f(x).
-    This will include known {x, f(x)} pairs + uncertainity around these points.
-    Sample next optimiser, i.e x' that optimises f(x').
-    Update the model with pari {x', f(x')} and repeat the process.
-
 Basic strategies:
     Grid Search
     Random Search
     Sequential Search
         Bayesian Search.
+
+Core Idea:
+    Build the model of the objective function f(x).
+    This will include known {x, f(x)} pairs + uncertainity around these points.
+    Sample next optimiser, i.e x' that optimises f(x').
+    Update the model with pari {x', f(x')} and repeat the process.
 
 Bayesian optimization components
     Probabilistic model of the function.
