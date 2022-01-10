@@ -13,7 +13,8 @@ Core Idea:
     Build the model of the objective function f(x).
     This will include known {x, f(x)} pairs + uncertainity around these points.
     Sample next optimiser, i.e x' that optimises f(x').
-    Update the model with pari {x', f(x')} and repeat the process.
+    Update the model with pari {x', f(x')}
+    Repeat the process.
 
 Bayesian optimization components
     Probabilistic model of the function.
