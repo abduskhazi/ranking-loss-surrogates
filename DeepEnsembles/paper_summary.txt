@@ -1,28 +1,30 @@
 Research Paper: https://arxiv.org/pdf/1612.01474.pdf
 
-Problem: How can we use DNN to quantify uncertainity in a prediction?
+Problem: How can we use DNN to quantify uncertainty in a prediction?
 
 Solutions Previously:
     1. Bayesian neural networks.
        A prior over weights and biases is specified. Given the data, a posterior is calculated.
        Hard and complex to train.
 
-    2. Ensemble approach. E.g Using Dropout during evaluation.
+    2. Ensemble approach. E.g Using Monte Carlo Dropout during evaluation. (Behaves like an ensemble)
+       Consider 10 predictions in an ensemble. Using these, we could calculate the variance and the
+       mean of the gaussian. Example: Section 3.2 Regression on toy datasets.
 
-Evaluation of Predictive uncertainities:
-    Calibration & scoring rules
-    Out of distribution uncertainity
+Evaluation of Predictive uncertainties:
+    Scoring rules - Measure quality of predictive uncertainty.
+    Out of distribution uncertainty
 
 Contributions by authors:
     Non Bayesian approach.
     Ensemble of neural networks.
-    Adversarial training for smooth predictions.
+    Adversarial training for smooth predictions (Adversarial training is optional as it improves the prediction uncertainty quality only in some cases).
 
 
 Proposed Implementation:
     Given theta are NN parameters, we need to predict p_theta(y|x).
     p = distribution over real values in regression
-    p = Discrete probabalistic distribution for classification.
+    p = Discrete probablistic distribution for classification.
 
     3 step approach - Proper scoring rules, adversarial training and ensemble of NNs.
 
@@ -34,10 +36,18 @@ Understanding proper scoring rules:
 Observations:
    How to combine regression and classification problems in deep ensembles - This is possible by having the correct loss function. For example addition of different parameters.
    Understand the intuition behind the adversarial examples y = nn(x). We assume that nn is a smooth function hence the small
-    change in x should only have a small change in y. Hence nn( neighbourhood(x) ) = y
+   change in x should only have a small change in y. Hence nn( neighbourhood(x) ) = y
    For good training use 2^N examples for neighbourhood.
+   Used a custom NN architecture rather than using 1 hidden layer with 50/100 units depending on the data available.
+   This is because the architecture given in the paper was not helpful.
+
+Evaluations of confidence vs accuracy.
+    The deep ensembles seem to have a better accuracy with higher confidence as compared to MC-Dropout.
 
 For Using Deep Ensembles for HPO:
     We can only use the regression version of the research because the objective scoring is a real valued number
     How to model discrete input dimensions as inputs into the Deep Ensemble?
+
+Doubts:
+    Could not understand section 3.5 last paragraph correctly.
 

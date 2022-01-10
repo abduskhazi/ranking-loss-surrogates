@@ -39,12 +39,12 @@ print("Maximizer =", maximizer, ", maxima =", maxima)
 # Getting a small list of random samples:
 #    In the actual problems we have access to only random samples and their objective evaluations
 #    These random samples serve as a beginning data to train the Deep Ensemble with.
-X = np.array(np.random.random(50), dtype=np.float32)
+X = np.array(np.random.random(20), dtype=np.float32)
 Y = np.array([objective(x) for x in X], dtype=np.float32)  # Noisy evaluations of objective function.
 
 # Deep Ensembles = surrogate for our optimization problem.
 DE = DeepEnsemble(M=5)  # M = Number of Neural Networks
-DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=1000, batch_size=50)
+DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=40, batch_size=50)
 
 def plot(X, Y, model):
     # Plotting the results after the optimisation cycle.
@@ -109,7 +109,7 @@ for _ in range(100):
     # Training the neural networks only for a small number of epochs
     # Rationale - Most of the training has been completed, only slight modification needs to
     #             be done due to an additional data point.
-    DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=100, batch_size=20)
+    DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=40, batch_size=20)
     # if _ % 10 == 0:
     #    plot(np.copy(X), np.copy(Y), DE)
 
