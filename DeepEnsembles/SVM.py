@@ -9,6 +9,7 @@
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 from sklearn import svm
+from matplotlib import pyplot
 import math
 import torch
 import numpy as np
@@ -83,7 +84,9 @@ DE.train(theta_X, theta_Y.reshape(-1, 1), ranges, epochs=1000, batch_size=50)
 print("Training finished")
 
 #  Optimization cycle.
+#  Adding incumbent data for plotting
 print("Running optimisation cycle")
+incumbent = []
 for _ in range(20):
     print("Iteration:", _, end="\r")
     tx_opt = optimize_acquisition(DE)
@@ -96,10 +99,16 @@ for _ in range(20):
     #             be done due to an additional data point.
     DE.train(theta_X, theta_Y.reshape(-1, 1), epochs=100, batch_size=100)
     # Using a fixed batch size of 100 as defined in the paper
+    incumbent += [np.max(theta_Y)]
+
+# Plotting the incumbent graph
+pyplot.plot(np.array(range(1, len(incumbent)+1)), np.array(incumbent))
+pyplot.show()
 
 print()
 print("After optimization")
 print("Maximizer =", theta_X[np.argmax(theta_Y)], ", Maxima =", np.max(theta_Y))
+
 
 # Results obtained after running one optmisation
 # After optimization (100 iterations) ADAM(0.01), Batch Size = 20
