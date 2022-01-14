@@ -47,7 +47,8 @@ def acquisition(X, X_samples, model):
 #     2. Run the acquisition function for all samples
 #     3. Find the best sample and then return the maximizer
 def opt_aquisition(X, model):
-    X_samples = np.random.random(100)
+    # Sampling from the whole domain instead of randomly sampling domain values
+    X_samples = np.array(np.linspace(0.0, 1.0, 100000), dtype=np.float32)
     X_samples = X_samples.reshape((-1, 1))
     scores = acquisition(X, X_samples, model)
     i = np.argmax(scores)
