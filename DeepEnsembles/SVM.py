@@ -71,7 +71,7 @@ def get_search_space_range():
 print("Getting initial evaluations of input samples")
 # First get a few evaluations of the objective function to begin with
 # Naming theta_X and theta_Y here so as not to get confused with
-theta_X = np.array([sample_search_space() for i in range(20)], dtype=np.float32)
+theta_X = np.array([sample_search_space() for i in range(5)], dtype=np.float32)
 theta_Y = np.array([objective(t_x) for t_x in theta_X], dtype=np.float32)
 print("Finished evaluations")
 
@@ -84,7 +84,7 @@ print("Training finished")
 
 #  Optimization cycle.
 print("Running optimisation cycle")
-for _ in range(100):
+for _ in range(20):
     print("Iteration:", _, end="\r")
     tx_opt = optimize_acquisition(DE)
     ty_opt = np.array([objective(tx_opt)])

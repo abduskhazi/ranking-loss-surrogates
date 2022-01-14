@@ -39,7 +39,7 @@ print("Maximizer =", maximizer, ", maxima =", maxima)
 # Getting a small list of random samples:
 #    In the actual problems we have access to only random samples and their objective evaluations
 #    These random samples serve as a beginning data to train the Deep Ensemble with.
-X = np.array(np.random.random(20), dtype=np.float32)
+X = np.array(np.random.random(5), dtype=np.float32)
 Y = np.array([objective(x) for x in X], dtype=np.float32)  # Noisy evaluations of objective function.
 
 # Deep Ensembles = surrogate for our optimization problem.
@@ -101,7 +101,7 @@ plot(np.copy(X), np.copy(Y), DE)
 #   Add incumbent data for plotting
 print("Running optimisation cycle")
 incumbent = []
-for _ in range(100):
+for _ in range(20):
     print("Iteration:", _, end="\r")
     x_opt = optimize_acquisition(Y, DE)
     x_opt = x_opt.detach().numpy()
