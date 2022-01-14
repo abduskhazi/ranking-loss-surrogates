@@ -98,7 +98,9 @@ plot(np.copy(X), np.copy(Y), DE)
 #   Evaluate the sample on the objective function (expensive step)
 #   Append the data to the existing data points
 #   Refit our surrogate (i.e Deep Ensembles)
+#   Add incumbent data for plotting
 print("Running optimisation cycle")
+incumbent = []
 for _ in range(100):
     print("Iteration:", _, end="\r")
     x_opt = optimize_acquisition(Y, DE)
@@ -112,9 +114,14 @@ for _ in range(100):
     DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=40, batch_size=20)
     # if _ % 10 == 0:
     #    plot(np.copy(X), np.copy(Y), DE)
+    incumbent += [np.max(Y)]
 
 print()
 print("After optimization")
 print("Maximizer =", X[np.argmax(Y)], ", Maxima =", np.max(Y))
 
 plot(np.copy(X), np.copy(Y), DE)
+
+# Plotting the incumbent graph
+pyplot.plot(np.array(range(1, len(incumbent)+1)), np.array(incumbent))
+pyplot.show()
