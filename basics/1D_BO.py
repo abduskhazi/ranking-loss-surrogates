@@ -78,7 +78,7 @@ print("Maximizer =", maximizer, ", maxima =", maxima)
 # Fit a GP model with random samples.
 # Reason for random samples
 #     - In the actual problems we have access to only random samples and their objective evaluations
-X = np.random.random(50)
+X = np.random.random(5)
 Y = np.array([objective(x) for x in X])  # Noisy evaulations.
 model = GaussianProcessRegressor()
 X = X.reshape((-1, 1))
@@ -86,7 +86,7 @@ model.fit(X, Y)
 plot(X, Y, model)
 
 # Now the optimization cycle.
-for _ in range(100):
+for _ in range(20):
     x = opt_aquisition(X, model)
     y = objective(x)
     x = x.reshape((1, 1))
