@@ -102,7 +102,7 @@ plot(np.copy(X), np.copy(Y), DE)
 print("Running optimisation cycle")
 incumbent = []
 for _ in range(20):
-    print("Iteration:", _, end="\r")
+    print("Iteration:", _ + 1, end="\r")
     x_opt = optimize_acquisition(Y, DE)
     x_opt = x_opt.detach().numpy()
     y_opt = objective(x_opt)
