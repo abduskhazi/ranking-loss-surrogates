@@ -55,11 +55,18 @@ def opt_aquisition(X, model):
 
 
 def plot(X, Y, model):
+    # Plotting the observed data
     pyplot.scatter(X, Y, marker='.')
 
-    grid_i = np.linspace(0.0, 1.0, 1000)
-    grid_o = model.predict(grid_i.reshape(-1, 1))
+    # Plotting the true objective
+    grid_i = np.array(np.linspace(0.0, 1.0, 10000))
+    grid_o = np.array([objective(x, 0.0) for x in grid_i])
     pyplot.plot(grid_i, grid_o)
+
+    # Plotting the uncertainty prediction of model.
+    mean, std_dev = model.predict(grid_i.reshape(-1, 1), return_std=True)
+    pyplot.plot(grid_i, mean)
+    pyplot.fill_between(grid_i, mean - std_dev, mean + std_dev, alpha=0.45)
 
     pyplot.show()
 
@@ -87,6 +94,7 @@ for _ in range(100):
     X = np.append(X, x, axis=0)
     Y = np.append(Y, y, axis=0)
 
+    #plot(X, Y, model)
     model.fit(X, Y)
 
 print("After optimization")
