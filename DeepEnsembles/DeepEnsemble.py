@@ -54,7 +54,7 @@ class Estimator(nn.Module):
 
         # Enforcing the positivity of the variance as mentioned in the paper.
         # Also adding 1e-6 for numerical stability
-        x[:, 1] = torch.log(1 + torch.exp(x[:, 1])) + 1e-6
+        x[..., 1] = torch.log(1 + torch.exp(x[..., 1])) + 1e-6
 
         return x
 
@@ -122,8 +122,8 @@ class DeepEnsemble():
 
         for nn in self.nn_list:
             Y_NN = nn(X)
-            mean_NN = Y_NN[:, 0]  # Getting the mean out
-            variance_NN = Y_NN[:, 1]
+            mean_NN = Y_NN[..., 0]  # Getting the mean out
+            variance_NN = Y_NN[..., 1]
             mean_list += [mean_NN]
             variance_list += [variance_NN]
 
