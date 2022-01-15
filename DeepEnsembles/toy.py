@@ -43,7 +43,7 @@ X = np.array(np.random.random(5), dtype=np.float32)
 Y = np.array([objective(x) for x in X], dtype=np.float32)  # Noisy evaluations of objective function.
 
 # Deep Ensembles = surrogate for our optimization problem.
-DE = DeepEnsemble(M=5)  # M = Number of Neural Networks
+DE = DeepEnsemble(M=5, divided_nn=False)  # M = Number of Neural Networks
 DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=100, batch_size=50)
 
 def plot(X, Y, model):

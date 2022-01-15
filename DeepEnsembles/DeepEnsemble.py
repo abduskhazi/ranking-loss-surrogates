@@ -17,16 +17,23 @@ def regression_criterion(predicted, Y):
 # Implementing a single neural network that estimates uncertainty
 # Uncertainty can be estimated using a mean and a variance.
 class Estimator(nn.Module):
-    def __init__(self, input_dim=1):
+    def __init__(self, input_dim=1, divided_nn=False):
         super(Estimator, self).__init__()
+        # divided_nn = Wether to divide the neural network in the end or not
+        self.divided_nn = divided_nn
         # Here fc is an abbreviation fully connected
         self.fc1 = nn.Linear(input_dim, 15)  # Input dimension of the objective function = 1
         self.fc2 = nn.Linear(15, 25)
         self.fc3 = nn.Linear(25, 15)
+        fc3_o_dim = 15
+
         # For mean and variance the output dimension is 2.
         # First output is the mean, second output is the variance
-        self.fc4a = nn.Linear(15, 1)
-        self.fc4b = nn.Linear(15, 1)
+        if self.divided_nn:
+            self.fc4a = nn.Linear(fc3_o_dim, 1)
+            self.fc4b = nn.Linear(fc3_o_dim, 1)
+        else:
+            self.fc4 = nn.Linear(fc3_o_dim, 2)
 
     def forward(self, x):
         x = self.fc1(x)
@@ -38,10 +45,12 @@ class Estimator(nn.Module):
         x = self.fc3(x)
         x = F.relu(x)
 
-        mean = self.fc4a(x)
-        variance = self.fc4b(x)
-
-        x = torch.hstack((mean, variance))
+        if self.divided_nn:
+            mean = self.fc4a(x)
+            variance = self.fc4b(x)
+            x = torch.hstack((mean, variance))
+        else:
+            x = self.fc4(x)
 
         # Enforcing the positivity of the variance as mentioned in the paper.
         # Also adding 1e-6 for numerical stability
@@ -90,12 +99,12 @@ class Estimator(nn.Module):
                 optimizer.step()
 
 class DeepEnsemble():
-    def __init__(self, input_dim=1, M=5):
+    def __init__(self, input_dim=1, M=5, divided_nn=False):
         self.M = M
         self.nn_list = []
         for _ in range(self.M):
             # Using the default weight initialization in pytorch according to the paper.
-            self.nn_list += [Estimator(input_dim)]
+            self.nn_list += [Estimator(input_dim, divided_nn)]
 
     def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=100):
         i = 1
