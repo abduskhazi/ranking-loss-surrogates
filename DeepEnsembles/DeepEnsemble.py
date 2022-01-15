@@ -63,7 +63,7 @@ class Estimator(nn.Module):
         return X_batch_adv
 
     # Training the estimator (with uncertainty) for the objective function
-    def train(self, X, Y, optimizer, search_space_range=1, epochs=1000, batch_size=100):
+    def train(self, X, Y, optimizer, search_space_range=1, epochs=1000, batch_size=100, adverserial_training=False):
         for _ in range(epochs):
             # print("Epoch", _)
             X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
@@ -76,10 +76,11 @@ class Estimator(nn.Module):
                 Y_batch = torch.from_numpy(Y_batch)
                 i = i + batch_size
 
-                # Get the adversarial batch, append the adv to the X_batch
-                X_batch_adv = self.get_adversarial(X_batch.clone().detach(), Y_batch.clone().detach(), search_space_range)
-                X_batch = torch.cat((X_batch, X_batch_adv))
-                Y_batch = torch.cat((Y_batch, Y_batch))
+                if adverserial_training:
+                    # Get the adversarial batch, append the adv to the X_batch
+                    X_batch_adv = self.get_adversarial(X_batch.clone().detach(), Y_batch.clone().detach(), search_space_range)
+                    X_batch = torch.cat((X_batch, X_batch_adv))
+                    Y_batch = torch.cat((Y_batch, Y_batch))
 
                 # Run the optmization procedure on the whole data
                 optimizer.zero_grad()
