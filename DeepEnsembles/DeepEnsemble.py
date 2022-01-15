@@ -25,7 +25,8 @@ class Estimator(nn.Module):
         self.fc3 = nn.Linear(25, 15)
         # For mean and variance the output dimension is 2.
         # First output is the mean, second output is the variance
-        self.fc4 = nn.Linear(15, 2)
+        self.fc4a = nn.Linear(15, 1)
+        self.fc4b = nn.Linear(15, 1)
 
     def forward(self, x):
         x = self.fc1(x)
@@ -37,7 +38,10 @@ class Estimator(nn.Module):
         x = self.fc3(x)
         x = F.relu(x)
 
-        x = self.fc4(x)
+        mean = self.fc4a(x)
+        variance = self.fc4b(x)
+
+        x = torch.hstack((mean, variance))
 
         # Enforcing the positivity of the variance as mentioned in the paper.
         # Also adding 1e-6 for numerical stability
