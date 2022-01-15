@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn import svm
 from scipy.stats import norm
+from matplotlib import pyplot
 import numpy as np
 import math
 
@@ -69,6 +70,8 @@ theta_Y = np.array(theta_Y)
 gp_approximator = GaussianProcessRegressor()
 gp_approximator.fit(theta_X, theta_Y)
 
+#   Add incumbent data for plotting
+incumbent = []
 # Run the optmization loop
 for _ in range(1000):
     # Get the next best sample to evaluate
@@ -84,6 +87,8 @@ for _ in range(1000):
     # Refit the probabilistic model.
     gp_approximator.fit(theta_X, theta_Y)
 
+    incumbent += [np.max(theta_Y)]
+
 # Report the maximizer.
 i = np.argmax(theta_Y)
 maximizer = theta_X[i]
@@ -98,6 +103,10 @@ model.fit(X_train, Y_train)
 score = model.score(X_test, Y_test)
 
 print("Accuracy with the best HPO on the test data = ", score)
+
+# Plotting the incumbent graph
+pyplot.plot(np.array(range(1, len(incumbent)+1)), np.array(incumbent))
+pyplot.show()
 
 # Obtained the following result when I ran the above code
 # Maximizer =  [ 7.47422034e-01 -1.05591509e+01  8.60451524e-03]
