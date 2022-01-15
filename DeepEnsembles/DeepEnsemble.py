@@ -109,11 +109,11 @@ class DeepEnsemble():
             # Using the default weight initialization in pytorch according to the paper.
             self.nn_list += [Estimator(input_dim, divided_nn)]
 
-    def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=100):
+    def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=100, adverserial_training=False):
         i = 1
         for nn in self.nn_list:
             # print("Estimator ", i, end='\r')
-            nn.train(X, Y, search_space_range, epochs=epochs, batch_size=batch_size)
+            nn.train(X, Y, search_space_range, epochs=epochs, batch_size=batch_size, adverserial_training=adverserial_training)
             i += 1
 
     def predict(self, X):
