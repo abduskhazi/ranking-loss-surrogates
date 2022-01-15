@@ -93,10 +93,13 @@ class DeepEnsemble():
             self.nn_list += [Estimator(input_dim)]
 
     def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=100):
+        i = 1
         for nn in self.nn_list:
+            # print("Estimator ", i, end='\r')
             # Using adam optimiser with a learning rate of 0.1 as in the paper.
             optimizer = optim.Adam(nn.parameters(), lr=0.1)
             nn.train(X, Y, optimizer, search_space_range, epochs=epochs, batch_size=batch_size)
+            i += 1
 
     def predict(self, X):
         mean_list = []
