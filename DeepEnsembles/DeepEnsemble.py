@@ -73,8 +73,9 @@ class Estimator(nn.Module):
 
     # Training the estimator (with uncertainty) for the objective function
     def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=100, adverserial_training=False):
-        # Using adam optimiser with a learning rate of 0.1 as in the paper.
-        optimizer = optim.Adam(self.parameters(), lr=0.1)
+        # Not Using adam optimiser with a learning rate of 0.1 as in the paper.
+        # THis was resulting in wrong fitting
+        optimizer = optim.Adam(self.parameters(), lr=0.01)
         for _ in range(epochs):
             # print("Epoch", _)
             X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
