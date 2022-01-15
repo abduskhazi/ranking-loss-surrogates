@@ -72,7 +72,9 @@ class Estimator(nn.Module):
         return X_batch_adv
 
     # Training the estimator (with uncertainty) for the objective function
-    def train(self, X, Y, optimizer, search_space_range=1, epochs=1000, batch_size=100, adverserial_training=False):
+    def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=100, adverserial_training=False):
+        # Using adam optimiser with a learning rate of 0.1 as in the paper.
+        optimizer = optim.Adam(self.parameters(), lr=0.1)
         for _ in range(epochs):
             # print("Epoch", _)
             X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
@@ -110,9 +112,7 @@ class DeepEnsemble():
         i = 1
         for nn in self.nn_list:
             # print("Estimator ", i, end='\r')
-            # Using adam optimiser with a learning rate of 0.1 as in the paper.
-            optimizer = optim.Adam(nn.parameters(), lr=0.1)
-            nn.train(X, Y, optimizer, search_space_range, epochs=epochs, batch_size=batch_size)
+            nn.train(X, Y, search_space_range, epochs=epochs, batch_size=batch_size)
             i += 1
 
     def predict(self, X):
