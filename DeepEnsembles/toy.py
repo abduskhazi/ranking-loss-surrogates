@@ -82,7 +82,8 @@ def acquisition_UCB(X_samples, surrogate_model):
 
 # Defining a routine that finds the next best input sample according to the acquisition function.
 def optimize_acquisition(Y, surrogate_model):
-    X_samples = np.array(np.random.random(10000), dtype=np.float32)
+    # Sampling from the whole domain instead of randomly sampling domain values
+    X_samples = np.array(np.linspace(0.0, 1.0, 100000), dtype=np.float32)
     X_samples = torch.from_numpy(X_samples.reshape(-1, 1))
     # scores = acquisition_PI(Y, X_samples, surrogate_model)
     scores = acquisition_UCB(X_samples, surrogate_model)
