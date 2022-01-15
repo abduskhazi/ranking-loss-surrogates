@@ -41,6 +41,11 @@ def acquisition(X, X_samples, model):
     mean, std = surrogate(model, X_samples)
     return norm.cdf((mean - best) / (std + 1E-9))
 
+# Upper Confidence Bound acquisistion function
+def acquisition_UCB(X_samples, model):
+    mean, std_dev = surrogate(model, X_samples)
+    ucb = mean + 2 * std_dev
+    return ucb
 
 # Optimization of the acquisition function
 #     1. Search strategy for samples - Here it is random sampling
@@ -50,7 +55,8 @@ def opt_aquisition(X, model):
     # Sampling from the whole domain instead of randomly sampling domain values
     X_samples = np.array(np.linspace(0.0, 1.0, 100000), dtype=np.float32)
     X_samples = X_samples.reshape((-1, 1))
-    scores = acquisition(X, X_samples, model)
+    scores = acquisition_UCB(X_samples, model)
+    # scores = acquisition_UCB(X, X_samples, model)
     i = np.argmax(scores)
     return X_samples[i]
 
