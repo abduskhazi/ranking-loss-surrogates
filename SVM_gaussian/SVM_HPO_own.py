@@ -61,7 +61,7 @@ def opt_acquisition(gp_approximator, best):
 
 
 # Obtain the initial random objective evaluations.
-theta_X = [sample_search_space() for _ in range(100)]
+theta_X = [sample_search_space() for _ in range(5)]
 theta_Y = [objective(t_x) for t_x in theta_X]
 theta_X = np.array(theta_X)
 theta_Y = np.array(theta_Y)
@@ -73,7 +73,7 @@ gp_approximator.fit(theta_X, theta_Y)
 #   Add incumbent data for plotting
 incumbent = []
 # Run the optmization loop
-for _ in range(1000):
+for _ in range(100):
     # Get the next best sample to evaluate
     t_x = opt_acquisition(gp_approximator, np.max(theta_Y))
 
