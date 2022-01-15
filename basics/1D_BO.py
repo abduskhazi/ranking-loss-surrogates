@@ -57,7 +57,7 @@ def opt_aquisition(X, model):
     X_samples = np.array(np.linspace(0.0, 1.0, 100000), dtype=np.float32)
     X_samples = X_samples.reshape((-1, 1))
     scores = acquisition_UCB(X_samples, model, beta=10000)
-    # scores = acquisition_UCB(X, X_samples, model)
+    # scores = acquisition(X, X_samples, model)
     i = np.argmax(scores)
     return X_samples[i]
 
