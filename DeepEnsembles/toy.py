@@ -111,8 +111,7 @@ for _ in range(20):
     Y = np.append(Y, y_opt, axis=0)
     # Running for the same number of epochs as given in the paper.
     DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=100, batch_size=X.shape[0]//5)
-    # if _ % 10 == 0:
-    #    plot(np.copy(X), np.copy(Y), DE)
+    # plot(np.copy(X), np.copy(Y), DE)
     incumbent += [np.max(Y)]
 
 print()
