@@ -95,7 +95,7 @@ for _ in range(20):
     X = np.append(X, x, axis=0)
     Y = np.append(Y, y, axis=0)
 
-    #plot(X, Y, model)
+    # plot(X, Y, model) # Uncomment this to see how the model evolves over time.
     model.fit(X, Y)
 
 print("After optimization")
