@@ -93,6 +93,8 @@ X = X.reshape((-1, 1))
 model.fit(X, Y)
 plot(X, Y, model)
 
+#   Add incumbent data for plotting
+incumbent = []
 # Now the optimization cycle.
 for _ in range(20):
     x = opt_aquisition(X, model)
@@ -104,7 +106,12 @@ for _ in range(20):
 
     # plot(X, Y, model) # Uncomment this to see how the model evolves over time.
     model.fit(X, Y)
+    incumbent += [np.max(Y)]
 
 print("After optimization")
 print("Maximizer =", X[np.argmax(Y), 0], ", Maxima =", np.max(Y))
 plot(X, Y, model)
+
+# Plotting the incumbent graph
+pyplot.plot(np.array(range(1, len(incumbent)+1)), np.array(incumbent))
+pyplot.show()
