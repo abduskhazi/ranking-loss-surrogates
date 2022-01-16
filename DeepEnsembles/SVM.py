@@ -13,6 +13,7 @@ from matplotlib import pyplot
 import math
 import torch
 import numpy as np
+from scipy.stats import norm
 from DeepEnsemble import DeepEnsemble
 
 # Dataset for Binary classification task.
@@ -47,10 +48,20 @@ def acquisition_UCB(X_samples, surrogate_model):
     ucb = mean + 2 * std_dev # We are assuming Beta to be 4.
     return ucb
 
+def acquisition_PI(Y, X_samples, surrogate_model):
+    # Find the best value of the objective function so far according to data.
+    best_y = np.max(Y)
+    # Calculate the predicted mean & variance values of all the required samples
+    mean, variance = surrogate_model.predict(X_samples)
+    mean = mean.detach().numpy()
+    std_dev = torch.sqrt(variance).detach().numpy()
+    return norm.cdf((mean - best_y) / (std_dev + 1E-9))
+
 # Defining the optimization function of the acquisition function
-def optimize_acquisition(surrogate_model):
+def optimize_acquisition(Y, surrogate_model):
     X_samples = np.array(gridsample_search_space(), dtype=np.float32)
-    scores = acquisition_UCB(torch.from_numpy(X_samples), surrogate_model)
+    # scores = acquisition_UCB(torch.from_numpy(X_samples), surrogate_model)
+    scores = acquisition_PI(Y, torch.from_numpy(X_samples), surrogate_model)
     ind = np.unravel_index(np.argmax(scores, axis=None), scores.shape)
     # ind = np.argmax(scores, keepdims=True) # Use this for numpy version > 1.22
     return X_samples[ind]
@@ -97,7 +108,7 @@ print("Running optimisation cycle")
 incumbent = []
 for _ in range(20):
     print("Iteration:", _, end="\r")
-    tx_opt = optimize_acquisition(DE)
+    tx_opt = optimize_acquisition(theta_Y, DE)
     ty_opt = np.array([objective(tx_opt)])
     tx_opt = tx_opt.reshape(1, -1)
     theta_X = np.append(theta_X, tx_opt, axis=0)
