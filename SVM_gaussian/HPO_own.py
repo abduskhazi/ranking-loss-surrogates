@@ -38,8 +38,16 @@ def objective(param_list):
     
     return score
 
-# Sampling from the custom search space
-def sample_search_space():
+
+def gridsample_search_space():
+    x = np.array(np.linspace(-5, 15, 100), dtype=np.float32)
+    y = np.array(np.linspace(-15, 3, 100), dtype=np.float32)
+    z = np.array(np.linspace(1e-4, 1e-2, 100), dtype=np.float32)
+    x_1, y_1, z_1 = np.meshgrid(x, y, z)
+    return np.stack((x_1, y_1, z_1), axis=-1)
+
+# Function to random sample from the search space.
+def randomsample_search_space():
     S = list(np.random.random(size=3))
     S[0] = (15 - (-5))   * S[0] - 5
     S[1] = (3 - (-15))   * S[1] - 15
@@ -54,14 +62,16 @@ def acquisition(gp_approximator, theta_X, best):
 
 
 def opt_acquisition(gp_approximator, best):
-    theta_X = [sample_search_space() for _ in range(100)]
+    theta_X = gridsample_search_space()
+    # Reshaping because guassian process regressor does not accept tensors of higher dimensions.
+    theta_X = np.reshape(theta_X, (-1, theta_X.shape[-1]))
     theta_Y = acquisition(gp_approximator, theta_X, best)
     i = np.argmax(theta_Y)
     return theta_X[i]
 
 
 # Obtain the initial random objective evaluations.
-theta_X = [sample_search_space() for _ in range(5)]
+theta_X = [randomsample_search_space() for _ in range(5)]
 theta_Y = [objective(t_x) for t_x in theta_X]
 theta_X = np.array(theta_X)
 theta_Y = np.array(theta_Y)
@@ -74,6 +84,7 @@ gp_approximator.fit(theta_X, theta_Y)
 incumbent = []
 # Run the optmization loop
 for _ in range(100):
+    print("Iteration:", _, end='\r')
     # Get the next best sample to evaluate
     t_x = opt_acquisition(gp_approximator, np.max(theta_Y))
 
