@@ -7,7 +7,7 @@
 # 4. tol - [E-4 to E-2]
 
 from sklearn import datasets
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn import svm
 from matplotlib import pyplot
 import math
@@ -18,6 +18,7 @@ from DeepEnsemble import DeepEnsemble
 
 # Dataset for Binary classification task.
 cancer = datasets.load_breast_cancer()
+# cancer = datasets.load_iris()
 X_train, X_test, Y_train, Y_test = train_test_split(cancer.data, cancer.target, test_size=0.15)
 
 # Objective function is the function whose extremizer and extrema needs to be found
@@ -37,6 +38,9 @@ def objective(param_list):
     model.set_params(C=C, gamma=gamma, tol=tol)
     model.fit(X_t, Y_t)
     score = model.score(X_v, Y_v)
+    # Uncomment the following 2 lines to use cross validation instaed of normal score.
+    # score = cross_val_score(model, X_train, Y_train, cv=5, n_jobs=-1, scoring='accuracy')
+    # score = np.mean(score)
 
     return score
 
