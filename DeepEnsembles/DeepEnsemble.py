@@ -48,7 +48,7 @@ class Estimator(nn.Module):
         if self.divided_nn:
             mean = self.fc4a(x)
             variance = self.fc4b(x)
-            x = torch.hstack((mean, variance))
+            x = torch.cat((mean, variance), dim=-1)
         else:
             x = self.fc4(x)
 
