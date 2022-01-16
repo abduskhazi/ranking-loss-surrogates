@@ -49,13 +49,21 @@ def acquisition_UCB(X_samples, surrogate_model):
 
 # Defining the optimization function of the acquisition function
 def optimize_acquisition(surrogate_model):
-    X_samples = np.array([sample_search_space() for i in range(1000)], dtype=np.float32)
+    X_samples = np.array(gridsample_search_space(), dtype=np.float32)
     scores = acquisition_UCB(torch.from_numpy(X_samples), surrogate_model)
-    ind = np.argmax(scores)
+    ind = np.unravel_index(np.argmax(scores, axis=None), scores.shape)
+    # ind = np.argmax(scores, keepdims=True) # Use this for numpy version > 1.22
     return X_samples[ind]
 
+def gridsample_search_space():
+    x = np.array(np.linspace(-5, 15, 100), dtype=np.float32)
+    y = np.array(np.linspace(-15, 3, 100), dtype=np.float32)
+    z = np.array(np.linspace(1e-4, 1e-2, 100), dtype=np.float32)
+    x_1, y_1, z_1 = np.meshgrid(x, y, z)
+    return np.stack((x_1, y_1, z_1), axis=-1)
+
 # Function to random sample from the search space.
-def sample_search_space():
+def randomsample_search_space():
     S = list(np.random.random(size=3))
     S[0] = (15 - (-5))   * S[0] - 5
     S[1] = (3 - (-15))   * S[1] - 15
@@ -72,7 +80,7 @@ def get_search_space_range():
 print("Getting initial evaluations of input samples")
 # First get a few evaluations of the objective function to begin with
 # Naming theta_X and theta_Y here so as not to get confused with
-theta_X = np.array([sample_search_space() for i in range(5)], dtype=np.float32)
+theta_X = np.array([randomsample_search_space() for i in range(5)], dtype=np.float32)
 theta_Y = np.array([objective(t_x) for t_x in theta_X], dtype=np.float32)
 print("Finished evaluations")
 
