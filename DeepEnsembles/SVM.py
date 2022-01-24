@@ -120,7 +120,7 @@ for _ in range(20):
     # Training the neural networks only for a small number of epochs
     # Rationale - Most of the training has been completed, only slight modification needs to
     #             be done due to an additional data point.
-    DE.train(theta_X, theta_Y.reshape(-1, 1), ranges, epochs=100, batch_size=theta_X.shape[0]//5)
+    DE.train(theta_X, theta_Y.reshape(-1, 1), ranges, epochs=1000, batch_size=theta_X.shape[0]//5)
     # Using a fixed batch size of 100 as defined in the paper
     incumbent += [np.max(theta_Y)]
 
