@@ -18,7 +18,7 @@ from DeepEnsemble import DeepEnsemble
 
 # Objective function is the function whose extremizer and extrema needs to be found
 # Returns a score (i.e Loss/Performance) for any sampled input space point.
-def objective(param_list):
+def objective(param_list, X_train, Y_train):
     # Model for fitting the classifier for the given dataset.
     model = svm.SVC()
 
@@ -97,7 +97,7 @@ def main():
     # First get a few evaluations of the objective function to begin with
     # Naming theta_X and theta_Y here so as not to get confused with
     theta_X = np.array([randomsample_search_space() for i in range(5)], dtype=np.float32)
-    theta_Y = np.array([objective(t_x) for t_x in theta_X], dtype=np.float32)
+    theta_Y = np.array([objective(t_x, X_train, Y_train) for t_x in theta_X], dtype=np.float32)
     print("Finished evaluations")
 
     DE = DeepEnsemble(input_dim=3, M=5)
@@ -114,7 +114,7 @@ def main():
     for _ in range(20):
         print("Iteration:", _, end="\r")
         tx_opt = optimize_acquisition(theta_Y, DE)
-        ty_opt = np.array([objective(tx_opt)])
+        ty_opt = np.array([objective(tx_opt, X_train, Y_train)])
         tx_opt = tx_opt.reshape(1, -1)
         theta_X = np.append(theta_X, tx_opt, axis=0)
         theta_Y = np.append(theta_Y, ty_opt, axis=0)
