@@ -44,7 +44,7 @@ Y = np.array([objective(x) for x in X], dtype=np.float32)  # Noisy evaluations o
 
 # Deep Ensembles = surrogate for our optimization problem.
 DE = DeepEnsemble(M=5, divided_nn=False)  # M = Number of Neural Networks
-DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=1000, batch_size=X.shape[0]//5)
+DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=10000, batch_size=X.shape[0]//5)
 
 def plot(X, Y, model):
     # Plotting the results after the optimisation cycle.

@@ -22,10 +22,10 @@ class Estimator(nn.Module):
         # divided_nn = Wether to divide the neural network in the end or not
         self.divided_nn = divided_nn
         # Here fc is an abbreviation fully connected
-        self.fc1 = nn.Linear(input_dim, 15)  # Input dimension of the objective function = 1
-        self.fc2 = nn.Linear(15, 25)
-        self.fc3 = nn.Linear(25, 15)
-        fc3_o_dim = 15
+        self.fc1 = nn.Linear(input_dim, 30)  # Input dimension of the objective function = 1
+        self.fc2 = nn.Linear(30, 50)
+        self.fc3 = nn.Linear(50, 30)
+        fc3_o_dim = 30
 
         # For mean and variance the output dimension is 2.
         # First output is the mean, second output is the variance
@@ -75,7 +75,7 @@ class Estimator(nn.Module):
     def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=100, adverserial_training=False):
         # Not Using adam optimiser with a learning rate of 0.1 as in the paper.
         # THis was resulting in wrong fitting
-        optimizer = optim.Adam(self.parameters(), lr=0.01)
+        optimizer = optim.Adam(self.parameters(), lr=0.001)
         for _ in range(epochs):
             # print("Epoch", _)
             X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
