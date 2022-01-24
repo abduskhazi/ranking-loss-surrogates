@@ -28,24 +28,6 @@ def get_maxima(obj_func):
     return maximizer, maxima
 
 
-maximizer, maxima = get_maxima(objective)
-print("Actual values:")
-print("Maximizer =", maximizer, ", maxima =", maxima)
-
-# We need to use Deep Ensemble as a surrogate to predict the maxima of the objective function.
-# The Deep Ensemble takes over the functionality of a gaussian process model for estimating the mean
-# and the variance of the loss surface at a given input.
-
-# Getting a small list of random samples:
-#    In the actual problems we have access to only random samples and their objective evaluations
-#    These random samples serve as a beginning data to train the Deep Ensemble with.
-X = np.array(np.random.random(5), dtype=np.float32)
-Y = np.array([objective(x) for x in X], dtype=np.float32)  # Noisy evaluations of objective function.
-
-# Deep Ensembles = surrogate for our optimization problem.
-DE = DeepEnsemble(M=5, divided_nn=False)  # M = Number of Neural Networks
-DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=10000, batch_size=X.shape[0]//5)
-
 def plot(X, Y, model):
     # Plotting the results after the optimisation cycle.
     pyplot.scatter(X, Y, marker='.') # Plotting noisy data points
@@ -90,36 +72,57 @@ def optimize_acquisition(Y, surrogate_model):
     ind = np.argmax(scores)
     return X_samples[ind]
 
+def main():
+    maximizer, maxima = get_maxima(objective)
+    print("Actual values:")
+    print("Maximizer =", maximizer, ", maxima =", maxima)
 
-# Plotting just before the optmization cycle
-plot(np.copy(X), np.copy(Y), DE)
+    # We need to use Deep Ensemble as a surrogate to predict the maxima of the objective function.
+    # The Deep Ensemble takes over the functionality of a gaussian process model for estimating the mean
+    # and the variance of the loss surface at a given input.
 
-# Running the optimisation cycle
-#   Get the next best input sample
-#   Evaluate the sample on the objective function (expensive step)
-#   Append the data to the existing data points
-#   Refit our surrogate (i.e Deep Ensembles)
-#   Add incumbent data for plotting
-print("Running optimisation cycle")
-incumbent = []
-for _ in range(20):
-    print("Iteration:", _ + 1, end="\r")
-    x_opt = optimize_acquisition(Y, DE)
-    x_opt = x_opt.detach().numpy()
-    y_opt = objective(x_opt)
-    X = np.append(X, x_opt, axis=0)
-    Y = np.append(Y, y_opt, axis=0)
-    # Running for the same number of epochs as given in the paper.
-    DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=1000, batch_size=X.shape[0]//5)
-    # plot(np.copy(X), np.copy(Y), DE)
-    incumbent += [np.max(Y)]
+    # Getting a small list of random samples:
+    #    In the actual problems we have access to only random samples and their objective evaluations
+    #    These random samples serve as a beginning data to train the Deep Ensemble with.
+    X = np.array(np.random.random(5), dtype=np.float32)
+    Y = np.array([objective(x) for x in X], dtype=np.float32)  # Noisy evaluations of objective function.
 
-print()
-print("After optimization")
-print("Maximizer =", X[np.argmax(Y)], ", Maxima =", np.max(Y))
+    # Deep Ensembles = surrogate for our optimization problem.
+    DE = DeepEnsemble(M=5, divided_nn=False)  # M = Number of Neural Networks
+    DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=10000, batch_size=X.shape[0] // 5)
 
-plot(np.copy(X), np.copy(Y), DE)
+    # Plotting just before the optmization cycle
+    plot(np.copy(X), np.copy(Y), DE)
 
-# Plotting the incumbent graph
-pyplot.plot(np.array(range(1, len(incumbent)+1)), np.array(incumbent))
-pyplot.show()
+    # Running the optimisation cycle
+    #   Get the next best input sample
+    #   Evaluate the sample on the objective function (expensive step)
+    #   Append the data to the existing data points
+    #   Refit our surrogate (i.e Deep Ensembles)
+    #   Add incumbent data for plotting
+    print("Running optimisation cycle")
+    incumbent = []
+    for _ in range(20):
+        print("Iteration:", _ + 1)
+        x_opt = optimize_acquisition(Y, DE)
+        x_opt = x_opt.detach().numpy()
+        y_opt = objective(x_opt)
+        X = np.append(X, x_opt, axis=0)
+        Y = np.append(Y, y_opt, axis=0)
+        # Running for the same number of epochs as given in the paper.
+        DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=1000, batch_size=X.shape[0]//5)
+        # plot(np.copy(X), np.copy(Y), DE)
+        incumbent += [np.max(Y)]
+
+    print()
+    print("After optimization")
+    print("Maximizer =", X[np.argmax(Y)], ", Maxima =", np.max(Y))
+
+    plot(np.copy(X), np.copy(Y), DE)
+
+    # Plotting the incumbent graph
+    pyplot.plot(np.array(range(1, len(incumbent)+1)), np.array(incumbent))
+    pyplot.show()
+
+if __name__ == '__main__':
+    main()
