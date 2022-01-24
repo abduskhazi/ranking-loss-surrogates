@@ -16,11 +16,6 @@ import numpy as np
 from scipy.stats import norm
 from DeepEnsemble import DeepEnsemble
 
-# Dataset for Binary classification task.
-cancer = datasets.load_breast_cancer()
-# cancer = datasets.load_iris()
-X_train, X_test, Y_train, Y_test = train_test_split(cancer.data, cancer.target, test_size=0.15)
-
 # Objective function is the function whose extremizer and extrema needs to be found
 # Returns a score (i.e Loss/Performance) for any sampled input space point.
 def objective(param_list):
@@ -92,52 +87,62 @@ def get_search_space_range():
     ranges[0, 2] = (1e-2 - 1e-4)
     return ranges
 
-print("Getting initial evaluations of input samples")
-# First get a few evaluations of the objective function to begin with
-# Naming theta_X and theta_Y here so as not to get confused with
-theta_X = np.array([randomsample_search_space() for i in range(5)], dtype=np.float32)
-theta_Y = np.array([objective(t_x) for t_x in theta_X], dtype=np.float32)
-print("Finished evaluations")
+def main():
+    # Dataset for Binary classification task.
+    cancer = datasets.load_breast_cancer()
+    # cancer = datasets.load_iris()
+    X_train, X_test, Y_train, Y_test = train_test_split(cancer.data, cancer.target, test_size=0.15)
 
-DE = DeepEnsemble(input_dim=3, M=5)
+    print("Getting initial evaluations of input samples")
+    # First get a few evaluations of the objective function to begin with
+    # Naming theta_X and theta_Y here so as not to get confused with
+    theta_X = np.array([randomsample_search_space() for i in range(5)], dtype=np.float32)
+    theta_Y = np.array([objective(t_x) for t_x in theta_X], dtype=np.float32)
+    print("Finished evaluations")
 
-print("Training Begins")
-ranges = get_search_space_range()
-DE.train(theta_X, theta_Y.reshape(-1, 1), ranges, epochs=1000, batch_size=theta_X.shape[0]//5)
-print("Training finished")
+    DE = DeepEnsemble(input_dim=3, M=5)
 
-#  Optimization cycle.
-#  Adding incumbent data for plotting
-print("Running optimisation cycle")
-incumbent = []
-for _ in range(20):
-    print("Iteration:", _, end="\r")
-    tx_opt = optimize_acquisition(theta_Y, DE)
-    ty_opt = np.array([objective(tx_opt)])
-    tx_opt = tx_opt.reshape(1, -1)
-    theta_X = np.append(theta_X, tx_opt, axis=0)
-    theta_Y = np.append(theta_Y, ty_opt, axis=0)
-    # Training the neural networks only for a small number of epochs
-    # Rationale - Most of the training has been completed, only slight modification needs to
-    #             be done due to an additional data point.
+    print("Training Begins")
+    ranges = get_search_space_range()
     DE.train(theta_X, theta_Y.reshape(-1, 1), ranges, epochs=1000, batch_size=theta_X.shape[0]//5)
-    # Using a fixed batch size of 100 as defined in the paper
-    incumbent += [np.max(theta_Y)]
+    print("Training finished")
 
-# Plotting the incumbent graph
-pyplot.plot(np.array(range(1, len(incumbent)+1)), np.array(incumbent))
-pyplot.show()
+    #  Optimization cycle.
+    #  Adding incumbent data for plotting
+    print("Running optimisation cycle")
+    incumbent = []
+    for _ in range(20):
+        print("Iteration:", _, end="\r")
+        tx_opt = optimize_acquisition(theta_Y, DE)
+        ty_opt = np.array([objective(tx_opt)])
+        tx_opt = tx_opt.reshape(1, -1)
+        theta_X = np.append(theta_X, tx_opt, axis=0)
+        theta_Y = np.append(theta_Y, ty_opt, axis=0)
+        # Training the neural networks only for a small number of epochs
+        # Rationale - Most of the training has been completed, only slight modification needs to
+        #             be done due to an additional data point.
+        DE.train(theta_X, theta_Y.reshape(-1, 1), ranges, epochs=1000, batch_size=theta_X.shape[0]//5)
+        # Using a fixed batch size of 100 as defined in the paper
+        incumbent += [np.max(theta_Y)]
+        # print(theta_X[np.argmax(theta_Y)], np.max(theta_Y))
 
-print()
-print("After optimization")
-print("Maximizer =", theta_X[np.argmax(theta_Y)], ", Maxima =", np.max(theta_Y))
+    # Plotting the incumbent graph
+    pyplot.plot(np.array(range(1, len(incumbent)+1)), np.array(incumbent))
+    pyplot.show()
+
+    print()
+    print("After optimization")
+    print("Maximizer =", theta_X[np.argmax(theta_Y)], ", Maxima =", np.max(theta_Y))
 
 
-# Results obtained after running one optmisation
-# After optimization (100 iterations) ADAM(0.01), Batch Size = 20
-# Maximizer = [-1.7665786e+00 -7.2858520e+00  4.9927384e-03] , Maxima = 0.979381443298969
-# After optimization (1000 iterations) ADAM(0.01), Batch size adaptive >= 50
-# Maximizer = [-1.6634938  -8.352619    0.00887886] , Maxima = 0.979381443298969
+    # Results obtained after running one optmisation
+    # After optimization (100 iterations) ADAM(0.01), Batch Size = 20
+    # Maximizer = [-1.7665786e+00 -7.2858520e+00  4.9927384e-03] , Maxima = 0.979381443298969
+    # After optimization (1000 iterations) ADAM(0.01), Batch size adaptive >= 50
+    # Maximizer = [-1.6634938  -8.352619    0.00887886] , Maxima = 0.979381443298969
 
-# Results obtained by using parameters of the paper
-# Maximizer = [ 1.3411719e+01 -1.4029912e+01  2.7184824e-03] , Maxima = 0.9896907216494846
+    # Results obtained by using parameters of the paper
+    # Maximizer = [ 1.3411719e+01 -1.4029912e+01  2.7184824e-03] , Maxima = 0.9896907216494846
+
+if __name__ == '__main__':
+    main()
