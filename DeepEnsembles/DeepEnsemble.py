@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import sklearn
-
+import multiprocessing as mp
 
 # Defining the criterion proposed in the paper instead of using MSE for regression task.
 def regression_criterion(predicted, Y):
@@ -101,8 +101,13 @@ class Estimator(nn.Module):
                 loss.backward()
                 optimizer.step()
 
+def nn_train(args):
+    nn, X, Y, search_space_range, epochs, batch_size, adverserial_training = args
+    nn.train(X, Y, search_space_range, epochs=epochs, batch_size=batch_size, adverserial_training=adverserial_training)
+
 class DeepEnsemble():
-    def __init__(self, input_dim=1, M=5, divided_nn=False):
+    def __init__(self, input_dim=1, M=5, divided_nn=False, parallel_training=False):
+        self.parallel_training = parallel_training
         self.M = M
         self.nn_list = []
         for _ in range(self.M):
@@ -110,11 +115,15 @@ class DeepEnsemble():
             self.nn_list += [Estimator(input_dim, divided_nn)]
 
     def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=100, adverserial_training=False):
-        i = 1
-        for nn in self.nn_list:
-            # print("Estimator ", i, end='\r')
-            nn.train(X, Y, search_space_range, epochs=epochs, batch_size=batch_size, adverserial_training=adverserial_training)
-            i += 1
+        if self.parallel_training:
+            with mp.Pool(len(self.nn_list)) as p:
+                p.map(nn_train, [(nn, X, Y, search_space_range, epochs, batch_size, adverserial_training) for nn in self.nn_list])
+        else:
+            i = 1
+            for nn in self.nn_list:
+               # print("Estimator ", i, end='\r')
+               nn_train((nn, X, Y, search_space_range, epochs, batch_size, adverserial_training))
+               i += 1
 
     def predict(self, X):
         mean_list = []

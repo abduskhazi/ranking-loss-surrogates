@@ -15,6 +15,7 @@ import torch
 import numpy as np
 from scipy.stats import norm
 from DeepEnsemble import DeepEnsemble
+import multiprocessing as mp
 
 # Objective function is the function whose extremizer and extrema needs to be found
 # Returns a score (i.e Loss/Performance) for any sampled input space point.
@@ -100,7 +101,7 @@ def main():
     theta_Y = np.array([objective(t_x, X_train, Y_train) for t_x in theta_X], dtype=np.float32)
     print("Finished evaluations")
 
-    DE = DeepEnsemble(input_dim=3, M=5)
+    DE = DeepEnsemble(input_dim=3, M=5, parallel_training=True)
 
     print("Training Begins")
     ranges = get_search_space_range()
@@ -145,4 +146,5 @@ def main():
     # Maximizer = [ 1.3411719e+01 -1.4029912e+01  2.7184824e-03] , Maxima = 0.9896907216494846
 
 if __name__ == '__main__':
+    mp.freeze_support()
     main()

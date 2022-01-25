@@ -6,6 +6,7 @@ import torch
 from matplotlib import pyplot
 from scipy.stats import norm
 from DeepEnsemble import DeepEnsemble
+import multiprocessing as mp
 
 rng = np.random.default_rng()
 
@@ -88,7 +89,7 @@ def main():
     Y = np.array([objective(x) for x in X], dtype=np.float32)  # Noisy evaluations of objective function.
 
     # Deep Ensembles = surrogate for our optimization problem.
-    DE = DeepEnsemble(M=5, divided_nn=False)  # M = Number of Neural Networks
+    DE = DeepEnsemble(M=5, divided_nn=False, parallel_training=True)  # M = Number of Neural Networks
     DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=10000, batch_size=X.shape[0] // 5)
 
     # Plotting just before the optmization cycle
@@ -125,4 +126,5 @@ def main():
     pyplot.show()
 
 if __name__ == '__main__':
+    mp.freeze_support()
     main()
