@@ -54,6 +54,19 @@ def acquisition_PI(Y, X_samples, surrogate_model):
     std_dev = torch.sqrt(variance).detach().numpy()
     return norm.cdf((mean - best_y) / (std_dev + 1E-9))
 
+def acquisition_EI(Y, X_samples, surrogate_model):
+    # https://towardsdatascience.com/bayesian-optimization-a-step-by-step-approach-a1cb678dd2ec
+    # Find the best value of the objective function so far according to data.
+    # Is this according to the gaussian fit or according to the actual values.???
+    # For now using the best according to the actual values.
+    best_y = np.max(Y)
+    # Calculate the predicted mean & variance values of all the required samples
+    mean, variance = surrogate_model.predict(X_samples)
+    mean = mean.detach().numpy()
+    std_dev = torch.sqrt(variance).detach().numpy()
+    z = (mean - best_y) / (std_dev + 1E-9)
+    return (mean - best_y) * norm.cdf(z) + (std_dev + 1E-9) * norm.pdf(z)
+
 # Upper Confidence Bound acquisistion function
 def acquisition_UCB(X_samples, surrogate_model):
     mean, variance = surrogate_model.predict(X_samples)
@@ -68,7 +81,8 @@ def optimize_acquisition(Y, surrogate_model):
     # Sampling from the whole domain instead of randomly sampling domain values
     X_samples = np.array(np.linspace(0.0, 1.0, 100000), dtype=np.float32)
     X_samples = torch.from_numpy(X_samples.reshape(-1, 1))
-    scores = acquisition_PI(Y, X_samples, surrogate_model)
+    # scores = acquisition_PI(Y, X_samples, surrogate_model)
+    scores = acquisition_EI(Y, X_samples, surrogate_model)
     # scores = acquisition_UCB(X_samples, surrogate_model)
     ind = np.argmax(scores)
     return X_samples[ind]
