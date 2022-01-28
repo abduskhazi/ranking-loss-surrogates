@@ -2,6 +2,7 @@ import math
 import numpy as np
 from matplotlib import pyplot
 from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel
 from scipy.stats import norm
 
 rng = np.random.default_rng()
@@ -100,7 +101,8 @@ print("Maximizer =", maximizer, ", maxima =", maxima)
 #     - In the actual problems we have access to only random samples and their objective evaluations
 X = np.random.random(5)
 Y = np.array([objective(x) for x in X])  # Noisy evaulations.
-model = GaussianProcessRegressor()
+kernel = ConstantKernel(1.0, constant_value_bounds="fixed") * RBF(1.0)
+model = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=500)
 X = X.reshape((-1, 1))
 model.fit(X, Y)
 plot(X, Y, model)
