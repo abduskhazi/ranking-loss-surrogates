@@ -68,7 +68,7 @@ def opt_aquisition(Y, X, model):
     # Sampling from the whole domain instead of randomly sampling domain values
     X_samples = np.array(np.linspace(0.0, 1.0, 100000), dtype=np.float32)
     X_samples = X_samples.reshape((-1, 1))
-    # scores = acquisition_UCB(X_samples, model, beta=10000)
+    # scores = acquisition_UCB(X_samples, model, beta=4)
     scores = acquisition_EI(Y, X_samples, model)
     # scores = acquisition(Y, X_samples, model)
     i = np.argmax(scores)
