@@ -9,7 +9,7 @@ rng = np.random.default_rng()
 
 
 # Objective function
-def objective(x, noise=0.1):
+def objective(x, noise=0.0):
     y = x ** 2 * math.sin(5 * math.pi * x) ** 6
     y_noise = rng.normal(loc=0, scale=noise)
     return y + y_noise
