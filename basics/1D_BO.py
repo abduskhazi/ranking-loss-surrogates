@@ -41,6 +41,18 @@ def acquisition(X, X_samples, model):
     mean, std = surrogate(model, X_samples)
     return norm.cdf((mean - best) / (std + 1E-9))
 
+def acquisition_EI(Y, X_samples, model):
+    # https://towardsdatascience.com/bayesian-optimization-a-step-by-step-approach-a1cb678dd2ec
+    # Find the best value of the objective function so far according to data.
+    # Is this according to the gaussian fit or according to the actual values.???
+    # For now using the best according to the actual values.
+    best_y = np.max(Y)
+    # Calculate the predicted mean & variance values of all the required samples
+    mean, variance = surrogate(model, X_samples)
+    std_dev = np.sqrt(variance)
+    z = (mean - best_y) / (std_dev + 1E-9)
+    return (mean - best_y) * norm.cdf(z) + (std_dev + 1E-9) * norm.pdf(z)
+
 # Upper Confidence Bound acquisistion function
 # Beta defines the number of std_dev to take into account.
 def acquisition_UCB(X_samples, model, beta):
@@ -52,12 +64,13 @@ def acquisition_UCB(X_samples, model, beta):
 #     1. Search strategy for samples - Here it is random sampling
 #     2. Run the acquisition function for all samples
 #     3. Find the best sample and then return the maximizer
-def opt_aquisition(X, model):
+def opt_aquisition(Y, X, model):
     # Sampling from the whole domain instead of randomly sampling domain values
     X_samples = np.array(np.linspace(0.0, 1.0, 100000), dtype=np.float32)
     X_samples = X_samples.reshape((-1, 1))
-    scores = acquisition_UCB(X_samples, model, beta=10000)
-    # scores = acquisition(X, X_samples, model)
+    # scores = acquisition_UCB(X_samples, model, beta=10000)
+    scores = acquisition_EI(Y, X_samples, model)
+    # scores = acquisition(Y, X_samples, model)
     i = np.argmax(scores)
     return X_samples[i]
 
@@ -97,7 +110,7 @@ plot(X, Y, model)
 incumbent = []
 # Now the optimization cycle.
 for _ in range(20):
-    x = opt_aquisition(X, model)
+    x = opt_aquisition(Y, X, model)
     y = objective(x)
     x = x.reshape((1, 1))
 
