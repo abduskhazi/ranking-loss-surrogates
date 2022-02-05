@@ -105,7 +105,7 @@ def main():
 
     # Deep Ensembles = surrogate for our optimization problem.
     DE = DeepEnsemble(M=5, divided_nn=False, parallel_training=True)  # M = Number of Neural Networks
-    DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=20000)
+    DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=20000, lr=0.001)
 
     # Plotting just before the optmization cycle
     plot(np.copy(X), np.copy(Y), DE, 0)
@@ -126,7 +126,7 @@ def main():
         X = np.append(X, x_opt, axis=0)
         Y = np.append(Y, y_opt, axis=0)
         # Running for the same number of epochs as given in the paper.
-        DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=20000)
+        DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=20000, lr=0.001)
         # plot(np.copy(X), np.copy(Y), DE, _+1)
         incumbent += [np.max(Y)]
 

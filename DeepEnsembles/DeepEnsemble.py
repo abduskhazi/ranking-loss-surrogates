@@ -72,10 +72,10 @@ class Estimator(nn.Module):
         return X_batch_adv
 
     # Training the estimator (with uncertainty) for the objective function
-    def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=100, adverserial_training=False):
+    def train(self, X, Y, search_space_range=1, epochs=1000, lr=0.001, batch_size=100, adverserial_training=False):
         # Not Using adam optimiser with a learning rate of 0.1 as in the paper.
         # THis was resulting in wrong fitting
-        optimizer = optim.Adam(self.parameters(), lr=0.001)
+        optimizer = optim.Adam(self.parameters(), lr=lr)
         for _ in range(epochs):
             # print("Training Progress", 100 * _ / epochs, "%", end='\r')
             X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
@@ -103,8 +103,8 @@ class Estimator(nn.Module):
         # print()
 
 def nn_train(args):
-    nn, X, Y, search_space_range, epochs, batch_size, adverserial_training = args
-    nn.train(X, Y, search_space_range, epochs=epochs, batch_size=batch_size, adverserial_training=adverserial_training)
+    nn, X, Y, search_space_range, epochs, lr, batch_size, adverserial_training = args
+    nn.train(X, Y, search_space_range, epochs=epochs, lr=lr, batch_size=batch_size, adverserial_training=adverserial_training)
 
 class DeepEnsemble():
     def __init__(self, input_dim=1, M=5, divided_nn=False, parallel_training=False):
@@ -115,15 +115,15 @@ class DeepEnsemble():
             # Using the default weight initialization in pytorch according to the paper.
             self.nn_list += [Estimator(input_dim, divided_nn)]
 
-    def train(self, X, Y, search_space_range=1, epochs=1000, batch_size=100, adverserial_training=False):
+    def train(self, X, Y, search_space_range=1, epochs=1000, lr=0.001, batch_size=100, adverserial_training=False):
         if self.parallel_training:
             with mp.Pool(len(self.nn_list)) as p:
-                p.map(nn_train, [(nn, X, Y, search_space_range, epochs, batch_size, adverserial_training) for nn in self.nn_list])
+                p.map(nn_train, [(nn, X, Y, search_space_range, epochs, lr, batch_size, adverserial_training) for nn in self.nn_list])
         else:
             i = 1
             for nn in self.nn_list:
                # print("Estimator ", i, end='\r')
-               nn_train((nn, X, Y, search_space_range, epochs, batch_size, adverserial_training))
+               nn_train((nn, X, Y, search_space_range, epochs, lr, batch_size, adverserial_training))
                i += 1
 
     def predict(self, X):
