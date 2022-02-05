@@ -6,30 +6,44 @@ import multiprocessing as mp
 from DE import DE_search
 import numpy as np
 import scipy
+import gpytorch
 
 # created as a stub for parallel evaluations.
 def evaluation_worker(args):
     hpob_hdlr, method, search_space, dataset, seed, n_trials = args
-    res = hpob_hdlr.evaluate(method,
-                              search_space_id=search_space,
-                              dataset_id=dataset,
-                              seed=seed,
-                              n_trials=n_trials)
-    print("Completed 1 evaluation instance")
-    return res
+    print(search_space, dataset, seed, n_trials)
+    res = []
+    try:
+        res = hpob_hdlr.evaluate(method,
+                                  search_space_id=search_space,
+                                  dataset_id=dataset,
+                                  seed=seed,
+                                  n_trials=n_trials)
+        print(search_space, dataset, seed, n_trials, "Completed evaluation of instance")
+    # This exception needs to be ignored due to issues with GP fitting the HPO-B data
+    except gpytorch.utils.errors.NotPSDError:
+        print("Ignoring the error and not recording this as a valid evaluation combination")
+        res = []
+    return (search_space, dataset, seed, n_trials), res
 
-def evaluate_all_combinations(hpob_hdlr, method, n_trials, parallelize=False):
+def get_all_combinations(hpob_hdlr, n_trials):
     # A total of 430 combinations are present in this if all seeds are used.
     print("Evaluating all elements of set {search_space} X {dataset} X {seed} for", method)
     seed_list = ["test0", "test1", "test2", "test3", "test4"]
     evaluation_list = []
     for search_space in hpob_hdlr.get_search_spaces():
         for dataset in hpob_hdlr.get_datasets(search_space):
-            # search_space: '5891' X dataset: '9980' X seed: ["test2", "test0"] is having a problem for GPs,
-            # hence excluding this combination from our evaluation list for safety reasons.
-            if not (search_space == '5891' and dataset == '9980'):
-                for seed in ["test2"]:  # seed_list: # use this for running on all possible seeds
-                    evaluation_list += [(hpob_hdlr, method, search_space, dataset, seed, n_trials)]
+            for seed in ["test2"]:  # seed_list: # use this for running on all possible seeds
+                evaluation_list += [(search_space, dataset, seed, n_trials)]
+
+    return evaluation_list
+
+def evaluate_combinations(hpob_hdlr, method, keys_to_evaluate, parallelize=False):
+
+    evaluation_list = []
+    for key in keys_to_evaluate:
+        search_space, dataset, seed, n_trials = key
+        evaluation_list += [(hpob_hdlr, method, search_space, dataset, seed, n_trials)]
 
     if parallelize:
         with mp.Pool(mp.cpu_count()) as p:
@@ -49,19 +63,29 @@ def main():
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
     n_trials = 100
 
-    method = RandomSearch()
-    rs_performance = evaluate_all_combinations(hpob_hdlr, method, n_trials, parallelize=False)
-    rs_performance = np.array(rs_performance, dtype=np.float32)
-    avg_rs_performance = np.mean(rs_performance, axis=0)
-    plt.plot(avg_rs_performance)
-    plt.legend(["Random Search Average"])
-    plt.savefig("Average_RS.png")
+    method = GaussianProcess(acq_name="EI")
+    all_keys = get_all_combinations(hpob_hdlr, n_trials)
+    performance = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=all_keys, parallelize=True)
+    gp_keys = []
+    gp_performance = []
+    for key, performance_list in performance:
+        if performance_list:
+            gp_keys += [key]
+            gp_performance += [performance_list]
+    gp_performance = np.array(gp_performance, dtype=np.float32)
+    print("GP performance shape:", gp_performance.shape)
+    avg_gp_performance = np.mean(gp_performance, axis=0)
+    plt.figure(1)
+    plt.plot(avg_gp_performance)
+    plt.legend(["GP Average"])
+    plt.savefig("Average_RS_GP.png")
     # plt.show()
 
-    method = GaussianProcess(acq_name="EI")
-    gp_performance = evaluate_all_combinations(hpob_hdlr, method, n_trials, parallelize=True)
-    gp_performance = np.array(gp_performance, dtype=np.float32)
-    avg_gp_performance = np.mean(gp_performance, axis=0)
+    method = RandomSearch()
+    rs_performance = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=gp_keys)
+    rs_performance = [performance_list for _, performance_list in rs_performance]
+    rs_performance = np.array(rs_performance, dtype=np.float32)
+    avg_rs_performance = np.mean(rs_performance, axis=0)
     plt.figure(2)
     plt.plot(avg_rs_performance)
     plt.plot(avg_gp_performance)
