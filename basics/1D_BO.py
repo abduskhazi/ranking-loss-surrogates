@@ -37,6 +37,9 @@ def surrogate(model, X):
 #    2. Use the mean and std of all samples to calculate the respective PIs
 #    3. PI = cumulative probability.
 def acquisition(Y, X_samples, model):
+    # Correction: Y values were calculated from the surrogate before. This was not required as we already
+    #             have evaluated them using the real objective function.
+    # Y_hat, _ = surrogate(model, X)
     best = np.max(Y)
     mean, std = surrogate(model, X_samples)
     return norm.cdf((mean - best) / (std + 1E-9))
