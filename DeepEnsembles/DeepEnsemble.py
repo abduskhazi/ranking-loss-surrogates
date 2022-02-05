@@ -77,7 +77,7 @@ class Estimator(nn.Module):
         # THis was resulting in wrong fitting
         optimizer = optim.Adam(self.parameters(), lr=0.001)
         for _ in range(epochs):
-            # print("Epoch", _)
+            # print("Training Progress", 100 * _ / epochs, "%", end='\r')
             X, Y = sklearn.utils.shuffle(X, Y)  # Randomly shuffle the data for each epoch
             i = 0
             while i < X.shape[0]:
@@ -100,6 +100,7 @@ class Estimator(nn.Module):
                 loss = regression_criterion(Y_pred, Y_batch)
                 loss.backward()
                 optimizer.step()
+        # print()
 
 def nn_train(args):
     nn, X, Y, search_space_range, epochs, batch_size, adverserial_training = args
