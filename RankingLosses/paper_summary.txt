@@ -1,0 +1,39 @@
+https://proceedings.neurips.cc/paper/2009/file/2f55707d4193dc27118a0f19a1985716-Paper.pdf
+
+Main Idea:
+    Given a set of objects, we need to rank the objects. (E.g. Ranking documents based on relevance to a query)
+    For this a ranking function (rf) needs to be learnt.
+    This function (rf) is learnt by optimizing a criteria (This is called a Ranking Loss)
+    Ranking: This function can be used to rank newly given objects.
+
+3 types of ranking functions:
+    1. Point-wise ranking [Learning Instance = 1 object, Pointwise Ranking loss]
+    2. Pair-wise ranking [Learning Instance = pair, Pairwise RL]
+    3. List-wise ranking [Learning Instance = Entire object/list, Listwise RL]
+
+Evalution of learnt RF = Ranking measures.
+Relationship of Ranking measures and RLs is unkown.
+
+
+Main AIM:
+    Find relationship between RMs and Pointwise/Listwise RLs.
+
+Proposed IDEA:
+    Use an essential loss. (Need more reading)
+
+Loss function understanding:
+Pointwise - Try to get the label as per data
+Pairwise - Try to separate the labels as much as possible.
+Listwise - Doubt. We talk about permutations. It is only possible if #Lables << #DataPoints.
+
+
+Ranking Losses:
+    Point               Pair            List
+    Subset regression   Ranking SVM     ListNET
+    McRank              RankBoost       ListMLE
+                        RankNet
+
+Ranking Measures
+    NDCG & MAP (Used in Information Retreival)
+
+
