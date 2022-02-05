@@ -1,0 +1,3 @@
+[submodule "HPO_B"]
+	path = HPO_B
+	url = https://github.com/releaunifreiburg/HPO-B.git
