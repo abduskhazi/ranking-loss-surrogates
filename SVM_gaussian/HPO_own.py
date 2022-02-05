@@ -83,7 +83,7 @@ gp_approximator.fit(theta_X, theta_Y)
 #   Add incumbent data for plotting
 incumbent = []
 # Run the optmization loop
-for _ in range(100):
+for _ in range(20):
     print("Iteration:", _, end='\r')
     # Get the next best sample to evaluate
     t_x = opt_acquisition(gp_approximator, np.max(theta_Y))
