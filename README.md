@@ -12,5 +12,8 @@ Repository for MSc-Thesis work @ Representation Lab Uni-Freiburg.
 * This creates a conda environment called `thesis`. Activate the conda environment. `conda activate thesis`
 * After activating `thesis` environment, you can run all the scripts in the repository.
 
+# Notes
+* To run `study_hpo.py` we need to download and extract hpob\_data in the HPO\_B folder. The location is given in the documentation of the submodule HPO\_B. 
+
 # Thesis Duration
 8.12.2021 - 8.06.2022
