@@ -25,9 +25,9 @@ def evaluate_all_combinations(hpob_hdlr, method, n_trials, parallelize=False):
     evaluation_list = []
     for search_space in hpob_hdlr.get_search_spaces():
         for dataset in hpob_hdlr.get_datasets(search_space):
-            # search_space: '5965' X dataset '9946' is having a problem for GPs, hence excluding this combination
-            # from our evaluation list.
-            if not (search_space == '5965' and dataset == '9946'):
+            # search_space: '5891' X dataset: '9980' X seed: ["test2", "test0"] is having a problem for GPs,
+            # hence excluding this combination from our evaluation list for safety reasons.
+            if not (search_space == '5891' and dataset == '9980'):
                 for seed in ["test2"]:  # seed_list: # use this for running on all possible seeds
                     evaluation_list += [(hpob_hdlr, method, search_space, dataset, seed, n_trials)]
 
