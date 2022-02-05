@@ -29,7 +29,8 @@ def get_maxima(obj_func):
     return maximizer, maxima
 
 
-def plot(X, Y, model):
+def plot(X, Y, model, n):
+    pyplot.figure(n)
     # Plotting the results after the optimisation cycle.
     pyplot.scatter(X, Y, marker='.') # Plotting noisy data points
     X = np.array(np.linspace(0.0, 1.0, 1000), dtype=np.float32)
@@ -40,8 +41,8 @@ def plot(X, Y, model):
     std_dev = torch.sqrt(variance).detach().numpy()
     pyplot.plot(X, mean)
     pyplot.fill_between(X, mean - std_dev, mean + std_dev, alpha=0.45)
-    # pyplot.savefig("results_initial_fit_DE.png")
     pyplot.show()
+    # pyplot.savefig(str(n) + ".png")
 
 # Defining the acquisition function for deep ensembles.
 # Using probability of improvement for the acquisition function
@@ -107,7 +108,7 @@ def main():
     DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=20000)
 
     # Plotting just before the optmization cycle
-    plot(np.copy(X), np.copy(Y), DE)
+    plot(np.copy(X), np.copy(Y), DE, 0)
 
     # Running the optimisation cycle
     #   Get the next best input sample
@@ -126,16 +127,17 @@ def main():
         Y = np.append(Y, y_opt, axis=0)
         # Running for the same number of epochs as given in the paper.
         DE.train(X.reshape(-1, 1), Y.reshape(-1, 1), epochs=20000)
-        # plot(np.copy(X), np.copy(Y), DE)
+        # plot(np.copy(X), np.copy(Y), DE, _+1)
         incumbent += [np.max(Y)]
 
     print()
     print("After optimization")
     print("Maximizer =", X[np.argmax(Y)], ", Maxima =", np.max(Y))
 
-    plot(np.copy(X), np.copy(Y), DE)
+    plot(np.copy(X), np.copy(Y), DE, 100)
 
     # Plotting the incumbent graph
+    pyplot.figure(101)
     pyplot.plot(np.array(range(1, len(incumbent)+1)), np.array(incumbent))
     pyplot.show()
 
