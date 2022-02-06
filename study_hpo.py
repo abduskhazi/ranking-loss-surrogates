@@ -128,21 +128,20 @@ def main():
     plt.savefig("Average_RS_GP_DE.png")
     # plt.show()
 
-    search_space_id = hpob_hdlr.get_search_spaces()[0]
-    dataset_id = hpob_hdlr.get_datasets(search_space_id)[2]
-    seed = "test1"
-    n_trials = 20
-    method = DE_search(input_dim=3)
-    acc = hpob_hdlr.evaluate(method, search_space_id = search_space_id,
-                                            dataset_id = dataset_id,
-                                            seed = seed,
-                                            n_trials = n_trials)
-    plt.figure(4)
-    plt.plot(acc)
-
-    legend = ["Random Search", "Gaussian Processes", "Deep Ensembles"]
-    plt.legend(legend)
-    plt.show()
+    # Creating a rank graph for all 3 methods
+    performance = np.stack((rs_performance, gp_performance, de_performance), axis=-1)
+    # Since rank data ranks in the increasing order, we need to multiply by -1
+    rg = scipy.stats.rankdata(-1 * performance, axis=-1)
+    rank_rs = np.mean(rg[:, :, 0], axis=0)
+    rank_gp = np.mean(rg[:, :, 1], axis=0)
+    rank_de = np.mean(rg[:, :, 2], axis=0)
+    plt.figure(5)
+    plt.plot(rank_rs)
+    plt.plot(rank_gp)
+    plt.plot(rank_de)
+    plt.legend(["RS Rank", "GP Rank", "DE Rank"])
+    plt.savefig("Rank_RS_GP_DE.png")
+    # plt.show()
 
 if __name__ == '__main__':
     mp.freeze_support()
