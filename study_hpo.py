@@ -7,6 +7,7 @@ from DE import DE_search
 import numpy as np
 import scipy
 import gpytorch
+import time
 # For memory management
 import gc
 
@@ -16,12 +17,14 @@ def evaluation_worker(hpob_hdlr, method, args):
     print(search_space, dataset, seed, n_trials)
     res = []
     try:
+        t_start = time.time()
         res = hpob_hdlr.evaluate(method,
                                   search_space_id=search_space,
                                   dataset_id=dataset,
                                   seed=seed,
                                   n_trials=n_trials)
-        print(search_space, dataset, seed, n_trials, "Completed evaluation of instance")
+        t_end = time.time()
+        print(search_space, dataset, seed, n_trials, "Completed in", t_end - t_start, "s")
     # This exception needs to be ignored due to issues with GP fitting the HPO-B data
     except gpytorch.utils.errors.NotPSDError:
         print("Ignoring the error and not recording this as a valid evaluation combination")
