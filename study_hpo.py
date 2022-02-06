@@ -7,10 +7,12 @@ from DE import DE_search
 import numpy as np
 import scipy
 import gpytorch
+# For memory management
+import gc
 
 # created as a stub for parallel evaluations.
-def evaluation_worker(args):
-    hpob_hdlr, method, search_space, dataset, seed, n_trials = args
+def evaluation_worker(hpob_hdlr, method, args):
+    search_space, dataset, seed, n_trials = args
     print(search_space, dataset, seed, n_trials)
     res = []
     try:
@@ -37,28 +39,25 @@ def get_all_combinations(hpob_hdlr, n_trials):
 
     return evaluation_list
 
-def evaluate_combinations(hpob_hdlr, method, keys_to_evaluate, parallelize=False):
+def evaluate_combinations(hpob_hdlr, method, keys_to_evaluate):
 
     print("Evaluating for", method)
 
     evaluation_list = []
     for key in keys_to_evaluate:
         search_space, dataset, seed, n_trials = key
-        evaluation_list += [(hpob_hdlr, method, search_space, dataset, seed, n_trials)]
+        evaluation_list += [(search_space, dataset, seed, n_trials)]
 
-    if parallelize:
-        with mp.Pool(mp.cpu_count()) as p:
-           performance = p.map(evaluation_worker, evaluation_list)
-           return performance
-    else:
-        performance = []
-        run_i = 0
-        for eval in evaluation_list:
-            result = evaluation_worker(eval)
-            performance.append(result)
-            run_i = run_i + 1
-            print("Completed Running", run_i, end="\n")
-        return performance
+    performance = []
+    run_i = 0
+    for eval_instance in evaluation_list:
+        result = evaluation_worker(hpob_hdlr, method, eval_instance)
+        performance.append(result)
+        run_i = run_i + 1
+        print("Completed Running", run_i, end="\n")
+        gc.collect()
+
+    return performance
 
 def main():
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
@@ -66,7 +65,7 @@ def main():
 
     method = GaussianProcess(acq_name="EI")
     all_keys = get_all_combinations(hpob_hdlr, n_trials)
-    performance = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=all_keys, parallelize=True)
+    performance = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=all_keys)
     gp_keys = []
     gp_performance = []
     for key, performance_list in performance:
