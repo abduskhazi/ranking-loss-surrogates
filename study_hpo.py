@@ -88,7 +88,7 @@ def main():
     plt.figure(1)
     plt.plot(avg_gp_performance)
     plt.legend(["GP Average"])
-    plt.savefig("Average_RS_GP.png")
+    plt.savefig("Average_GP.png")
     # plt.show()
 
     method = RandomSearch()
