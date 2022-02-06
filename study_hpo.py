@@ -59,6 +59,16 @@ def evaluate_combinations(hpob_hdlr, method, keys_to_evaluate):
 
     return performance
 
+def evaluate_DE(hpob_hdlr, keys_to_evaluate):
+    performance = []
+    for key in keys_to_evaluate:
+        search_space, dataset, _, _ = key
+        input_dim = hpob_hdlr.get_input_dim(search_space, dataset)
+        method = DE_search(input_dim=input_dim)
+        res = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=[key])
+        performance += res
+    return performance
+
 def main():
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
     n_trials = 100
@@ -106,6 +116,17 @@ def main():
     plt.savefig("Rank_RS_GP.png")
     # plt.show()
 
+    de_performance = evaluate_DE(hpob_hdlr, keys_to_evaluate=gp_keys)
+    de_performance = [performance_list for _, performance_list in de_performance]
+    de_performance = np.array(de_performance, dtype=np.float32)
+    avg_de_performance = np.mean(de_performance, axis=0)
+    plt.figure(4)
+    plt.plot(avg_rs_performance)
+    plt.plot(avg_gp_performance)
+    plt.plot(avg_de_performance)
+    plt.legend(["RS Average", "GP Average", "DE Average"])
+    plt.savefig("Average_RS_GP_DE.png")
+    # plt.show()
 
     search_space_id = hpob_hdlr.get_search_spaces()[0]
     dataset_id = hpob_hdlr.get_datasets(search_space_id)[2]
