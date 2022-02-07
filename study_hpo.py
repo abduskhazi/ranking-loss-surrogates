@@ -8,8 +8,18 @@ import numpy as np
 import scipy
 import gpytorch
 import time
+import pickle
+
 # For memory management
 import gc
+
+def store_object(obj, obj_name):
+    with open(obj_name, "wb") as fp:
+        pickle.dump(obj, fp)
+
+def load_object(obj_name):
+    with open(obj_name, "rb") as fp:
+        return pickle.load(fp)
 
 # created as a stub for parallel evaluations.
 def evaluation_worker(hpob_hdlr, method, args):
@@ -93,7 +103,15 @@ def main():
     plt.legend(["GP Average"])
     plt.savefig("Average_GP.png")
     # plt.show()
+    # Store results
+    store_object(gp_keys, "gp_keys")
+    store_object(gp_performance, "gp_performance")
+    # ####
 
+    # Loading previous outputs
+    gp_keys = load_object("gp_keys")
+    gp_performance = load_object("gp_performance")
+    ####
     method = RandomSearch()
     rs_performance = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=gp_keys)
     rs_performance = [performance_list for _, performance_list in rs_performance]
@@ -105,6 +123,9 @@ def main():
     plt.legend(["RS Average", "GP Average"])
     plt.savefig("Average_RS_GP.png")
     # plt.show()
+    # Store results
+    store_object(rs_performance, "rs_performance")
+    # ####
 
     # Creating a rank graph from the given data
     performance = np.stack((rs_performance, gp_performance), axis=-1)
@@ -119,17 +140,24 @@ def main():
     plt.savefig("Rank_RS_GP.png")
     # plt.show()
 
+    # Loading previous outputs
+    gp_keys = load_object("gp_keys")
+    gp_performance = load_object("gp_performance")
+    rs_performance = load_object("rs_performance")
+    ####
     de_performance = evaluate_DE(hpob_hdlr, keys_to_evaluate=gp_keys)
     de_performance = [performance_list for _, performance_list in de_performance]
     de_performance = np.array(de_performance, dtype=np.float32)
-    avg_de_performance = np.mean(de_performance, axis=0)
     plt.figure(4)
-    plt.plot(avg_rs_performance)
-    plt.plot(avg_gp_performance)
-    plt.plot(avg_de_performance)
-    plt.legend(["RS Average", "GP Average", "DE Average"])
+    plt.plot(np.mean(rs_performance, axis=0))
+    plt.plot(np.mean(gp_performance, axis=0))
+    plt.plot(np.mean(de_performance, axis=0))
+    plt.legend(["RS Average", "GP Average", "DE Average [32,32] ep=500 lr=0.02"])
     plt.savefig("Average_RS_GP_DE.png")
     # plt.show()
+    # Store results
+    store_object(de_performance, "de_performance_32_32_500_0_02")
+    # ####
 
     # Creating a rank graph for all 3 methods
     performance = np.stack((rs_performance, gp_performance, de_performance), axis=-1)
@@ -142,7 +170,7 @@ def main():
     plt.plot(rank_rs)
     plt.plot(rank_gp)
     plt.plot(rank_de)
-    plt.legend(["RS Rank", "GP Rank", "DE Rank"])
+    plt.legend(["RS Rank", "GP Rank", "DE Rank [32,32] ep=500 lr=0.02"])
     plt.savefig("Rank_RS_GP_DE.png")
     # plt.show()
 
