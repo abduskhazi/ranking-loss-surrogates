@@ -82,6 +82,41 @@ def evaluate_DE(hpob_hdlr, keys_to_evaluate):
         performance += res
     return performance
 
+def plot_rank_graph():
+    # Loading previous outputs
+    gp_performance = load_object("gp_performance")
+    rs_performance = load_object("rs_performance")
+    de1 = load_object("de_performance_32_E100_l0_2")
+    de2 = load_object("de_performance_32_E1000_l0_02")
+    de3 = load_object("de_performance_32x50x32_E100_l0_1")
+    de4 = load_object("de_performance_32x50x32_E100_l0_2")
+    de5 = load_object("de_performance_32x32_E100_l0_1")
+    ####
+    # Creating a rank graph for all above methods
+    performance = np.stack((rs_performance, gp_performance, de1, de2, de3, de4, de5), axis=-1)
+    # Since rank data ranks in the increasing order, we need to multiply by -1
+    rg = scipy.stats.rankdata(-1 * performance, axis=-1)
+    rank_rs = np.mean(rg[:, :, 0], axis=0)
+    rank_gp = np.mean(rg[:, :, 1], axis=0)
+    rank_de1 = np.mean(rg[:, :, 2], axis=0)
+    rank_de2 = np.mean(rg[:, :, 3], axis=0)
+    rank_de3 = np.mean(rg[:, :, 4], axis=0)
+    rank_de4 = np.mean(rg[:, :, 5], axis=0)
+    rank_de5 = np.mean(rg[:, :, 6], axis=0)
+    plt.figure(5)
+    plt.plot(rank_rs)
+    plt.plot(rank_gp)
+    plt.plot(rank_de1)
+    plt.plot(rank_de2)
+    plt.plot(rank_de3)
+    plt.plot(rank_de4)
+    plt.plot(rank_de5)
+    plt.legend(["RS Rank", "GP Rank", "DE Rank [32] ep=100 lr=0.2", "DE Rank [32] ep=1000 lr=0.02", "DE Rank [32,50,32] ep=100 lr=0.1", "DE Rank [32,50,32] ep=100 lr=0.2", "DE Rank [32,32] ep=100 lr=0.1"])
+    #plt.savefig("Rank_RS_GP_DE.png")
+    plt.show()
+
+
+
 def main():
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
     n_trials = 100
@@ -145,6 +180,7 @@ def main():
     gp_performance = load_object("gp_performance")
     rs_performance = load_object("rs_performance")
     ####
+
     de_performance = evaluate_DE(hpob_hdlr, keys_to_evaluate=gp_keys)
     de_performance = [performance_list for _, performance_list in de_performance]
     de_performance = np.array(de_performance, dtype=np.float32)
@@ -159,20 +195,7 @@ def main():
     store_object(de_performance, "de_performance_32_32_500_0_02")
     # ####
 
-    # Creating a rank graph for all 3 methods
-    performance = np.stack((rs_performance, gp_performance, de_performance), axis=-1)
-    # Since rank data ranks in the increasing order, we need to multiply by -1
-    rg = scipy.stats.rankdata(-1 * performance, axis=-1)
-    rank_rs = np.mean(rg[:, :, 0], axis=0)
-    rank_gp = np.mean(rg[:, :, 1], axis=0)
-    rank_de = np.mean(rg[:, :, 2], axis=0)
-    plt.figure(5)
-    plt.plot(rank_rs)
-    plt.plot(rank_gp)
-    plt.plot(rank_de)
-    plt.legend(["RS Rank", "GP Rank", "DE Rank [32,32] ep=500 lr=0.02"])
-    plt.savefig("Rank_RS_GP_DE.png")
-    # plt.show()
+    plot_rank_graph()
 
 if __name__ == '__main__':
     mp.freeze_support()
