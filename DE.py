@@ -22,6 +22,15 @@ class DE_search:
         print("Using Deep Ensembles as method...")
         self.DE = DeepEnsemble(M=5, input_dim=input_dim, divided_nn=False, parallel_training=False)
 
+        self.mse_acc = []
+        self.variance_acc = []
+
+    def store_fitting_data(self, y_obs, pred_mean, pred_variance):
+        pred_mean = pred_mean.detach().numpy().reshape(-1, 1)
+        pred_variance = pred_variance.detach().numpy()
+        self.mse_acc += [np.mean(np.abs(pred_mean - y_obs))]
+        self.variance_acc += [np.mean(pred_variance)]
+
     # Assuming that we are dealing with only discrete case ==> X_pen is None.
     # First fitting the model based on observations.
     # Predicting then the pending configuration for evaluation.
@@ -30,7 +39,10 @@ class DE_search:
         X_obs = np.array(X_obs, dtype=np.float32)
         y_obs = np.array(y_obs, dtype=np.float32)
         X_pen = np.array(X_pen, dtype=np.float32)
-        self.DE.train(X_obs, y_obs, epochs=100, lr=0.1, adverserial_training=False)
+        self.DE.train(X_obs, y_obs, epochs=1000, lr=0.01, adverserial_training=False)
+        pred_mean, pred_variance = self.DE.predict(torch.from_numpy(X_obs))
+        self.store_fitting_data(y_obs, pred_mean, pred_variance)
+
         X_pen = torch.from_numpy(X_pen)
         scores = acquisition_EI(y_obs, X_pen, self.DE)
         idx = np.argmax(scores)

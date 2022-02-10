@@ -74,12 +74,27 @@ def evaluate_combinations(hpob_hdlr, method, keys_to_evaluate):
 
 def evaluate_DE(hpob_hdlr, keys_to_evaluate):
     performance = []
+    mse = []
+    variance = []
     for key in keys_to_evaluate:
         search_space, dataset, _, _ = key
         input_dim = hpob_hdlr.get_input_dim(search_space, dataset)
         method = DE_search(input_dim=input_dim)
         res = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=[key])
         performance += res
+        mse += [method.mse_acc]
+        variance += [method.variance_acc]
+
+    store_object(mse, "mse")
+    store_object(variance, "variance")
+
+    plt.plot(np.mean(np.array(mse), axis=0))
+    plt.legend(["mse"])
+    plt.show()
+    plt.plot(np.mean(np.array(variance), axis=0))
+    plt.legend(["variance"])
+    plt.show()
+
     return performance
 
 def plot_rank_graph():
@@ -195,11 +210,11 @@ def main():
     plt.plot(np.mean(rs_performance, axis=0))
     plt.plot(np.mean(gp_performance, axis=0))
     plt.plot(np.mean(de_performance, axis=0))
-    plt.legend(["RS Average", "GP Average", "DE Average [32,32] ep=500 lr=0.02"])
+    plt.legend(["RS Average", "GP Average", "DE Average [32,32] ep=1000 lr=0.01"])
     plt.savefig("Average_RS_GP_DE.png")
     # plt.show()
     # Store results
-    store_object(de_performance, "de_performance_32_32_500_0_02")
+    store_object(de_performance, "de_performance_32x32_E1000_l0_01")
     # ####
 
     plot_rank_graph()
