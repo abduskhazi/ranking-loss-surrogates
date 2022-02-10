@@ -20,7 +20,7 @@ class DE_search:
 
     def __init__(self, input_dim):
         print("Using Deep Ensembles as method...")
-        self.DE = DeepEnsemble(M=5, input_dim=input_dim, divided_nn=False, parallel_training=True)
+        self.DE = DeepEnsemble(M=5, input_dim=input_dim, divided_nn=False, parallel_training=False)
 
     # Assuming that we are dealing with only discrete case ==> X_pen is None.
     # First fitting the model based on observations.
