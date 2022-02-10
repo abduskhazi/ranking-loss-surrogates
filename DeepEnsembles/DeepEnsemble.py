@@ -22,10 +22,10 @@ class Estimator(nn.Module):
         # divided_nn = Wether to divide the neural network in the end or not
         self.divided_nn = divided_nn
         # Here fc is an abbreviation fully connected
-        self.fc1 = nn.Linear(input_dim, 30)  # Input dimension of the objective function = 1
-        self.fc2 = nn.Linear(30, 50)
-        self.fc3 = nn.Linear(50, 30)
-        fc3_o_dim = 30
+        self.fc1 = nn.Linear(input_dim, 32)  # Input dimension of the objective function
+        self.fc2 = nn.Linear(32, 32)
+        # self.fc3 = nn.Linear(50, 32)
+        fc3_o_dim = 32
 
         # For mean and variance the output dimension is 2.
         # First output is the mean, second output is the variance
@@ -42,8 +42,8 @@ class Estimator(nn.Module):
         x = self.fc2(x)
         x = F.relu(x)
 
-        x = self.fc3(x)
-        x = F.relu(x)
+        # x = self.fc3(x)
+        # x = F.relu(x)
 
         if self.divided_nn:
             mean = self.fc4a(x)
