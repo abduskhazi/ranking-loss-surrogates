@@ -14,6 +14,9 @@ Main Idea:
 Points:
     They try to skip an inference step.
     Treat classification as regression.
+        When there are C classes, they build C one vs rest classifiers.
+        The loss is the some of losses per classifier (Log marginal likelihood)
+        The prediction class = max probability of all classifier predictions
     Outerloop cycle contains parameters that are model agnositic.
     Innerloop cycle contains things that are model specific.
 
@@ -61,7 +64,10 @@ Detailed analysis:
         Log marginal likelihood is used to train both phi and theta - the task specific parameters are marginalised.
         Since they do a full integral (marginalization) of task specific parameters, they only optimize for common
            parameters.
+
+    Experiments
         
+    
 Observation:
     There is duality between probability and likelihood
 
@@ -75,3 +81,7 @@ Doubts:
 
 Issues with starting implementation.
     What are the tasks in our HPO-B dataset?
+    The input dimensions are different for different dataset, how should we do transfer learning here?
+    Possible solutions:
+        Learn the kernel for one task and restart for other tasks
+        What about restarting within the optimization episode (Like random start in DE)

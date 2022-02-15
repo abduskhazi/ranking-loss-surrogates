@@ -1,3 +1,6 @@
 [submodule "HPO_B"]
 	path = HPO_B
 	url = https://github.com/abduskhazi/HPO-B.git
+[submodule "deep_kernel_transfer"]
+	path = deep_kernel_transfer
+	url = https://github.com/abduskhazi/deep-kernel-transfer.git
