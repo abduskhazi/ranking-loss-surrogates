@@ -1,0 +1,77 @@
+Paper: https://arxiv.org/pdf/1910.05199.pdf
+Code: https://github.com/BayesWatch/deep-kernel-transfer
+      For understanding - https://docs.gpytorch.ai/en/stable/examples/01_Exact_GPs/Simple_GP_Regression.html#
+
+Problem : Few shot learning problem
+Solution: Using bayesian method.
+
+Main Idea:
+    Deep Kernel Transfer (DKT)
+    Meta learning as a heirarchiacal model.
+    Learn the prior using known tasks. Then, learn the posterior over the target task.
+    Marginalize the target task parameter. Hence skip 1 inference step. (Motivation 3rd paragaph)
+
+Points:
+    They try to skip an inference step.
+    Treat classification as regression.
+    Outerloop cycle contains parameters that are model agnositic.
+    Innerloop cycle contains things that are model specific.
+
+Detailed analysis:
+    Few shot learning in humans good because (assumption by authors/references) of bayesian inference mechanism.
+    What is bayesian inference mechanism?
+        Have a belief about something i.e your best guess. [Prior]
+        Collected data
+        Update your belief [Posterior]
+        Repeat the above process. Use your updated belief [Posterer] as a [Prior] in the next iteration.
+
+    Inner loop cycle and outer loop cycle.
+        Inner loop learns the task dependent part. This is conventional machine learning.
+        Here we use bayesian regression model for the inner loop.
+        The outer loop learns the meta data i.e how to imporve the learning of the inner loop.
+        The knowledge learnt in the outer loop can be make task-agnositic and "transfered" to other tasks.
+
+    Take set of known tasks and evalutions. Learn a model for predicting them. This acts as a prior.
+    The new task has a few shots (Support data points) for a new task.
+    Condition the prior with the given shots to get a posterior.
+    Predict new queries for the task using the posterier.
+    https://arxiv.org/pdf/2004.05439.pdf
+
+    A Task can be seen as a very high dimensional data point. A task distribution is a distribution of this
+    n-dimensional data point.
+
+    Prediction of uncertainity in few shot problem is very cruicial due to less data and inherent model uncertainty
+    Motivation(Para1) explains probabalistically principalled approach to calculate predictive destribution (posterier)
+
+    Section 2.1
+        Shot = number of data points that exist in the new task.
+        The dataset is the set of tasks D = {T_1, T_2 ... T_n}. Train, test & val sets are distint subsets of D.
+
+    kernel
+        It defines the covariance of the output of x, x' i.e f(x), f(x') depending on the location of x, x' in the
+           input space
+        Kernel from which space defines.. This is the jargon used by the authors. [Here space refers to the input space]
+
+    Method:
+        Heirachial representation of Meta learning has issues.
+            Gradient Issues due to meta gradients.
+            Stability during training issues. But how????
+        Replace the inner loop with a guassian kernel
+        optimize the outer loop parameters by maximising the log marginal likelihood
+        Log marginal likelihood is used to train both phi and theta - the task specific parameters are marginalised.
+        Since they do a full integral (marginalization) of task specific parameters, they only optimize for common
+           parameters.
+        
+Observation:
+    There is duality between probability and likelihood
+
+Doubts:
+    Differentiable meta learning method.
+    Variance hyperpameter for linear kernel?
+    Inner product and bayesian linear regression (What is the correlation) 
+    Do not understanding why it is the marginal likelihood, is it not the predictive probability distribution?
+    how is marginal likelihood implemented - unable to get a clear picture?
+
+
+Issues with starting implementation.
+    What are the tasks in our HPO-B dataset?

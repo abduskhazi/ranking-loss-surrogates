@@ -1,0 +1,42 @@
+Paper: https://arxiv.org/pdf/2101.07667.pdf
+
+Problem Domain: Hyperparameter searching.
+Keyword: Use Deep Kernel surrogates
+
+Key points:
+    1. Use transfer learning surrogates to get faster convergence
+    2. Treat HPO as a few shot learning problem (In the context of transfer learning)
+    3. Use kernel k(phi(x), phi(x')) where phi is a neural network that transforms x to a latent vector
+    4. Learn parameters of phi(W) and kernel(theta) together based on historical meta data
+    5. Fine tune both W and theta based on the given task. If possible use warm start for initialization.
+    6. Learn output range variance by creating augumented tasks.
+
+
+Quick note on expected improvement.
+    First the mean and variance is calculated for the target Hyperparameter Setting.
+    Considering the mean and variance of a particular HP, we calculate the following:
+        Remove y_max from the set of all values of f(x) and lowerbound it by 0.
+        Multiply the above value with the probability of the gaussian curve N(predicted_mean, predicted_variance)
+        For a continous curve we need to integrate.
+    Then we get the Expected Improvement for this HP setting.
+
+
+Gaussian Processes:
+    The output is considered to be a random variable.
+    When have more than 1 data point, the output becomes a multivariate normal
+        The output is a joint gaussian distribution.
+
+Personal points (Probability vs Likelihood)
+    Probability and likelihood are reverse in nature.
+    Probability starts with a given set of parameters and caculates the probability of a given outcome to occur
+    Likelihood starts with a given outcome, and we would like to determine the parameters.
+
+    Marginal likelihood (Likelihood after marginalization of some parameters)
+        integrates the effects of parameters that are not of your interest.
+
+Note:
+    Warm start is not essential for us. (It is not the main contribution of the paper)
+
+Main motive of deep kernel learning:
+    Learn the kernel function in the gaussian process.
+
