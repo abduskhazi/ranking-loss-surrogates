@@ -12,7 +12,9 @@ class DKT(nn.Module):
         super(DKT, self).__init__()
         ## GP parameters
         self.feature_extractor = backbone  # Sent as NN --> extract the input in Latent space
+        self.batch_size = batch_size
 
+        # backbone.output_dim is the latent dimension for the complete kernel
         train_x = torch.ones(batch_size, backbone.output_dim).to(device)
         train_y = torch.ones(batch_size).to(device)
         self.get_model_likelihood_mll(train_x, train_y)  # Init model, likelihood, and mll
@@ -47,11 +49,12 @@ class DKT(nn.Module):
 
         return torch.stack(batch), torch.stack(batch_labels)
 
-    def train_loop(self, epoch, optimizer, data, l, u, b_n, batch_size):
+    def train_loop(self, epoch, optimizer, data, l, u, b_n, batch_size, scaling=True):
         batch, batch_labels = self.get_training_batch(data, b_n, batch_size)
         batch, batch_labels = batch.to(device), batch_labels.to(device)
-        # Scale the lables according to the l and u for scale invariance.
-        batch_labels = (batch_labels - l) / (u - l)
+        if scaling:
+            # Scale the lables according to the l and u for scale invariance.
+            batch_labels = (batch_labels - l) / (u - l)
         for inputs, labels in zip(batch, batch_labels):
             optimizer.zero_grad()
             z = self.feature_extractor(inputs)
