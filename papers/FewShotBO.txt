@@ -11,6 +11,10 @@ Key points:
     5. Fine tune both W and theta based on the given task. If possible use warm start for initialization.
     6. Learn output range variance by creating augumented tasks.
 
+Conceptual points:
+    1. The deep kernel learnt does not have any task dependent parameters.
+       The task dependent parameters are marginalized out.
+       Hence finetuning during test time (after pretraining) should be complete.
 
 Quick note on expected improvement.
     First the mean and variance is calculated for the target Hyperparameter Setting.
@@ -39,4 +43,22 @@ Note:
 
 Main motive of deep kernel learning:
     Learn the kernel function in the gaussian process.
+
+How to do implementation with FSBO with HPO-B Metadataset?
+There are 16 search spaces (model optmizations here)
+    The train test split is already done metatraindata has the training data and metatest data has the test data.
+    What about validation?? Really required?
+    The search space id can be used for identifying correct search space for test and training data by using:
+        hpobhander.meta_test_data[search_space_id][dataset_id]["X"]
+        hpobhander.meta_train_data[search_space_id][dataset_id]["X"]
+
+1 ML model optimization
+    1 search space (with a unique searchspace id)
+        Dataset 1 (with unique dataset id)
+        Dataset 2
+        Dataset 3
+
+Pretrain the FSBO model with the train split of the dataset. M'
+Fine tune it on 1 dataset and evaluate using Expected Improvement
+    i.e run loop like the training with the given data.
 

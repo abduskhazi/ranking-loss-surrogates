@@ -4,6 +4,7 @@ from HPO_B.methods.botorch import GaussianProcess
 import matplotlib.pyplot as plt
 import multiprocessing as mp
 from DE import DE_search
+from fsbo import train_fsbo
 import numpy as np
 import scipy
 import gpytorch
@@ -140,6 +141,12 @@ def plot_rank_graph():
 
 
 def main():
+    # Pretrain hpob with a single search space (hardcoded for now)
+    search_space_id = '4796'
+    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
+    data = hpob_hdlr.meta_train_data[search_space_id]
+    train_fsbo(meta_data=data)
+
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
     n_trials = 100
 
