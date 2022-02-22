@@ -4,7 +4,7 @@ from HPO_B.methods.botorch import GaussianProcess
 import matplotlib.pyplot as plt
 import multiprocessing as mp
 from DE import DE_search
-from fsbo import train_fsbo
+from fsbo import FSBO, get_input_dim
 import numpy as np
 import scipy
 import gpytorch
@@ -141,15 +141,9 @@ def plot_rank_graph():
 
 
 def main():
-    # Pretrain hpob with a single search space (hardcoded for now)
-    search_space_id = '4796'
-    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
-    data = hpob_hdlr.meta_train_data[search_space_id]
-    train_fsbo(meta_data=data)
-
-    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
     n_trials = 100
 
+    """
     method = GaussianProcess(acq_name="EI")
     all_keys = get_all_combinations(hpob_hdlr, n_trials)
     performance = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=all_keys)
@@ -171,6 +165,38 @@ def main():
     store_object(gp_keys, "gp_keys")
     store_object(gp_performance, "gp_performance")
     # ####
+    """
+
+    # Pretrain fsbo with a single search space (hardcoded for now)
+    # hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
+    # print("Pretrain fsbo with witl all search spaces")
+    # for search_space_id in hpob_hdlr.get_search_spaces():
+    #     meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
+    #     method_fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_train_data),
+    #                       latent_dim=10, batch_size=70, num_batches=50)
+    #    method_fsbo.train(meta_train_data)
+
+    # search_space_id = '4796'
+    # meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
+    # method_fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_train_data),
+    #            latent_dim=10, batch_size=70, num_batches=50)
+    # method_fsbo.train(meta_train_data)
+
+    """
+    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
+    gp_keys = load_object("./optimization_results/gp_keys")
+    dkt_keys = gp_keys #
+    #dkt_keys = []
+    #for key in gp_keys:
+    #    search_space, dataset, seed, n_trials = key
+    #    if search_space == search_space_id:
+    #        dkt_keys += [key]
+    dkt_performance = evaluate_FSBO(hpob_hdlr, keys_to_evaluate=dkt_keys)
+    dkt_performance = [performance_list for _, performance_list in dkt_performance]
+    dkt_performance = np.array(dkt_performance, dtype=np.float32)
+    store_object(dkt_performance, "./optimization_results/dkt_performance")
+
+
 
     # Loading previous outputs
     gp_keys = load_object("gp_keys")

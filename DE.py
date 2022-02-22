@@ -22,6 +22,7 @@ class DE_search:
         print("Using Deep Ensembles as method...")
         self.DE = DeepEnsemble(M=5, input_dim=input_dim, divided_nn=False, parallel_training=False)
 
+        self.input_dim = input_dim
         self.mse_acc = []
         self.variance_acc = []
 

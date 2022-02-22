@@ -62,3 +62,4 @@ Pretrain the FSBO model with the train split of the dataset. M'
 Fine tune it on 1 dataset and evaluate using Expected Improvement
     i.e run loop like the training with the given data.
 
+Did not use strictGP --> Is it a problem?

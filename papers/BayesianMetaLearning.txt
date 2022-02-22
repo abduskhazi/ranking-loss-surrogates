@@ -82,6 +82,6 @@ Doubts:
 Issues with starting implementation.
     What are the tasks in our HPO-B dataset?
     The input dimensions are different for different dataset, how should we do transfer learning here?
-    Possible solutions:
+    Possible solution without transfer. This becomes only deep kernel learning:
         Learn the kernel for one task and restart for other tasks
         What about restarting within the optimization episode (Like random start in DE)

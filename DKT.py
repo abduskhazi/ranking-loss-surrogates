@@ -50,10 +50,15 @@ class DKT(nn.Module):
         return torch.stack(batch), torch.stack(batch_labels)
 
     def train_loop(self, epoch, optimizer, data, l, u, b_n, batch_size, scaling=True):
+        # Required in case of reuse
+        # self.model.train()
+        # self.feature_extractor.train()
+        # self.likelihood.train()
+
         batch, batch_labels = self.get_training_batch(data, b_n, batch_size)
         batch, batch_labels = batch.to(device), batch_labels.to(device)
         if scaling:
-            # Scale the lables according to the l and u for scale invariance.
+            # Scale the labels according to the l and u for scale invariance.
             batch_labels = (batch_labels - l) / (u - l)
         for inputs, labels in zip(batch, batch_labels):
             optimizer.zero_grad()
@@ -73,38 +78,49 @@ class DKT(nn.Module):
                     self.model.likelihood.noise.item()
                 ))
 
-    def test_loop(self, n_support, optimizer=None): # no optimizer needed for GP
-        inputs, targets = get_batch(test_people)
+    def fine_tune_loop(self, epoch, optimizer, X, y):
+        # Required in case of reuse
+        # self.model.train()
+        # self.feature_extractor.train()
+        # self.likelihood.train()
 
-        support_ind = list(np.random.choice(list(range(19)), replace=False, size=n_support))
-        query_ind   = [i for i in range(19) if i not in support_ind]
+        X, y = X.to(device), y.to(device)
 
-        x_all = inputs.to(device)
-        y_all = targets.to(device)
+        optimizer.zero_grad()
 
-        x_support = inputs[:,support_ind,:,:,:].to(device)
-        y_support = targets[:,support_ind].to(device)
-        x_query   = inputs[:,query_ind,:,:,:]
-        y_query   = targets[:,query_ind].to(device)
+        z = self.feature_extractor(X)
+        self.model.set_train_data(inputs=z, targets=y, strict=False)
+        predictions = self.model(z)
+        loss = -self.mll(predictions, self.model.train_targets)
 
-        # choose a random test person
-        n = np.random.randint(0, len(test_people)-1)
+        loss.backward()
+        optimizer.step()
 
-        z_support = self.feature_extractor(x_support[n]).detach()
-        self.model.set_train_data(inputs=z_support, targets=y_support[n], strict=False)
+        mse = self.mse(predictions.mean, y)
+        #if (epoch % 10 == 0):
+        #    print('[%d] - Loss: %.3f  MSE: %.3f noise: %.3f' % (
+        #        epoch, loss.item(), mse.item(),
+        #        self.model.likelihood.noise.item()
+        #    ))
+
+    def predict(self, x_support, y_support, x_query):
+
+        x_support = x_support.to(device)
+        y_support = y_support.to(device)
+        x_query   = x_query.to(device)
+
+        z_support = self.feature_extractor(x_support).detach()
+        self.model.set_train_data(inputs=z_support, targets=y_support, strict=False)
 
         self.model.eval()
         self.feature_extractor.eval()
         self.likelihood.eval()
 
         with torch.no_grad():
-            z_query = self.feature_extractor(x_all[n]).detach()
+            z_query = self.feature_extractor(x_query).detach()
             pred    = self.likelihood(self.model(z_query))
-            lower, upper = pred.confidence_region() #2 standard deviations above and below the mean
 
-        mse = self.mse(pred.mean, y_all[n])
-
-        return mse
+        return pred
 
     def save_checkpoint(self, checkpoint):
         # save state
