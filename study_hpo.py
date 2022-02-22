@@ -98,6 +98,18 @@ def evaluate_DE(hpob_hdlr, keys_to_evaluate):
 
     return performance
 
+def evaluate_FSBO(hpob_hdlr, keys_to_evaluate):
+    performance = []
+    for key in keys_to_evaluate:
+        search_space_id, dataset, _, _ = key
+        input_dim = hpob_hdlr.get_input_dim(search_space_id, dataset)
+        method_fsbo = FSBO(search_space_id, input_dim=input_dim,
+                          latent_dim=10, batch_size=70, num_batches=50)
+        res = evaluate_combinations(hpob_hdlr, method_fsbo, keys_to_evaluate=[key])
+        performance += res
+
+    return performance
+
 def plot_rank_graph():
     # Loading previous outputs
     gp_performance = load_object("gp_performance")
