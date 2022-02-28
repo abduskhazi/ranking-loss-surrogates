@@ -99,10 +99,31 @@ class FSBO:
         # backbone for latent feature calculation.
         backbone = NN(input_dim=self.input_dim, output_dim=self.latent_dim)
         self.dkt = DKT(backbone, batch_size=batch_size).to(device)
-        self.optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.001},
-                                           {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.001}])
+        self.optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.0001}, # 0.001 used for long name HPOB simulation
+                                           {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.0001}])
 
-    def train(self, meta_data):
+    def get_val_data(self, val_data):
+        batch = []
+        batch_labels = []
+
+        for i in val_data.keys():
+            X = np.array(val_data[i]["X"], dtype=np.float32)
+            y = np.array(val_data[i]["y"], dtype=np.float32)
+            batch += [torch.from_numpy(X)]
+            batch_labels += [torch.from_numpy(y).flatten()]
+
+        batch, batch_labels = torch.cat(batch, 0), torch.cat(batch_labels, 0)
+
+        if(batch_labels.shape[0] > 2000):
+            idx = np.random.choice(np.arange(len(X)), 1000)
+            batch, batch_labels = batch[idx], batch_labels[idx]
+
+        return (batch, batch_labels)
+
+    def train(self, meta_data, meta_val_data):
+        loss_list = []
+        val_loss_list = []
+        meta_val_data = self.get_val_data(meta_val_data)
         # for reference check https://arxiv.org/pdf/2101.07667.pdf algorithm 1
         # Running the outer loop a 100 times as this is not specified exactly in the paper.
         # Finding y_min and y_max for creating a scale invariant model

@@ -21,7 +21,7 @@ class DKT(nn.Module):
 
     def get_model_likelihood_mll(self, train_x, train_y):
         likelihood = gpytorch.likelihoods.GaussianLikelihood()
-        model = ExactGPLayer(train_x=train_x, train_y=train_y, likelihood=likelihood, kernel='rbf')
+        model = ExactGPLayer(train_x=train_x, train_y=train_y, likelihood=likelihood, kernel='matern')
 
         self.model      = model.to(device)
         self.likelihood = likelihood.to(device)
@@ -49,11 +49,11 @@ class DKT(nn.Module):
 
         return torch.stack(batch), torch.stack(batch_labels)
 
-    def train_loop(self, epoch, optimizer, data, l, u, b_n, batch_size, scaling=True):
+    def train_loop(self, epoch, optimizer, data, val_data, l, u, b_n, batch_size, scaling=True):
         # Required in case of reuse
-        # self.model.train()
-        # self.feature_extractor.train()
-        # self.likelihood.train()
+        self.model.train()
+        self.feature_extractor.train()
+        self.likelihood.train()
 
         batch, batch_labels = self.get_training_batch(data, b_n, batch_size)
         batch, batch_labels = batch.to(device), batch_labels.to(device)
@@ -64,7 +64,7 @@ class DKT(nn.Module):
             optimizer.zero_grad()
             z = self.feature_extractor(inputs)
 
-            self.model.set_train_data(inputs=z, targets=labels)
+            self.model.set_train_data(inputs=z, targets=labels, strict=False)
             predictions = self.model(z)
             loss = -self.mll(predictions, self.model.train_targets)
 
@@ -72,17 +72,35 @@ class DKT(nn.Module):
             optimizer.step()
             mse = self.mse(predictions.mean, labels)
 
-            if (epoch%10==0):
-                print('[%d] - Loss: %.3f  MSE: %.3f noise: %.3f' % (
-                    epoch, loss.item(), mse.item(),
-                    self.model.likelihood.noise.item()
-                ))
+        val_loss = self.get_val_loss(val_data)
+        if True:  # (epoch%10==0):
+            print('[%d] - Loss: %.3f  Val-Loss: %.3f MSE: %.3f noise: %.3f' % (
+                epoch, loss.item(), val_loss, mse.item(),
+                self.model.likelihood.noise.item()
+            ))
+
+        return loss.item(), val_loss
+
+    def get_val_loss(self, val_data):
+        self.model.train()
+        self.feature_extractor.train()
+        self.likelihood.train()
+
+        batch, batch_labels = val_data
+
+        with torch.no_grad():
+            z = self.feature_extractor(batch)
+            self.model.set_train_data(inputs=z, targets=batch_labels, strict=False)
+            predictions = self.model(z)
+            val_loss = -self.mll(predictions, self.model.train_targets)
+
+        return val_loss.item()
 
     def fine_tune_loop(self, epoch, optimizer, X, y):
         # Required in case of reuse
-        # self.model.train()
-        # self.feature_extractor.train()
-        # self.likelihood.train()
+        self.model.train()
+        self.feature_extractor.train()
+        self.likelihood.train()
 
         X, y = X.to(device), y.to(device)
 
@@ -141,7 +159,9 @@ class ExactGPLayer(gpytorch.models.ExactGP):
         self.mean_module  = gpytorch.means.ConstantMean()
 
         ## RBF kernel
-        if(kernel=='rbf' or kernel=='RBF'):
+        if(kernel == "matern" or kernel == "MATERN"):
+            self.covar_module = gpytorch.kernels.MaternKernel()
+        elif(kernel=='rbf' or kernel=='RBF'):
             self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
         ## Spectral kernel
         elif(kernel=='spectral'):
