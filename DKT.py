@@ -43,13 +43,34 @@ class DKT(nn.Module):
         batch = []
         batch_labels = []
         for i in range(b_n):
-            idx = np.random.choice(np.arange(len(X)), batch_size)
+            idx = np.random.choice(X.shape[0], batch_size, replace=False)
             batch += [torch.from_numpy(X[idx])]
             batch_labels += [torch.from_numpy(y[idx]).flatten()]
 
         return torch.stack(batch), torch.stack(batch_labels)
 
-    def train_loop(self, epoch, optimizer, data, val_data, l, u, b_n, batch_size, scaling=True):
+    def get_validation_batch(self, val_data):
+        # This is different from the training batch because we require
+        # support and query sets for testing the working.
+        X = np.array(val_data["X"], dtype=np.float32)
+        y = np.array(val_data["y"], dtype=np.float32)
+
+        # 100 support points and 200 (or remaining) query points distinct sets
+        n_support_points = 50
+        n_query_points = 200 if X.shape[0] > 200 + n_support_points else X.shape[0] - n_support_points
+
+        idx_support = np.random.choice(X.shape[0], size=n_support_points, replace=False)
+        query_choice = np.delete(np.arange(X.shape[0]), idx_support)
+        idx_query = np.random.choice(query_choice, size=n_query_points, replace=False)
+
+        X_support = torch.from_numpy(X[idx_support])
+        y_support = torch.from_numpy(y[idx_support].flatten())
+        X_query = torch.from_numpy(X[idx_query])
+        y_query = torch.from_numpy(y[idx_query].flatten())
+
+        return X_support, y_support, X_query, y_query
+
+    def train_loop(self, epoch, optimizer, data, meta_val_data, l, u, b_n, batch_size, scaling=True):
         # Required in case of reuse
         self.model.train()
         self.feature_extractor.train()
@@ -72,7 +93,12 @@ class DKT(nn.Module):
             optimizer.step()
             mse = self.mse(predictions.mean, labels)
 
-        val_loss = self.get_val_loss(val_data)
+        val_loss_list = []
+        for k in meta_val_data.keys():
+            val_data = self.get_validation_batch(meta_val_data[k])
+            val_loss_list += [self.get_val_loss(val_data)]
+        val_loss = sum(val_loss_list)/len(val_loss_list)
+
         if True:  # (epoch%10==0):
             print('[%d] - Loss: %.3f  Val-Loss: %.3f MSE: %.3f noise: %.3f' % (
                 epoch, loss.item(), val_loss, mse.item(),
@@ -81,23 +107,28 @@ class DKT(nn.Module):
 
         return loss.item(), val_loss
 
-    def get_val_loss(self, val_data):
+    def get_val_loss(self, val_data):  # Check testing code of DKT Regression.
+        X_support, y_support, X_query, y_query = val_data
+
+        z_support = self.feature_extractor(X_support).detach()
+        self.model.set_train_data(inputs=z_support, targets=y_support, strict=False)
+
+        self.model.eval()
+        self.feature_extractor.eval()
+        self.likelihood.eval()
+
+        with torch.no_grad():
+            z_query = self.feature_extractor(X_query).detach()
+            prediction = self.likelihood(self.model(z_query))
+            val_loss = -self.mll(prediction, y_query)
+
         self.model.train()
         self.feature_extractor.train()
         self.likelihood.train()
 
-        batch, batch_labels = val_data
-
-        with torch.no_grad():
-            z = self.feature_extractor(batch)
-            self.model.set_train_data(inputs=z, targets=batch_labels, strict=False)
-            predictions = self.model(z)
-            val_loss = -self.mll(predictions, self.model.train_targets)
-
         return val_loss.item()
 
     def fine_tune_loop(self, epoch, optimizer, X, y):
-        # Required in case of reuse
         self.model.train()
         self.feature_extractor.train()
         self.likelihood.train()
@@ -130,10 +161,6 @@ class DKT(nn.Module):
         z_support = self.feature_extractor(x_support).detach()
         self.model.set_train_data(inputs=z_support, targets=y_support, strict=False)
 
-        self.model.eval()
-        self.feature_extractor.eval()
-        self.likelihood.eval()
-
         with torch.no_grad():
             z_query = self.feature_extractor(x_query).detach()
             pred    = self.likelihood(self.model(z_query))
@@ -160,7 +187,7 @@ class ExactGPLayer(gpytorch.models.ExactGP):
 
         ## RBF kernel
         if(kernel == "matern" or kernel == "MATERN"):
-            self.covar_module = gpytorch.kernels.MaternKernel()
+            self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.MaternKernel())
         elif(kernel=='rbf' or kernel=='RBF'):
             self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
         ## Spectral kernel

@@ -104,7 +104,7 @@ def evaluate_FSBO(hpob_hdlr, keys_to_evaluate):
         search_space_id, dataset, _, _ = key
         input_dim = hpob_hdlr.get_input_dim(search_space_id, dataset)
         method_fsbo = FSBO(search_space_id, input_dim=input_dim,
-                          latent_dim=10, batch_size=70, num_batches=50)
+                          latent_dim=32, batch_size=70, num_batches=50)
         res = evaluate_combinations(hpob_hdlr, method_fsbo, keys_to_evaluate=[key])
         performance += res
 
@@ -194,10 +194,9 @@ def main():
     #            latent_dim=10, batch_size=70, num_batches=50)
     # method_fsbo.train(meta_train_data)
 
-    """
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
     gp_keys = load_object("./optimization_results/gp_keys")
-    dkt_keys = gp_keys #
+    dkt_keys = gp_keys
     #dkt_keys = []
     #for key in gp_keys:
     #    search_space, dataset, seed, n_trials = key
@@ -206,10 +205,9 @@ def main():
     dkt_performance = evaluate_FSBO(hpob_hdlr, keys_to_evaluate=dkt_keys)
     dkt_performance = [performance_list for _, performance_list in dkt_performance]
     dkt_performance = np.array(dkt_performance, dtype=np.float32)
-    store_object(dkt_performance, "./optimization_results/dkt_performance")
+    store_object(dkt_performance, "./optimization_results/dkt_performance_val_break_32_32_updated_ft100_002")
 
-
-
+    """
     # Loading previous outputs
     gp_keys = load_object("gp_keys")
     gp_performance = load_object("gp_performance")

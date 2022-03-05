@@ -35,9 +35,9 @@ class NN(nn.Module):
         self.input_dim = input_dim
         self.output_dim = output_dim
         # Here fc is an abbreviation fully connected
-        self.fc1 = nn.Linear(input_dim, 64)  # Input dimension of the objective function
-        self.fc2 = nn.Linear(64, 64)
-        self.fc3 = nn.Linear(64, output_dim)
+        self.fc1 = nn.Linear(input_dim, 32)  # Input dimension of the objective function
+        self.fc2 = nn.Linear(32, 32)
+        self.fc3 = nn.Linear(32, output_dim)
 
     def forward(self, x):
         x = self.fc1(x)
@@ -56,7 +56,7 @@ def parse_args_regression(script):
     parser.add_argument('--seed', default=0, type=int, help='Seed for Numpy and pyTorch. Default: 0 (None)')
     parser.add_argument('--model', default='DNN', help='model: DNN')
     parser.add_argument('--method', default='DKT', help='DKT')
-    parser.add_argument('--dataset', default='HPOB', help='HPOB meta data set')
+    parser.add_argument('--dataset', default='HPOB_32_32_matern_val_updated', help='HPOB meta data set')
     parser.add_argument('--spectral', action='store_true', help='Use a spectral covariance kernel function')
 
     if script == 'train_regression':
@@ -100,35 +100,16 @@ class FSBO:
         backbone = NN(input_dim=self.input_dim, output_dim=self.latent_dim)
         self.dkt = DKT(backbone, batch_size=batch_size).to(device)
         self.optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.0001}, # 0.001 used for long name HPOB simulation
-                                           {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.0001}])
-
-    def get_val_data(self, val_data):
-        batch = []
-        batch_labels = []
-
-        for i in val_data.keys():
-            X = np.array(val_data[i]["X"], dtype=np.float32)
-            y = np.array(val_data[i]["y"], dtype=np.float32)
-            batch += [torch.from_numpy(X)]
-            batch_labels += [torch.from_numpy(y).flatten()]
-
-        batch, batch_labels = torch.cat(batch, 0), torch.cat(batch_labels, 0)
-
-        if(batch_labels.shape[0] > 2000):
-            idx = np.random.choice(np.arange(len(X)), 1000)
-            batch, batch_labels = batch[idx], batch_labels[idx]
-
-        return (batch, batch_labels)
+                                           {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.002}]) # Previously 0.001
 
     def train(self, meta_data, meta_val_data):
         loss_list = []
         val_loss_list = []
-        meta_val_data = self.get_val_data(meta_val_data)
         # for reference check https://arxiv.org/pdf/2101.07667.pdf algorithm 1
         # Running the outer loop a 100 times as this is not specified exactly in the paper.
         # Finding y_min and y_max for creating a scale invariant model
         y_min, y_max = get_min_max(meta_data)
-        for epoch in range(1000):  # params.stop_epoch
+        for epoch in range(10000):  # params.stop_epoch
             # Sample a task and its data at random
             data_task_id = np.random.choice(list(meta_data.keys()))
             data = meta_data[data_task_id]
@@ -137,18 +118,38 @@ class FSBO:
             l = np.random.uniform(low=y_min, high=y_max)
             u = np.random.uniform(low=l, high=y_max)
             # Run the model training loop for set number of times.
-            self.dkt.train_loop(epoch, self.optimizer,
-                                data, l, u, b_n=self.num_batches,
-                                batch_size=self.batch_size)
+            loss, val_loss = self.dkt.train_loop(epoch, self.optimizer,
+                                data, meta_val_data, l, u, b_n=self.num_batches,
+                                batch_size=self.batch_size, scaling=False)
 
-        self.dkt.save_checkpoint(self.params.checkpoint_dir)
+            # Save the best model.
+            if not val_loss_list:
+                self.dkt.save_checkpoint(self.params.checkpoint_dir)
+            elif val_loss < min(val_loss_list):
+                self.dkt.save_checkpoint(self.params.checkpoint_dir)
+
+            # Compare how many times the current loss is higher than the lowest loss
+            # Check given implementation.
+            if len(val_loss_list) > 10:
+                # Break if divergence occurs in the last 10 epochs
+                # diff_loss = np.array(val_loss_list[-10:]) - np.array(loss_list[-10:])
+                if min(val_loss_list) not in val_loss_list[-10:]:
+                    if val_loss_list[-1] > val_loss_list[-10]:
+                        # and val_loss_list[-1] == max(val_loss_list[-10]):
+                        #if (diff_loss == np.sort(diff_loss)).all():
+                        break
+
+            loss_list += [loss]
+            val_loss_list += [val_loss]
+
+        # self.dkt.save_checkpoint(self.params.checkpoint_dir)
 
     # Fine tuning is done for a few points in the data set, to make it
     # a little bit more specific to this.
     def finetune(self, X, y):
         self.dkt.load_checkpoint(self.params.checkpoint_dir)
 
-        for epoch in range(200):
+        for epoch in range(100):
             # Run the model training loop for a smaller number of times for finetuning.
             # Do not use scaling when doing fine tuning.
             self.dkt.fine_tune_loop(epoch, self.optimizer, X, y)
