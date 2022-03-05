@@ -30,23 +30,27 @@ def acquisition_EI(X, y, X_query, surrogate_model):
 
 
 class NN(nn.Module):
-    def __init__(self, input_dim=1, output_dim=1):
+    def __init__(self, input_dim=1, output_dim=1, n_hidden=2):
         super(NN, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
         # Here fc is an abbreviation fully connected
         self.fc1 = nn.Linear(input_dim, 32)  # Input dimension of the objective function
-        self.fc2 = nn.Linear(32, 32)
-        self.fc3 = nn.Linear(32, output_dim)
+        self.hidden_layers = []
+        for i in range(n_hidden):
+            self.hidden_layers += [nn.Linear(32, 32)]
+        self.fc_last = nn.Linear(32, output_dim)
 
     def forward(self, x):
         x = self.fc1(x)
         x = F.relu(x)
 
-        x = self.fc2(x)
-        x = F.relu(x)
+        for fc in self.hidden_layers:
+            x = fc(x)
+            x = F.relu(x)
 
-        x = self.fc3(x)
+        x = self.fc_last(x)
+        # The last layer must not be passed through relu
 
         return x
 
@@ -56,7 +60,7 @@ def parse_args_regression(script):
     parser.add_argument('--seed', default=0, type=int, help='Seed for Numpy and pyTorch. Default: 0 (None)')
     parser.add_argument('--model', default='DNN', help='model: DNN')
     parser.add_argument('--method', default='DKT', help='DKT')
-    parser.add_argument('--dataset', default='HPOB_32_32_matern_val_updated', help='HPOB meta data set')
+    parser.add_argument('--dataset', default='HPOB_32x4_matern_val_updated', help='HPOB meta data set')
     parser.add_argument('--spectral', action='store_true', help='Use a spectral covariance kernel function')
 
     if script == 'train_regression':
@@ -96,11 +100,12 @@ class FSBO:
         self.num_batches = num_batches
         self.params = self.get_params(ssid)
 
+        self.scheduler_function = lambda x,y: torch.optim.lr_scheduler.CosineAnnealingLR(x, y, eta_min=1e-7)
+
         # backbone for latent feature calculation.
-        backbone = NN(input_dim=self.input_dim, output_dim=self.latent_dim)
+        # Total layers = n_hidden + 1 (input layer) + 1 (output layer)
+        backbone = NN(input_dim=self.input_dim, output_dim=self.latent_dim, n_hidden=2)
         self.dkt = DKT(backbone, batch_size=batch_size).to(device)
-        self.optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.0001}, # 0.001 used for long name HPOB simulation
-                                           {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.002}]) # Previously 0.001
 
     def train(self, meta_data, meta_val_data):
         loss_list = []
@@ -109,7 +114,14 @@ class FSBO:
         # Running the outer loop a 100 times as this is not specified exactly in the paper.
         # Finding y_min and y_max for creating a scale invariant model
         y_min, y_max = get_min_max(meta_data)
-        for epoch in range(10000):  # params.stop_epoch
+        epochs = 1000
+
+        self.optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.001},
+                                           {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.001}])
+        scheduler = self.scheduler_function(self.optimizer, epochs)
+
+        div_count = 0
+        for epoch in range(epochs):  # params.stop_epoch
             # Sample a task and its data at random
             data_task_id = np.random.choice(list(meta_data.keys()))
             data = meta_data[data_task_id]
@@ -129,30 +141,34 @@ class FSBO:
                 self.dkt.save_checkpoint(self.params.checkpoint_dir)
 
             # Compare how many times the current loss is higher than the lowest loss
-            # Check given implementation.
-            if len(val_loss_list) > 10:
-                # Break if divergence occurs in the last 10 epochs
-                # diff_loss = np.array(val_loss_list[-10:]) - np.array(loss_list[-10:])
-                if min(val_loss_list) not in val_loss_list[-10:]:
-                    if val_loss_list[-1] > val_loss_list[-10]:
-                        # and val_loss_list[-1] == max(val_loss_list[-10]):
-                        #if (diff_loss == np.sort(diff_loss)).all():
-                        break
+            # Break if divergence occurs in the last 10 epochs
+            if len(val_loss_list) > 0:
+                if val_loss > min(val_loss_list):
+                    div_count += 1
+                else:
+                    div_count = 0
+                if div_count > 20:
+                    break
 
             loss_list += [loss]
             val_loss_list += [val_loss]
-
-        # self.dkt.save_checkpoint(self.params.checkpoint_dir)
+            scheduler.step()
 
     # Fine tuning is done for a few points in the data set, to make it
     # a little bit more specific to this.
     def finetune(self, X, y):
         self.dkt.load_checkpoint(self.params.checkpoint_dir)
+        epochs = 500
 
-        for epoch in range(100):
+        self.optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.001},
+                                           {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.001}])
+        scheduler = self.scheduler(self.optimizer, epochs)
+
+        for epoch in range(epochs):
             # Run the model training loop for a smaller number of times for finetuning.
             # Do not use scaling when doing fine tuning.
             self.dkt.fine_tune_loop(epoch, self.optimizer, X, y)
+            scheduler.step()
 
     def get_params(self, ssid):
         params = parse_args_regression('train_regression')

@@ -205,7 +205,7 @@ def main():
     dkt_performance = evaluate_FSBO(hpob_hdlr, keys_to_evaluate=dkt_keys)
     dkt_performance = [performance_list for _, performance_list in dkt_performance]
     dkt_performance = np.array(dkt_performance, dtype=np.float32)
-    store_object(dkt_performance, "./optimization_results/dkt_performance_val_break_32_32_updated_ft100_002")
+    store_object(dkt_performance, "./optimization_results/dkt_performance_val_break_32x4_updated_ft100_002")
 
     """
     # Loading previous outputs

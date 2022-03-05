@@ -81,6 +81,7 @@ class DKT(nn.Module):
         if scaling:
             # Scale the labels according to the l and u for scale invariance.
             batch_labels = (batch_labels - l) / (u - l)
+
         for inputs, labels in zip(batch, batch_labels):
             optimizer.zero_grad()
             z = self.feature_extractor(inputs)
@@ -145,12 +146,8 @@ class DKT(nn.Module):
         loss.backward()
         optimizer.step()
 
-        mse = self.mse(predictions.mean, y)
-        #if (epoch % 10 == 0):
-        #    print('[%d] - Loss: %.3f  MSE: %.3f noise: %.3f' % (
-        #        epoch, loss.item(), mse.item(),
-        #        self.model.likelihood.noise.item()
-        #    ))
+        # mse = self.mse(predictions.mean, y)
+        return
 
     def predict(self, x_support, y_support, x_query):
 
