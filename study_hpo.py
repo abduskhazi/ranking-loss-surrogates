@@ -10,6 +10,7 @@ import scipy
 import gpytorch
 import time
 import pickle
+import configs as conf
 
 # For memory management
 import gc
@@ -86,8 +87,8 @@ def evaluate_DE(hpob_hdlr, keys_to_evaluate):
         mse += [method.mse_acc]
         variance += [method.variance_acc]
 
-    store_object(mse, "mse")
-    store_object(variance, "variance")
+    store_object(mse, "mse_32x32_E1000_l0_02_random_start")
+    store_object(variance, "variance_32x32_E1000_l0_02_random_start")
 
     plt.plot(np.mean(np.array(mse), axis=0))
     plt.legend(["mse"])
@@ -112,50 +113,45 @@ def evaluate_FSBO(hpob_hdlr, keys_to_evaluate):
 
 def plot_rank_graph():
     # Loading previous outputs
-    gp_performance = load_object("gp_performance")
-    rs_performance = load_object("rs_performance")
-    de1 = load_object("de_performance_32_E100_l0_2")
-    de2 = load_object("de_performance_32_E1000_l0_02")
-    de3 = load_object("de_performance_32x32_E100_l0_1")
-    de4 = load_object("de_performance_32x32_E1000_l0_02")
-    de5 = load_object("de_performance_32x32_E1000_l0_01")
+    gp_performance = load_object("./optimization_results/gp_performance")
+    rs_performance = load_object("./optimization_results/rs_performance")
+    #de1 = load_object("./optimization_results/de_performance_32x32_E1000_l0_01")
+    de2 = load_object("./optimization_results/de_performance_32x32_E1000_l0_02_random_start")
+    dkt = load_object("./optimization_results/dkt_performance_val_break_64_64_ft1000")
+    dkt2 = load_object("./optimization_results/dkt_performance_val_break_64_64_ft500")
     ####
     # Creating a rank graph for all above methods
-    performance = np.stack((rs_performance, gp_performance, de2, de4, de5), axis=-1)
+    performance = np.stack((rs_performance, gp_performance, de2, dkt, dkt2), axis=-1)
     # Since rank data ranks in the increasing order, we need to multiply by -1
     rg = scipy.stats.rankdata(-1 * performance, axis=-1)
     rank_rs = np.mean(rg[:, :, 0], axis=0)
     rank_gp = np.mean(rg[:, :, 1], axis=0)
-    #rank_de1 = np.mean(rg[:, :, 2], axis=0)
+    # rank_de1 = np.mean(rg[:, :, 2], axis=0)
     rank_de2 = np.mean(rg[:, :, 2], axis=0)
-    #rank_de3 = np.mean(rg[:, :, 2], axis=0)
-    rank_de4 = np.mean(rg[:, :, 3], axis=0)
-    rank_de5 = np.mean(rg[:, :, 4], axis=0)
+    rank_dkt = np.mean(rg[:, :, 3], axis=0)
+    rank_dkt2 = np.mean(rg[:, :, 4], axis=0)
     plt.figure(5)
     plt.plot(rank_rs)
     plt.plot(rank_gp)
-    #plt.plot(rank_de1)
+    # plt.plot(rank_de1)
     plt.plot(rank_de2)
-    #plt.plot(rank_de3)
-    plt.plot(rank_de4)
-    plt.plot(rank_de5)
+    plt.plot(rank_dkt)
+    plt.plot(rank_dkt2)
     legend = ["RS Rank",
               "GP Rank",
-    #          "DE Rank [32] ep=100 lr=0.2",
-              "DE Rank [32] ep=1000 lr=0.02",
-    #          "DE Rank [32,32] ep=100 lr=0.1",
-              "DE Rank [32,32] ep=1000 lr=0.02",
-              "DE Rank [32,32] ep=1000 lr=0.01"]
+              # "DE Rank [32,32] ep=1000 lr=0.01",
+              "DE Rank [32,32] ep=1000 lr=0.02 (Rand.)",
+              "DKT Rank [64,64] ft1000 lr=0.001",
+              "DKT Rank [64,64] ft500 lr=0.001"
+              ]
     plt.legend(legend)
-    #plt.savefig("Rank_RS_GP_DE.png")
     plt.show()
 
 
-
-def main():
-    n_trials = 100
-
-    """
+# For studying guassina pre-traning is not required.
+# Hence directly using the meta test set
+def study_gaussian(n_trials):
+    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
     method = GaussianProcess(acq_name="EI")
     all_keys = get_all_combinations(hpob_hdlr, n_trials)
     performance = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=all_keys)
@@ -167,101 +163,134 @@ def main():
             gp_performance += [performance_list]
     gp_performance = np.array(gp_performance, dtype=np.float32)
     print("GP performance shape:", gp_performance.shape)
-    avg_gp_performance = np.mean(gp_performance, axis=0)
-    plt.figure(1)
-    plt.plot(avg_gp_performance)
-    plt.legend(["GP Average"])
-    plt.savefig("Average_GP.png")
-    # plt.show()
     # Store results
-    store_object(gp_keys, "gp_keys")
-    store_object(gp_performance, "gp_performance")
-    # ####
-    """
+    store_object(gp_keys, "./optimization_results/gp_keys")
+    store_object(gp_performance, "./optimization_results/gp_performance")
 
-    # Pretrain fsbo with a single search space (hardcoded for now)
-    # hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
-    # print("Pretrain fsbo with witl all search spaces")
-    # for search_space_id in hpob_hdlr.get_search_spaces():
-    #     meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
-    #     method_fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_train_data),
-    #                       latent_dim=10, batch_size=70, num_batches=50)
-    #    method_fsbo.train(meta_train_data)
-
-    # search_space_id = '4796'
-    # meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
-    # method_fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_train_data),
-    #            latent_dim=10, batch_size=70, num_batches=50)
-    # method_fsbo.train(meta_train_data)
-
+def study_random_search(n_trials):
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
-    gp_keys = load_object("./optimization_results/gp_keys")
-    dkt_keys = gp_keys
-    #dkt_keys = []
-    #for key in gp_keys:
-    #    search_space, dataset, seed, n_trials = key
-    #    if search_space == search_space_id:
-    #        dkt_keys += [key]
-    dkt_performance = evaluate_FSBO(hpob_hdlr, keys_to_evaluate=dkt_keys)
-    dkt_performance = [performance_list for _, performance_list in dkt_performance]
-    dkt_performance = np.array(dkt_performance, dtype=np.float32)
-    store_object(dkt_performance, "./optimization_results/dkt_performance_val_break_32x4_updated_ft100_002")
-
-    """
     # Loading previous outputs
-    gp_keys = load_object("gp_keys")
-    gp_performance = load_object("gp_performance")
-    ####
+    gp_keys = load_object("./optimization_results/gp_keys")
+    # Evaluate Random search
     method = RandomSearch()
     rs_performance = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=gp_keys)
     rs_performance = [performance_list for _, performance_list in rs_performance]
     rs_performance = np.array(rs_performance, dtype=np.float32)
-    avg_rs_performance = np.mean(rs_performance, axis=0)
-    plt.figure(2)
-    plt.plot(avg_rs_performance)
-    plt.plot(avg_gp_performance)
-    plt.legend(["RS Average", "GP Average"])
-    plt.savefig("Average_RS_GP.png")
-    # plt.show()
     # Store results
-    store_object(rs_performance, "rs_performance")
-    # ####
+    store_object(rs_performance, "./optimization_results/rs_performance")
 
-    # Creating a rank graph from the given data
-    performance = np.stack((rs_performance, gp_performance), axis=-1)
-    # Since rank data ranks in the increasing order, we need to multiply by -1
-    rg = scipy.stats.rankdata(-1 * performance, axis=-1)
-    rank_rs = np.mean(rg[:, :, 0], axis=0)
-    rank_gp = np.mean(rg[:, :, 1], axis=0)
-    plt.figure(3)
-    plt.plot(rank_rs)
-    plt.plot(rank_gp)
-    plt.legend(["RS Rank", "GP Rank"])
-    plt.savefig("Rank_RS_GP.png")
-    # plt.show()
-
+def study_DE(n_trails):
+    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
     # Loading previous outputs
-    gp_keys = load_object("gp_keys")
-    gp_performance = load_object("gp_performance")
-    rs_performance = load_object("rs_performance")
-    ####
-
+    gp_keys = load_object("./optimization_results/gp_keys")
+    # Evaluate DE
     de_performance = evaluate_DE(hpob_hdlr, keys_to_evaluate=gp_keys)
     de_performance = [performance_list for _, performance_list in de_performance]
     de_performance = np.array(de_performance, dtype=np.float32)
-    plt.figure(4)
-    plt.plot(np.mean(rs_performance, axis=0))
-    plt.plot(np.mean(gp_performance, axis=0))
-    plt.plot(np.mean(de_performance, axis=0))
-    plt.legend(["RS Average", "GP Average", "DE Average [32,32] ep=1000 lr=0.01"])
-    plt.savefig("Average_RS_GP_DE.png")
-    # plt.show()
     # Store results
-    store_object(de_performance, "de_performance_32x32_E1000_l0_01")
-    # ####
+    store_object(de_performance, "./optimization_results/de_performance_32x32_E1000_l0_02_random_start")
+
+def study_FSBO(n_trails):
+    # Pretrain fsbo with a single search space (hardcoded for now)
+    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
+    print("Pretrain FSBO with all search spaces (training meta dataset)")
+    for search_space_id in hpob_hdlr.get_search_spaces():
+        meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
+        meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
+        method_fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_train_data),
+                           latent_dim=32, batch_size=70, num_batches=50)
+        method_fsbo.train(meta_train_data, meta_val_data)
+
+    print("Evaluate test set (training meta dataset)")
+    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
+    gp_keys = load_object("./optimization_results/gp_keys")
+    dkt_performance = evaluate_FSBO(hpob_hdlr, keys_to_evaluate=gp_keys)
+    dkt_performance = [performance_list for _, performance_list in dkt_performance]
+    dkt_performance = np.array(dkt_performance, dtype=np.float32)
+    store_object(dkt_performance, "./optimization_results/dkt_performance_val_break_32x4_updated_ft1000_01")
+
+
+def main():
+    n_trials = 100
+
+    if conf.evaluate_gaussian:
+        study_gaussian(n_trials)
+
+    if conf.evaluate_random:
+        study_random_search(n_trials)
+
+    if conf.evaluate_DE:
+        study_DE(n_trials)
+
+    if conf.evaluate_FSBO:
+        study_FSBO(n_trials)
 
     plot_rank_graph()
+    return
 
 if __name__ == '__main__':
     mp.freeze_support()
     main()
+
+
+"""
+# Average plotting code. (Backup)
+    # avg_gp_performance = np.mean(gp_performance, axis=0)
+    # plt.figure(1)
+    # plt.plot(avg_gp_performance)
+    # plt.legend(["GP Average"])
+    # plt.savefig("Average_GP.png")
+    # plt.show()
+    
+    # avg_rs_performance = np.mean(rs_performance, axis=0)
+    # plt.figure(2)
+    # plt.plot(avg_rs_performance)
+    # plt.plot(avg_gp_performance)
+    # plt.legend(["RS Average", "GP Average"])
+    # plt.savefig("Average_RS_GP.png")
+    # plt.show()
+
+    # ####
+    
+    plt.figure(4)
+    plt.plot(np.mean(rs_performance, axis=0))
+    plt.plot(np.mean(gp_performance, axis=0))
+    plt.plot(np.mean(de_performance, axis=0))
+    plt.legend(["RS Average", "GP Average", "DE Average [32,32] ep=1000 lr=0.02 (Rand. Start)"])
+    plt.savefig("Average_RS_GP_DE.png")
+    # plt.show()
+    
+        # Loading previous outputs
+    gp_keys = load_object("gp_keys")
+    gp_performance = load_object("gp_performance")
+    rs_performance = load_object("rs_performance")
+    de1 = load_object("de_performance_32x32_E1000_l0_01")
+    de2 = load_object("de_performance_32x32_E1000_l0_02_random_start")
+    ####
+    plt.figure(40)
+    plt.plot(np.mean(rs_performance, axis=0))
+    plt.plot(np.mean(gp_performance, axis=0))
+    plt.plot(np.mean(de1, axis=0))
+    plt.plot(np.mean(de2, axis=0))
+    plt.legend(["RS Average", "GP Average", "DE Average [32,32] ep=1000 lr=0.01", "DE Average [32,32] ep=1000 lr=0.02 (Rand.)"])
+    plt.show()
+    
+     mse = load_object("mse")
+    mse_random_start = load_object("mse_32x32_E1000_l0_02_random_start")
+    mse_2000 = load_object("mse_32x32_E2000_l0_01")
+    plt.plot(np.nanmean(np.array(mse), axis=0))
+    plt.plot(np.nanmean(np.array(mse_random_start), axis=0))
+    plt.plot(np.nanmean(np.array(mse_2000), axis=0))
+    plt.legend(["mse", "mse_random_start", "mse_2000"])
+    plt.show()
+
+
+    variance = load_object("variance")
+    variance_random_start = load_object("variance_32x32_E1000_l0_02_random_start")
+    variance_2000 = load_object("variance_32x32_E2000_l0_01")
+    plt.plot(np.nanmean(np.array(variance), axis=0))
+    plt.plot(np.nanmean(np.array(variance_random_start), axis=0))
+    plt.plot(np.nanmean(np.array(variance_2000), axis=0))
+    plt.legend(["variance", "variance_random_start", "variance_2000"])
+    plt.show()
+"""
