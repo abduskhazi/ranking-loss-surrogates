@@ -40,10 +40,13 @@ class DKT(nn.Module):
         X = np.array(data["X"], dtype=np.float32)
         y = np.array(data["y"], dtype=np.float32)
 
+        if batch_size > X.shape[0]:
+            batch_size = X.shape[0]
+
         batch = []
         batch_labels = []
         for i in range(b_n):
-            idx = np.random.choice(X.shape[0], batch_size, replace=False)
+            idx = np.random.choice(X.shape[0], size=batch_size, replace=False)
             batch += [torch.from_numpy(X[idx])]
             batch_labels += [torch.from_numpy(y[idx]).flatten()]
 
@@ -146,10 +149,17 @@ class DKT(nn.Module):
         loss.backward()
         optimizer.step()
 
-        # mse = self.mse(predictions.mean, y)
+        mse = self.mse(predictions.mean, y)
+        print('[%d] - Loss: %.3f MSE: %.3f noise: %.3f' % (
+            epoch, loss.item(), mse.item(),
+            self.model.likelihood.noise.item()
+        ))
         return
 
     def predict(self, x_support, y_support, x_query):
+        self.model.eval()
+        self.feature_extractor.eval()
+        self.likelihood.eval()
 
         x_support = x_support.to(device)
         y_support = y_support.to(device)
@@ -161,6 +171,10 @@ class DKT(nn.Module):
         with torch.no_grad():
             z_query = self.feature_extractor(x_query).detach()
             pred    = self.likelihood(self.model(z_query))
+
+        self.model.train()
+        self.feature_extractor.train()
+        self.likelihood.train()
 
         return pred
 
