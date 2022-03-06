@@ -103,7 +103,7 @@ class DKT(nn.Module):
             val_loss_list += [self.get_val_loss(val_data)]
         val_loss = sum(val_loss_list)/len(val_loss_list)
 
-        if True:  # (epoch%10==0):
+        if (epoch%40==0):
             print('[%d] - Loss: %.3f  Val-Loss: %.3f MSE: %.3f noise: %.3f' % (
                 epoch, loss.item(), val_loss, mse.item(),
                 self.model.likelihood.noise.item()
@@ -150,10 +150,11 @@ class DKT(nn.Module):
         optimizer.step()
 
         mse = self.mse(predictions.mean, y)
-        print('[%d] - Loss: %.3f MSE: %.3f noise: %.3f' % (
-            epoch, loss.item(), mse.item(),
-            self.model.likelihood.noise.item()
-        ))
+        if epoch % 40 == 0:
+            print('[%d] - Loss: %.3f MSE: %.3f noise: %.3f' % (
+                epoch, loss.item(), mse.item(),
+                self.model.likelihood.noise.item()
+            ))
         return
 
     def predict(self, x_support, y_support, x_query):

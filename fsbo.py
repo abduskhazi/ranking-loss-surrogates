@@ -147,7 +147,7 @@ class FSBO:
                     div_count += 1
                 else:
                     div_count = 0
-                if div_count > 20:
+                if div_count > 20: # Maybe use 30?
                     break
 
             loss_list += [loss]
@@ -158,11 +158,13 @@ class FSBO:
     # a little bit more specific to this.
     def finetune(self, X, y):
         self.dkt.load_checkpoint(self.params.checkpoint_dir)
-        epochs = 500
+        epochs = 500  # ....
 
-        self.optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.001},
-                                           {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.001}])
-        scheduler = self.scheduler(self.optimizer, epochs)
+        scheduler_function_ft = lambda x,y: torch.optim.lr_scheduler.CosineAnnealingLR(x, y, eta_min=1e-4)
+
+        self.optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.03},
+                                           {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.03}])
+        scheduler = scheduler_function_ft(self.optimizer, epochs)
 
         for epoch in range(epochs):
             # Run the model training loop for a smaller number of times for finetuning.

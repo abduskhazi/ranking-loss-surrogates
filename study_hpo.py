@@ -111,38 +111,30 @@ def evaluate_FSBO(hpob_hdlr, keys_to_evaluate):
 
     return performance
 
-def plot_rank_graph():
+def plot_rank_graph(n_keys=2, n_trials=3):
     # Loading previous outputs
-    gp_performance = load_object("./optimization_results/gp_performance")
-    rs_performance = load_object("./optimization_results/rs_performance")
-    #de1 = load_object("./optimization_results/de_performance_32x32_E1000_l0_01")
-    de2 = load_object("./optimization_results/de_performance_32x32_E1000_l0_02_random_start")
-    dkt = load_object("./optimization_results/dkt_performance_val_break_64_64_ft1000")
-    dkt2 = load_object("./optimization_results/dkt_performance_val_break_64_64_ft500")
+    gp_performance = load_object("./optimization_results/gp_performance")[:n_keys, :n_trials]
+    rs_performance = load_object("./optimization_results/rs_performance")[:n_keys, :n_trials]
+    de = load_object("./optimization_results/de_performance_32x32_E1000_l0_02_random_start")[:n_keys, :n_trials]
+    dkt = load_object("./optimization_results/dkt_performance_500_003_cosA")[:n_keys, :n_trials]
     ####
     # Creating a rank graph for all above methods
-    performance = np.stack((rs_performance, gp_performance, de2, dkt, dkt2), axis=-1)
+    performance = np.stack((rs_performance, gp_performance, de, dkt), axis=-1)
     # Since rank data ranks in the increasing order, we need to multiply by -1
     rg = scipy.stats.rankdata(-1 * performance, axis=-1)
     rank_rs = np.mean(rg[:, :, 0], axis=0)
     rank_gp = np.mean(rg[:, :, 1], axis=0)
-    # rank_de1 = np.mean(rg[:, :, 2], axis=0)
-    rank_de2 = np.mean(rg[:, :, 2], axis=0)
+    rank_de = np.mean(rg[:, :, 2], axis=0)
     rank_dkt = np.mean(rg[:, :, 3], axis=0)
-    rank_dkt2 = np.mean(rg[:, :, 4], axis=0)
-    plt.figure(5)
+    plt.figure(101)
     plt.plot(rank_rs)
     plt.plot(rank_gp)
-    # plt.plot(rank_de1)
-    plt.plot(rank_de2)
+    plt.plot(rank_de)
     plt.plot(rank_dkt)
-    plt.plot(rank_dkt2)
     legend = ["RS Rank",
               "GP Rank",
-              # "DE Rank [32,32] ep=1000 lr=0.01",
               "DE Rank [32,32] ep=1000 lr=0.02 (Rand.)",
-              "DKT Rank [64,64] ft1000 lr=0.001",
-              "DKT Rank [64,64] ft500 lr=0.001"
+              "DKT Rank [32x4] ft=500 lr=0.03 (CosAnne)"
               ]
     plt.legend(legend)
     plt.show()
@@ -190,42 +182,50 @@ def study_DE(n_trails):
     # Store results
     store_object(de_performance, "./optimization_results/de_performance_32x32_E1000_l0_02_random_start")
 
-def study_FSBO(n_trails):
-    # Pretrain fsbo with a single search space (hardcoded for now)
-    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
-    print("Pretrain FSBO with all search spaces (training meta dataset)")
-    for search_space_id in hpob_hdlr.get_search_spaces():
-        meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
-        meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
-        method_fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_train_data),
-                           latent_dim=32, batch_size=70, num_batches=50)
-        method_fsbo.train(meta_train_data, meta_val_data)
+def study_FSBO(conf_fsbo, n_keys, n_trails):
 
-    print("Evaluate test set (training meta dataset)")
-    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
-    gp_keys = load_object("./optimization_results/gp_keys")
-    dkt_performance = evaluate_FSBO(hpob_hdlr, keys_to_evaluate=gp_keys)
-    dkt_performance = [performance_list for _, performance_list in dkt_performance]
-    dkt_performance = np.array(dkt_performance, dtype=np.float32)
-    store_object(dkt_performance, "./optimization_results/dkt_performance_val_break_32x4_updated_ft1000_01")
+    if conf_fsbo.pretrain:
+        hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
+        print("Pretrain FSBO with all search spaces (training meta dataset)")
+        for search_space_id in hpob_hdlr.get_search_spaces():
+            meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
+            meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
+            method_fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_train_data),
+                               latent_dim=32, batch_size=70, num_batches=50)
+            method_fsbo.train(meta_train_data, meta_val_data)
+
+    if conf_fsbo.evaluate:
+        print("Evaluate test set (training meta dataset)")
+        hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
+        gp_keys = load_object("./optimization_results/gp_keys")[:n_keys]
+        # Change the number of trails in the key to the required amount
+        for i in range(len(gp_keys)):
+            key_new = list(gp_keys[i])
+            key_new[3] = n_trails
+            gp_keys[i] = tuple(key_new)
+        dkt_performance = evaluate_FSBO(hpob_hdlr, keys_to_evaluate=gp_keys)
+        dkt_performance = [performance_list for _, performance_list in dkt_performance]
+        dkt_performance = np.array(dkt_performance, dtype=np.float32)
+        store_object(dkt_performance, "./optimization_results/dkt_performance_500_003_cosA")
 
 
 def main():
-    n_trials = 100
+    n_trails = 100
+    n_keys = 77
 
     if conf.evaluate_gaussian:
-        study_gaussian(n_trials)
+        study_gaussian(n_trails)
 
     if conf.evaluate_random:
-        study_random_search(n_trials)
+        study_random_search(n_trails)
 
     if conf.evaluate_DE:
-        study_DE(n_trials)
+        study_DE(n_trails)
 
-    if conf.evaluate_FSBO:
-        study_FSBO(n_trials)
+    if conf.FSBO.pretrain or conf.FSBO.evaluate:
+        study_FSBO(conf.FSBO, n_keys=n_keys, n_trails=n_trails)
 
-    plot_rank_graph()
+    plot_rank_graph(n_keys=n_keys, n_trials=n_trails)
     return
 
 if __name__ == '__main__':

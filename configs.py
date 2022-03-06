@@ -1,4 +1,8 @@
+from collections import namedtuple
+
 evaluate_gaussian = False
-evaluate_random = True
+evaluate_random = False
 evaluate_DE = False
-evaluate_FSBO = True
+FSBO = namedtuple("FSBO", "pretrain evaluate")
+FSBO.pretrain = False
+FSBO.evaluate = True
