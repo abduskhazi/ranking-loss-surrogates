@@ -111,7 +111,7 @@ def evaluate_FSBO(hpob_hdlr, keys_to_evaluate):
 
     return performance
 
-def plot_rank_graph(n_keys=2, n_trials=3):
+def plot_rank_graph(n_keys, n_trials):
     # Loading previous outputs
     gp_performance = load_object("./optimization_results/gp_performance")[:n_keys, :n_trials]
     rs_performance = load_object("./optimization_results/rs_performance")[:n_keys, :n_trials]
