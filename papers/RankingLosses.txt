@@ -16,15 +16,25 @@ Relationship of Ranking measures and RLs is unkown.
 
 
 Main AIM:
-    Find relationship between RMs and Pointwise/Listwise RLs.
+    Find relationship between Ranking Measuress and Pointwise/Listwise Ranking Losses.
+    Pointsize relationship already clear
+    Goal to do the same for pair wize and listwise case.
 
 Proposed IDEA:
     Use an essential loss. (Need more reading)
 
 Loss function understanding:
 Pointwise - Try to get the label as per data
-Pairwise - Try to separate the labels as much as possible.
-Listwise - Doubt. We talk about permutations. It is only possible if #Lables << #DataPoints.
+Pairwise - Try to separate the labels as much as possible. (Because of -z in all forms of phi).
+           It is a classification of 2 objects with a boundary --- Hence the effort to separate things.
+Listwise - The anology of this is that of 2 oppposing forces. One the rank of the object. Secondly
+           the number of objects below it in the list.
+           Loss ===> -rank + number of objects below it.
+                If the rank is low and more number of objects are below it ==> Loss > 0 which is not desirable
+                On the contrary, if the rank is high it can bear more objects below it as Loss would not be so high.
+           Permutation invariance is obtained by using random valid (best case)
+     Doubt. We talk about permutations. It is only possible if #Lables << #DataPoints.
+        ==> This is true as we are doing K-Layer classfication.
 
 
 Ranking Losses:
@@ -33,7 +43,70 @@ Ranking Losses:
     McRank              RankBoost       ListMLE
                         RankNet
 
+Brief note on Pairwise approach: from the introduction of https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-2007-40.pdf
+    The data is created by creating (x1, x2) -> label tuples for all possible x1, x2 in the ranked list. The label can be -1, 0, or 1
+    ,for instance, if x1 is having lower, equal or higher rank to x2 respectively.
+
 Ranking Measures
-    NDCG & MAP (Used in Information Retreival)
+    NDCG = K level ratings
+    MAP = 2 level ratings
 
+    Read: https://faculty.cc.gatech.edu/~zha/CS8803WST/dcg.pdf
+    Read: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/08/letor3.pdf (Page 15 for a clearer picture)
+        CG = Cumulated gain (of information)
+        DCG = Discounted cumulated gain (of information)
+        NDCG = Normalized DCG i.e Divide each position of the DCG by Ideal DCG for the results.
+               You get a list of values in [0,1] which lenght of list = number of rankings considered.
+        NDCG@k = required real valued function of the ranking measure.
 
+    Question: Only 2 level rankings necessary for our case?
+
+Understanding listwise loss function:
+    Queries       Ranking(f(Q, D))      Ground Truth scores
+    q1        [d1, d2, d3 ... d10]      [y1, y2, y3 ... y10]
+    q2        [d1, d2, d3 ... d15]      [y1, y2, y3 ... y15]
+    q3        [d1, d2, d3 ... d7]       [y1, y2, y3 ... y7]
+
+    D = {Set of Documents}
+    Q = {Set of Queries}
+    f : QxD -> R [Note: Here D is conditioned on Q]. The function is defined for 1 (query, document) pair.
+
+    One instance of our training data is (X, Y) where X = {Set of all documents returned by query} Y = {Set of the respective ground
+    truth scores}. Basically 1 query is one instance. Hence our loss function has to take in vector of outputs from f.
+
+    Loss = L(Xi , Yi) where Xi and Yi are refer to 1 query qi.
+    Full Batch Loss = mean (L(Xi, Yi) for all elements i in the training objects)
+
+    Here f(Q, D) itself is the scoring function that is the main model to be learnt in our framework.
+
+    *** Complete explanation found in Section 3 and Section 4 of paper:
+        *** https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-2007-40.pdf
+
+    * We need to make sure that f returns scores that are SIMILAR IN RELAVANCE/ORDER to the ground truth scores.
+    * This would make the Ranking(f(Q, D)) equal to the ground truth and we would have learnt our ranking function.
+    * Note that we do not need to get the exact ground truth scores. Which increases the space of acceptable functions in the
+      function space F (Here f belongs to F) we are searching from 1 to INF.
+    * RANKING is nothing but sorting the results based on their respective scores/relavance (decreasing order)
+    * Since the sorting function is non differentiable, the loss function in question should not be composed of the RANKING function.
+    * Moreover, leaving the sorting function makes our loss permutation independent by making use of the + permutation invariant operator
+      [Check the final step for more clarity on this. Cross entropy uses + operator]
+    * This leaves us with 2 lists -
+        a. List of scores given by our ranking function f
+        b. List of relavance scores given to us by ground truth
+    * The loss function finds the distance of these 2 lists.
+    * A probabilitic approach is taken so as to take into account for any uncertainities.
+    * The probability of selecting any document can be taken as score_of_document / sum(all document scores) since higher score means
+      a more relavant document
+    * However the score of the document can negative as well. Hence a strictly positive and increasing funciton phi is taken
+        which makes prob(d) = phi(d) / sum (phi(d_i) for i in Documentsof(QueryGiven))
+    * The probability of a permutation is nothing but the probability of selecting one document after another without replacement
+      (Reminder: Discrete probability calculation){Which itself becomes a probability distribution i.e sigma = 1}
+    * One possible way to find the distance betwen the 2 lists a and b is to find the probabilities of all permutations for a and b
+      and compare both the distriputions. 
+    * Complexity of this O(n!) ==> Intractible
+    * Instead take the probabilities of selecting every document first in any possible permutation. {Which also is a probability 
+      distribution i.e sigma = 1}
+    * The first selection probability (Top 1 probability in the research paper) for a and b are calculated separately using their
+      respective scores.
+    * The final Loss for the list = Cross entropy of probability distribution (a) w.r.t that of b.
+    * This loss is backpropogated through the network to set the parameters.
