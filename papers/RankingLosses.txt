@@ -82,6 +82,7 @@ Understanding listwise loss function:
     *** Complete explanation found in Section 3 and Section 4 of paper:
         *** https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-2007-40.pdf
 
+    * ListNet
     * We need to make sure that f returns scores that are SIMILAR IN RELAVANCE/ORDER to the ground truth scores.
     * This would make the Ranking(f(Q, D)) equal to the ground truth and we would have learnt our ranking function.
     * Note that we do not need to get the exact ground truth scores. Which increases the space of acceptable functions in the
@@ -110,3 +111,12 @@ Understanding listwise loss function:
       respective scores.
     * The final Loss for the list = Cross entropy of probability distribution (a) w.r.t that of b.
     * This loss is backpropogated through the network to set the parameters.
+
+    ListMLE: http://icml2008.cs.helsinki.fi/papers/167.pdf
+    * Main difference is that the loss function used is different.
+    * Loss function is intuitive in that they would want to raise the probability of getting the ground truth permutation.
+    * They increase the probability of getting the exact (ground truth) permutation using the scores given by f.
+
+    Both the papers use linear network model for some simplicity. But we can use the non-linearity due to available library
+        implementations
+    Very nice summary of both loss functions : https://arxiv.org/pdf/1707.05438.pdf 
