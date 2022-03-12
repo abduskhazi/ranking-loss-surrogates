@@ -42,7 +42,7 @@ class DE_search:
         X_obs = np.array(X_obs, dtype=np.float32)
         y_obs = np.array(y_obs, dtype=np.float32)
         X_pen = np.array(X_pen, dtype=np.float32)
-        self.DE.train(X_obs, y_obs, epochs=1000, lr=0.02, adverserial_training=False)
+        self.DE.train(X_obs, y_obs, epochs=1000, lr=0.02, batch_size=200, adverserial_training=False)
         pred_mean, pred_variance = self.DE.predict(torch.from_numpy(X_obs))
         self.store_fitting_data(y_obs, pred_mean, pred_variance)
 
