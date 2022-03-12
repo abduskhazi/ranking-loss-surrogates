@@ -137,6 +137,7 @@ class DKT(nn.Module):
         self.feature_extractor.train()
         self.likelihood.train()
 
+
         X, y = X.to(device), y.to(device)
 
         optimizer.zero_grad()
@@ -198,6 +199,8 @@ class ExactGPLayer(gpytorch.models.ExactGP):
         self.mean_module  = gpytorch.means.ConstantMean()
 
         ## RBF kernel
+        ## Another possibility of a kernel - self.covar_module =
+        ## gpytorch.kernels.ScaleKernel(gpytorch.kernels.MaternKernel(nu=config["nu"], ard_num_dims=dims if config["a    rd"] else None))
         if(kernel == "matern" or kernel == "MATERN"):
             self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.MaternKernel())
         elif(kernel=='rbf' or kernel=='RBF'):
