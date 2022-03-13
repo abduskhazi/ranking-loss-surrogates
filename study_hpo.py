@@ -232,17 +232,9 @@ def study_FSBO(conf_fsbo, n_keys, n_trails):
     if conf_fsbo.evaluate:
         print("Evaluate test set (training meta dataset)")
         hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
-        gp_keys = load_object("./optimization_results/gp_keys")[:n_keys]
-        # Change the number of trails in the key to the required amount
-        for i in range(len(gp_keys)):
-            key_new = list(gp_keys[i])
-            key_new[3] = n_trails
-            gp_keys[i] = tuple(key_new)
-        dkt_performance = evaluate_FSBO(hpob_hdlr, keys_to_evaluate=gp_keys)
-        dkt_performance = [performance_list for _, performance_list in dkt_performance]
-        dkt_performance = np.array(dkt_performance, dtype=np.float32)
-        store_object(dkt_performance, "./optimization_results/dkt_performance_500_003_cosA")
-
+        dkt_keys = get_all_combinations(hpob_hdlr, 100)[:n_keys]
+        dkt_performance = evaluate_FSBO(hpob_hdlr, keys_to_evaluate=dkt_keys)
+        store_object(dkt_performance, "./optimization_results/dkt_evaluation_32x5_500_1")
 
 def main():
     n_trails = 100
