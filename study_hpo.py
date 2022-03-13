@@ -230,11 +230,11 @@ def main():
     n_trails = 100
     n_keys = 77
 
-    if conf.evaluate_gaussian:
-        study_gaussian(n_trails)
-
     if conf.evaluate_random:
         study_random_search()  # Evaluating it for 100 trials by default since compuationally cheap
+
+    if conf.evaluate_gaussian:
+        study_gaussian(n_trails)
 
     if conf.evaluate_DE:
         study_DE(n_trails)
