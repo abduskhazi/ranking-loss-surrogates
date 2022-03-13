@@ -139,6 +139,35 @@ def plot_rank_graph(n_keys, n_trials):
     plt.legend(legend)
     plt.show()
 
+def get_performance_array(eval_object, required_keys):
+    # Converting eval object to dictionary
+    eval_dict = {}
+    for k, p in eval_object:
+        eval_dict[k] = p
+    # Creating the performance list in the order given by keys
+    performance = []
+    for key in required_keys:
+        if key in list(eval_dict.keys()):
+            performance += [eval_dict[key]]
+        else:
+            # Raise an exception if the key is absent
+            ex = ValueError()
+            ex.strerror = str(key) + " not present in eval_object"
+            print("Exception ====> ", ex.strerror)
+            raise ex
+
+    return np.array(performance, dtype=np.float32)
+
+def study_random_search():
+    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
+    rs_keys = get_all_combinations(hpob_hdlr, 100)
+    # Evaluate Random search
+    method = RandomSearch()
+    rs_eval = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=rs_keys)
+    # Store results
+    store_object(rs_eval, "./optimization_results/rs_evaluate")
+    store_object(rs_keys, "./optimization_results/rs_keys")
+
 
 # For studying guassina pre-traning is not required.
 # Hence directly using the meta test set
@@ -158,20 +187,6 @@ def study_gaussian(n_trials):
     # Store results
     store_object(gp_keys, "./optimization_results/gp_keys")
     store_object(gp_performance, "./optimization_results/gp_performance")
-
-def study_random_search(n_trials):
-    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
-    # Loading previous outputs
-    rs_keys = get_all_combinations(hpob_hdlr, 100) # load_object("./optimization_results/gp_keys")
-    # Evaluate Random search
-    method = RandomSearch()
-    rs_performance = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=rs_keys)
-    store_object(rs_performance, "./optimization_results/rs_evaluate")
-    rs_performance = [performance_list for _, performance_list in rs_performance]
-    rs_performance = np.array(rs_performance, dtype=np.float32)
-    # Store results
-    store_object(rs_keys, "./optimization_results/rs_keys")
-    store_object(rs_performance, "./optimization_results/rs_performance")
 
 def study_DE(n_trails):
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
@@ -219,7 +234,7 @@ def main():
         study_gaussian(n_trails)
 
     if conf.evaluate_random:
-        study_random_search(n_trails)
+        study_random_search()  # Evaluating it for 100 trials by default since compuationally cheap
 
     if conf.evaluate_DE:
         study_DE(n_trails)
