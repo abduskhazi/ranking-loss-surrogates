@@ -211,13 +211,11 @@ def study_gaussian(n_trials):
 def study_DE(n_trails):
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
     # Loading previous outputs
-    gp_keys = load_object("./optimization_results/gp_keys")
+    de_keys = get_all_combinations(hpob_hdlr, 100)
     # Evaluate DE
-    de_performance = evaluate_DE(hpob_hdlr, keys_to_evaluate=gp_keys)
-    de_performance = [performance_list for _, performance_list in de_performance]
-    de_performance = np.array(de_performance, dtype=np.float32)
-    # Store results
-    store_object(de_performance, "./optimization_results/de_performance_32x32_E1000_l0_02_random_start")
+    de_performance = evaluate_DE(hpob_hdlr, keys_to_evaluate=de_keys)
+    store_object(de_performance, "./optimization_results/de_evaluate_32x32_E1000_l0_02_random_start")
+
 
 def study_FSBO(conf_fsbo, n_keys, n_trails):
 
