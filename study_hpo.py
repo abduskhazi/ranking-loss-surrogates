@@ -173,7 +173,7 @@ def get_common_keys(eval_object_list):
 
 
 def get_keys(eval_object):
-    return get_common_keys([eval_object, load_object("./optimization_results/rs_evaluate")])
+    return get_common_keys([eval_object, load_object("./optimization_results/rs_evaluation")])
 
 
 def get_performance_array(eval_object, required_keys):
@@ -202,8 +202,7 @@ def study_random_search():
     method = RandomSearch()
     rs_eval = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=rs_keys)
     # Store results
-    store_object(rs_eval, "./optimization_results/rs_evaluate")
-    store_object(rs_keys, "./optimization_results/rs_keys")
+    store_object(rs_eval, "./optimization_results/rs_evaluation")
 
 
 # For studying gaussian pre-training is not required.
