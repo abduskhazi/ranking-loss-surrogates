@@ -5,4 +5,6 @@ evaluate_random = False
 evaluate_DE = False
 FSBO = namedtuple("FSBO", "pretrain evaluate")
 FSBO.pretrain = False
-FSBO.evaluate = True
+FSBO.evaluate = False
+
+plot_ranks = False

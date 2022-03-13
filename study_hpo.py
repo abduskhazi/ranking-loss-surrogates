@@ -94,13 +94,6 @@ def evaluate_DE(hpob_hdlr, keys_to_evaluate):
     store_object(mse, "./optimization_results/de_mse_32x32_E1000_l0_02_random_start")
     store_object(variance, "./optimization_results/de_variance_32x32_E1000_l0_02_random_start")
 
-    plt.plot(np.mean(np.array(mse), axis=0))
-    plt.legend(["mse"])
-    plt.show()
-    plt.plot(np.mean(np.array(variance), axis=0))
-    plt.legend(["variance"])
-    plt.show()
-
     return performance
 
 def evaluate_FSBO(hpob_hdlr, keys_to_evaluate):
@@ -267,7 +260,9 @@ def main():
     if conf.FSBO.pretrain or conf.FSBO.evaluate:
         study_FSBO(conf.FSBO, n_keys=n_keys, n_trails=n_trails)
 
-    plot_rank_graph(n_keys=n_keys, n_trials=n_trails)
+    if conf.plot_ranks:
+        plot_rank_graph(n_keys=n_keys, n_trials=n_trails)
+
     return
 
 if __name__ == '__main__':
@@ -334,5 +329,13 @@ if __name__ == '__main__':
     plt.plot(np.nanmean(np.array(variance_random_start), axis=0))
     plt.plot(np.nanmean(np.array(variance_2000), axis=0))
     plt.legend(["variance", "variance_random_start", "variance_2000"])
+    plt.show()
+    
+    
+    plt.plot(np.mean(np.array(mse), axis=0))
+    plt.legend(["mse"])
+    plt.show()
+    plt.plot(np.mean(np.array(variance), axis=0))
+    plt.legend(["variance"])
     plt.show()
 """
