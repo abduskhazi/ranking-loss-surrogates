@@ -49,7 +49,7 @@ def get_all_combinations(hpob_hdlr, n_trials):
     evaluation_list = []
     for search_space in hpob_hdlr.get_search_spaces():
         for dataset in hpob_hdlr.get_datasets(search_space):
-            for seed in ["test2"]:  # seed_list: # use this for running on all possible seeds
+            for seed in seed_list:  # ["test2"]:  # seed_list: # use this for running on all possible seeds
                 evaluation_list += [(search_space, dataset, seed, n_trials)]
 
     return evaluation_list
@@ -162,13 +162,15 @@ def study_gaussian(n_trials):
 def study_random_search(n_trials):
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
     # Loading previous outputs
-    gp_keys = load_object("./optimization_results/gp_keys")
+    rs_keys = get_all_combinations(hpob_hdlr, 100) # load_object("./optimization_results/gp_keys")
     # Evaluate Random search
     method = RandomSearch()
-    rs_performance = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=gp_keys)
+    rs_performance = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=rs_keys)
+    store_object(rs_performance, "./optimization_results/rs_evaluate")
     rs_performance = [performance_list for _, performance_list in rs_performance]
     rs_performance = np.array(rs_performance, dtype=np.float32)
     # Store results
+    store_object(rs_keys, "./optimization_results/rs_keys")
     store_object(rs_performance, "./optimization_results/rs_performance")
 
 def study_DE(n_trails):
