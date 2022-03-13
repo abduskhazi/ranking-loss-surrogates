@@ -145,6 +145,7 @@ def plot_rank_graph(n_keys, n_trials):
     plt.legend(legend)
     plt.show()
 
+
 def convert_eval_to_dictionary(eval_object):
     # Converting eval object to dictionary
     # Holding only non empty performance lists
@@ -153,6 +154,7 @@ def convert_eval_to_dictionary(eval_object):
         if p:
             eval_dict[k] = p
     return eval_dict
+
 
 def get_common_keys(eval_object_list):
     # Create the list of dictionaries with non empty performance lists
@@ -168,6 +170,11 @@ def get_common_keys(eval_object_list):
         common_keys.intersection(key_set)
 
     return list(common_keys)
+
+
+def get_keys(eval_object):
+    return get_common_keys([eval_object, load_object("./optimization_results/rs_evaluate")])
+
 
 def get_performance_array(eval_object, required_keys):
 
@@ -186,6 +193,7 @@ def get_performance_array(eval_object, required_keys):
             raise ex
 
     return np.array(performance, dtype=np.float32)
+
 
 def study_random_search():
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
