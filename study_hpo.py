@@ -198,24 +198,15 @@ def study_random_search():
     store_object(rs_keys, "./optimization_results/rs_keys")
 
 
-# For studying guassina pre-traning is not required.
+# For studying gaussian pre-training is not required.
 # Hence directly using the meta test set
 def study_gaussian(n_trials):
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
     method = GaussianProcess(acq_name="EI")
     all_keys = get_all_combinations(hpob_hdlr, n_trials)
     performance = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=all_keys)
-    gp_keys = []
-    gp_performance = []
-    for key, performance_list in performance:
-        if performance_list:
-            gp_keys += [key]
-            gp_performance += [performance_list]
-    gp_performance = np.array(gp_performance, dtype=np.float32)
-    print("GP performance shape:", gp_performance.shape)
-    # Store results
-    store_object(gp_keys, "./optimization_results/gp_keys")
-    store_object(gp_performance, "./optimization_results/gp_performance")
+    store_object(performance, "./optimization_results/gp_evaluation")
+
 
 def study_DE(n_trails):
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
