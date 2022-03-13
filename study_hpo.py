@@ -86,9 +86,13 @@ def evaluate_DE(hpob_hdlr, keys_to_evaluate):
         performance += res
         mse += [method.mse_acc]
         variance += [method.variance_acc]
+        # Keep storing the intermittent evaluated DE.
+        store_object(performance, "./optimization_results/intermittent_de_evaluate_32x32_E1000_l0_02_random_start")
+        store_object(mse, "./optimization_results/intermittent_de_mse_32x32_E1000_l0_02_random_start")
+        store_object(variance, "./optimization_results/intermittent_de_variance_32x32_E1000_l0_02_random_start")
 
-    store_object(mse, "mse_32x32_E1000_l0_02_random_start")
-    store_object(variance, "variance_32x32_E1000_l0_02_random_start")
+    store_object(mse, "./optimization_results/de_mse_32x32_E1000_l0_02_random_start")
+    store_object(variance, "./optimization_results/de_variance_32x32_E1000_l0_02_random_start")
 
     plt.plot(np.mean(np.array(mse), axis=0))
     plt.legend(["mse"])
