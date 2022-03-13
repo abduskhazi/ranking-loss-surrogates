@@ -147,12 +147,23 @@ class FSBO:
                     div_count += 1
                 else:
                     div_count = 0
-                if div_count > 20: # Maybe use 30?
+                if div_count > 30:
                     break
 
             loss_list += [loss]
             val_loss_list += [val_loss]
             scheduler.step()
+
+        plt.figure(np.random.randint(999999999))
+        plt.plot(np.array(loss_list, dtype=np.float32))
+        plt.plot(np.array(val_loss_list, dtype=np.float32))
+        legend = ["Loss",
+                  "Validation Loss"
+                  ]
+        plt.legend(legend)
+        plt.savefig(self.params.checkpoint_dir + "_loss.png")
+
+        return loss_list, val_loss_list
 
     # Fine tuning is done for a few points in the data set, to make it
     # a little bit more specific to this.
