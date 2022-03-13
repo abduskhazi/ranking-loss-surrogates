@@ -139,11 +139,34 @@ def plot_rank_graph(n_keys, n_trials):
     plt.legend(legend)
     plt.show()
 
-def get_performance_array(eval_object, required_keys):
+def convert_eval_to_dictionary(eval_object):
     # Converting eval object to dictionary
+    # Holding only non empty performance lists
     eval_dict = {}
     for k, p in eval_object:
-        eval_dict[k] = p
+        if p:
+            eval_dict[k] = p
+    return eval_dict
+
+def get_common_keys(eval_object_list):
+    # Create the list of dictionaries with non empty performance lists
+    temp_eval_obj_list = []
+    for obj in eval_object_list:
+        eval_dict = convert_eval_to_dictionary(obj)
+        temp_eval_obj_list += [eval_dict]
+    eval_object_list = temp_eval_obj_list
+
+    common_keys = set(list(eval_object_list[0].keys()))
+    for i in range(1, len(eval_object_list)):
+        key_set = set(list(eval_object_list[i].keys()))
+        common_keys.intersection(key_set)
+
+    return list(common_keys)
+
+def get_performance_array(eval_object, required_keys):
+
+    eval_dict = convert_eval_to_dictionary(eval_object)
+
     # Creating the performance list in the order given by keys
     performance = []
     for key in required_keys:
@@ -231,7 +254,7 @@ def main():
     n_keys = 77
 
     if conf.evaluate_random:
-        study_random_search()  # Evaluating it for 100 trials by default since compuationally cheap
+        study_random_search()  # Evaluating it for 100 trials by default since computationally cheap
 
     if conf.evaluate_gaussian:
         study_gaussian(n_trails)
