@@ -108,6 +108,8 @@ def evaluate_FSBO(hpob_hdlr, keys_to_evaluate):
                           latent_dim=32, batch_size=70, num_batches=50)
         res = evaluate_combinations(hpob_hdlr, method_fsbo, keys_to_evaluate=[key])
         performance += res
+        # Keep storing the evaluated FSBO.
+        store_object(performance, "./optimization_results/intermittent_dkt_evaluation_32x5_500_1")
 
     return performance
 
