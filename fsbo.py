@@ -129,6 +129,7 @@ class FSBO:
 
         self.optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.001},
                                            {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.001}])
+        meta_val_data = convert_meta_data_to_np_dictionary(meta_val_data)
         scheduler = self.scheduler_function(self.optimizer, epochs)
 
         div_count = 0

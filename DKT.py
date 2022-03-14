@@ -55,8 +55,8 @@ class DKT(nn.Module):
     def get_validation_batch(self, val_data):
         # This is different from the training batch because we require
         # support and query sets for testing the working.
-        X = np.array(val_data["X"], dtype=np.float32)
-        y = np.array(val_data["y"], dtype=np.float32)
+        X = val_data["X"]
+        y = val_data["y"]
 
         # 100 support points and 200 (or remaining) query points distinct sets
         n_support_points = 50
