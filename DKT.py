@@ -155,7 +155,7 @@ class DKT(nn.Module):
                 epoch, loss.item(), mse.item(),
                 self.model.likelihood.noise.item()
             ))
-        return
+        return loss.item()
 
     def predict(self, x_support, y_support, x_query):
         self.model.eval()
