@@ -111,8 +111,6 @@ class FSBO:
         self.num_batches = num_batches
         self.params = self.get_params(ssid)
 
-        self.scheduler_function = lambda x,y: torch.optim.lr_scheduler.CosineAnnealingLR(x, y, eta_min=1e-7)
-
         # backbone for latent feature calculation.
         # Total layers = n_hidden + 1 (input layer) + 1 (output layer)
         backbone = NN(input_dim=self.input_dim, output_dim=self.latent_dim, n_hidden=2)
@@ -125,47 +123,38 @@ class FSBO:
         # Running the outer loop a 100 times as this is not specified exactly in the paper.
         # Finding y_min and y_max for creating a scale invariant model
         y_min, y_max = get_min_max(meta_data)
-        epochs = 1000
+        epochs = 2000
 
-        self.optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.001},
-                                           {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.001}])
         meta_data = convert_meta_data_to_np_dictionary(meta_data)
         meta_val_data = convert_meta_data_to_np_dictionary(meta_val_data)
-        scheduler = self.scheduler_function(self.optimizer, epochs)
 
         div_count = 0
         for epoch in range(epochs):  # params.stop_epoch
-            # Sample a task and its data at random
-            data_task_id = np.random.choice(list(meta_data.keys()))
-            data = meta_data[data_task_id]
             # Calculate l and u for random scaling such that l < u
             # Issue: l can be very close to u and create issues.
             l = np.random.uniform(low=y_min, high=y_max)
             u = np.random.uniform(low=l, high=y_max)
             # Run the model training loop for set number of times.
-            loss, val_loss = self.dkt.train_loop(epoch, self.optimizer,
-                                data, meta_val_data, l, u, b_n=self.num_batches,
+            loss, val_loss = self.dkt.train_loop(epoch, None, # giving optimiser as none.
+                                meta_data, meta_val_data, l, u, b_n=self.num_batches,
                                 batch_size=self.batch_size, scaling=False)
 
             # Save the best model.
-            if not val_loss_list:
-                self.dkt.save_checkpoint(self.params.checkpoint_dir)
-            elif val_loss < min(val_loss_list):
+            if val_loss < min(val_loss_list + [np.inf]):
                 self.dkt.save_checkpoint(self.params.checkpoint_dir)
 
             # Compare how many times the current loss is higher than the lowest loss
             # Break if divergence occurs in the last 10 epochs
-            if len(val_loss_list) > 0:
-                if val_loss > min(val_loss_list):
-                    div_count += 1
-                else:
-                    div_count = 0
-                if div_count > 30:
-                    break
+            if val_loss > min(val_loss_list + [np.inf]):
+                div_count += 1
+            else:
+                div_count = 0
+            if div_count > 20:  # Maybe 30? probably not a good idea
+                break
+                # no_breaking = True
 
             loss_list += [loss]
             val_loss_list += [val_loss]
-            scheduler.step()
 
         plt.figure(np.random.randint(999999999))
         plt.plot(np.array(loss_list, dtype=np.float32))

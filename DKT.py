@@ -36,16 +36,19 @@ class DKT(nn.Module):
     def set_forward_loss(self, x):
         pass
 
-        X = data["X"]
-        y = data["y"]
-
-        if batch_size > X.shape[0]:
-            batch_size = X.shape[0]
-
+    def get_training_batch(self, meta_train_data, b_n, batch_size):
         batch = []
         batch_labels = []
         for i in range(b_n):
-            idx = np.random.choice(X.shape[0], size=batch_size, replace=False)
+            # Sample a task and its data at random
+            data_task_id = np.random.choice(list(meta_train_data.keys()))
+            data = meta_train_data[data_task_id]
+
+            X = data["X"]
+            y = data["y"]
+
+            idx = np.random.choice(X.shape[0], size=batch_size, replace=True)
+
             batch += [torch.from_numpy(X[idx])]
             batch_labels += [torch.from_numpy(y[idx]).flatten()]
 
@@ -57,9 +60,18 @@ class DKT(nn.Module):
         X = val_data["X"]
         y = val_data["y"]
 
-        # 100 support points and 200 (or remaining) query points distinct sets
-        n_support_points = 50
-        n_query_points = 200 if X.shape[0] > 200 + n_support_points else X.shape[0] - n_support_points
+        # 50 support points and 200 (or remaining) query points distinct sets
+        # Originally 50 and 200
+        # Changed this to 10 and 3000... while 500 lr 0.03 still running.
+        # n_support_points = 50
+        # n_query_points = 200
+        n_support_points = 10
+        n_query_points = 3000
+
+        if n_support_points > X.shape[0]:
+            n_support_points = X.shape[0] // 2
+        if n_query_points > X.shape[0] - n_support_points:
+            n_query_points = X.shape[0] - n_support_points
 
         idx_support = np.random.choice(X.shape[0], size=n_support_points, replace=False)
         query_choice = np.delete(np.arange(X.shape[0]), idx_support)
@@ -80,10 +92,20 @@ class DKT(nn.Module):
 
         batch, batch_labels = self.get_training_batch(data, b_n, batch_size)
         batch, batch_labels = batch.to(device), batch_labels.to(device)
-        if scaling:
-            # Scale the labels according to the l and u for scale invariance.
-            batch_labels = (batch_labels - l) / (u - l)
 
+        # Schedular function for training
+        scheduler_fn = lambda x, y: torch.optim.lr_scheduler.CosineAnnealingLR(x, y, eta_min=1e-7)
+        optimizer = torch.optim.Adam([{'params': self.model.parameters(), 'lr': 0.0001},
+                                           {'params': self.feature_extractor.parameters(), 'lr': 0.0001}])
+        scheduler = scheduler_fn(optimizer, b_n)
+
+        # Scaling should be ignored because it gives very bad results.
+        # if scaling:
+        #     # Scale the labels according to the l and u for scale invariance.
+        #     batch_labels = (batch_labels - l) / (u - l)
+
+        loss_list = []
+        mse_list = []
         for inputs, labels in zip(batch, batch_labels):
             optimizer.zero_grad()
             z = self.feature_extractor(inputs)
@@ -94,21 +116,40 @@ class DKT(nn.Module):
 
             loss.backward()
             optimizer.step()
+            scheduler.step()
+
+            # Statistics
             mse = self.mse(predictions.mean, labels)
+            loss_list += [loss.item()]
+            mse_list += [mse.item()]
+
+        loss_mean = sum(loss_list) / len(loss_list)
+        mse_mean = sum(mse_list) / len(mse_list)
+
+        """
+        optimizer.zero_grad()
+        z = self.feature_extractor(batch)
+        self.model.set_train_data(inputs=z, targets=batch_labels, strict=False)
+        predictions = self.model(z)
+        loss = torch.mean(-self.mll(predictions, self.model.train_targets))
+
+        loss.backward()
+        optimizer.step()
+        """
 
         val_loss_list = []
         for k in meta_val_data.keys():
             val_data = self.get_validation_batch(meta_val_data[k])
             val_loss_list += [self.get_val_loss(val_data)]
-        val_loss = sum(val_loss_list)/len(val_loss_list)
+        val_loss_mean = sum(val_loss_list)/len(val_loss_list)
 
-        if (epoch%40==0):
+        if (epoch%1==0):
             print('[%d] - Loss: %.3f  Val-Loss: %.3f MSE: %.3f noise: %.3f' % (
-                epoch, loss.item(), val_loss, mse.item(),
+                epoch, loss_mean, val_loss_mean, mse_mean,
                 self.model.likelihood.noise.item()
             ))
 
-        return loss.item(), val_loss
+        return loss_mean, val_loss_mean
 
     def get_val_loss(self, val_data):  # Check testing code of DKT Regression.
         X_support, y_support, X_query, y_query = val_data
@@ -135,7 +176,6 @@ class DKT(nn.Module):
         self.model.train()
         self.feature_extractor.train()
         self.likelihood.train()
-
 
         X, y = X.to(device), y.to(device)
 
