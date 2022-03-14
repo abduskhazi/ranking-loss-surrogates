@@ -89,6 +89,16 @@ def get_input_dim(meta_data):
     dim = np.array(meta_data[dataset_key]["X"]).shape[1]
     return dim
 
+def convert_meta_data_to_np_dictionary(meta_data):
+    temp_meta_data = {}
+    for k in meta_data.keys():
+        X = np.array(meta_data[k]["X"], dtype=np.float32)
+        y = np.array(meta_data[k]["y"], dtype=np.float32)
+        temp_meta_data[k] = {"X": X, "y": y}
+        # temp_meta_data[k] = {"X": torch.from_numpy(X), "y": torch.from_numpy(y)} ... ?
+
+    return temp_meta_data
+
 class FSBO:
     # Note: num_batches is referred to as b_n in the paper.
     def __init__(self, ssid, input_dim, latent_dim, batch_size, num_batches):
