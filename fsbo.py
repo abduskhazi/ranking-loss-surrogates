@@ -6,6 +6,7 @@ import numpy as np
 from DKT import DKT
 import argparse
 from scipy.stats import norm
+import matplotlib.pyplot as plt
 
 from HPO_B.hpob_handler import HPOBHandler
 
@@ -187,11 +188,22 @@ class FSBO:
                                            {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.03}])
         scheduler = scheduler_function_ft(self.optimizer, epochs)
 
+        loss_list = []
         for epoch in range(epochs):
             # Run the model training loop for a smaller number of times for finetuning.
             # Do not use scaling when doing fine tuning.
-            self.dkt.fine_tune_loop(epoch, self.optimizer, X, y)
+            loss = self.dkt.fine_tune_loop(epoch, self.optimizer, X, y)
             scheduler.step()
+            loss_list += [loss]
+
+        plt.figure(np.random.randint(999999999))
+        plt.plot(np.array(loss_list, dtype=np.float32))
+        legend = ["Fine tune Loss"]
+        plt.legend(legend)
+        plt.savefig(self.params.checkpoint_dir + "_fine_tune_loss.png")
+        plt.close()
+
+        return loss_list
 
     def get_params(self, ssid):
         params = parse_args_regression('train_regression')
