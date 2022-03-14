@@ -36,9 +36,8 @@ class DKT(nn.Module):
     def set_forward_loss(self, x):
         pass
 
-    def get_training_batch(self, data, b_n, batch_size):
-        X = np.array(data["X"], dtype=np.float32)
-        y = np.array(data["y"], dtype=np.float32)
+        X = data["X"]
+        y = data["y"]
 
         if batch_size > X.shape[0]:
             batch_size = X.shape[0]
