@@ -235,7 +235,8 @@ def study_FSBO(conf_fsbo, n_keys, n_trails):
             meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
             method_fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_train_data),
                                latent_dim=32, batch_size=70, num_batches=50)
-            method_fsbo.train(meta_train_data, meta_val_data)
+            loss_list, val_loss_list = method_fsbo.train(meta_train_data, meta_val_data)
+
 
     if conf_fsbo.evaluate:
         print("Evaluate test set (training meta dataset)")
