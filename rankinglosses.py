@@ -68,6 +68,10 @@ def loss_list_wise_mle(predicted_scores: torch.Tensor, actual_scores: torch.Tens
     if predicted_scores.size() != actual_scores.size():
         raise Exception("loss_list_wise_mle: predicted_scores.size() != actual_scores.size()")
 
+    # Current implementation does not support high dimensional tensor.
+    if len(predicted_scores.size()) > 1:
+        raise Exception("len(predicted_scores.size()) > 1")
+
     # Numerical stability:
     #     Subtracting a constant from predicted_scores has no impact on result.
     #     This is because we use exp as our strictly positive increasing function
@@ -139,11 +143,11 @@ if __name__ == '__main__':
 
         optimizer.zero_grad()
 
-        train_data = get_training_data(14)
         # Changing the size for it to pass through our scorer
-        train_data = train_data[:, None]
+        train_data = get_training_data(14)
+        prediction = sc(train_data[:, None])
+        prediction = prediction.flatten()
 
-        prediction = sc(train_data)
         loss = loss_list_wise_mle(prediction, -1 * train_data)
 
         loss.backward()
@@ -155,16 +159,15 @@ if __name__ == '__main__':
     sorted_lists = 0
     for i in range(1000):
 
-        train_data = get_training_data(100)
-
         # Changing the size for it to pass through our scorer
+        train_data = get_training_data(100)
         prediction = sc(train_data[:, None])
         prediction = prediction.flatten()
 
         sorted_indices = torch.argsort(prediction)
         train_data_predicted_rank = train_data[sorted_indices].numpy()
 
-        if(is_sorted(train_data_predicted_rank, reverse=True)):
+        if is_sorted(train_data_predicted_rank, reverse=True):
             sorted_lists += 1
 
     print("Sorted percentage : ", sorted_lists * 100 / 1000)
