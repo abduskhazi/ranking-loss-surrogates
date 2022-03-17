@@ -86,7 +86,7 @@ Understanding listwise loss function:
     * We need to make sure that f returns scores that are SIMILAR IN RELAVANCE/ORDER to the ground truth scores.
     * This would make the Ranking(f(Q, D)) equal to the ground truth and we would have learnt our ranking function.
     * Note that we do not need to get the exact ground truth scores. Which increases the space of acceptable functions in the
-      function space F (Here f belongs to F) we are searching from 1 to INF.
+      function space F (Here f belongs to F) we are searching from 1 to INF. i.e It becomes easier to search if we only want a subspace and not the exact function.
     * RANKING is nothing but sorting the results based on their respective scores/relavance (decreasing order)
     * Since the sorting function is non differentiable, the loss function in question should not be composed of the RANKING function.
     * Moreover, leaving the sorting function makes our loss permutation independent by making use of the + permutation invariant operator
