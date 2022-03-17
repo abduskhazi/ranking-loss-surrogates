@@ -17,5 +17,7 @@ Documentation (Agenda):
         1. We do not have any output range of values as a reference. Hence the model can learn score values arbitrarily large
         2. We must control the output domain so that the training does not lead to underflow or overflow.
         3. This may make the output domain restrictive. Works for now, however, we may need a better solution for this.
+        4. The learnt model is extremely sensitive to the learning rate and the number of epochs
+
 
     Applying this to HPOB... (With or without query)
