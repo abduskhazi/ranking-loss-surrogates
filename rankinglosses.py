@@ -105,6 +105,14 @@ def remove_top_1_element(predicted_scores: torch.Tensor, actual_scores: torch.Te
     return predicted_scores[mask], actual_scores[mask]
 
 
+def is_sorted(l, reverse=False):
+    if reverse:
+        # check if descent sorted
+        return all(l[:-1] >= l[1:])
+    else:
+        # check if ascendent sorted
+        return all(l[:-1] <= l[1:])
+
 if __name__ == '__main__':
     # Unit testing our loss functions
     # IDEA:
@@ -117,15 +125,17 @@ if __name__ == '__main__':
     epochs = 1000
     sc = Scorer(input_dim=1)
 
+    # Creating a uniform distribution between [r1, r2]
+    r1 = 0
+    r2 = 100
+    get_training_data = lambda x: (r1 - r2) * torch.rand(x) + r2
+
     optimizer = torch.optim.Adam(sc.parameters(), lr=0.0001)
     for _ in range(epochs):
+
         optimizer.zero_grad()
 
-        # Creating a uniform distribution between [r1, r2]
-        r1 = 0
-        r2 = 100
-        train_data = (r1-r2) * torch.rand(14) + r2
-
+        train_data = get_training_data(14)
         # Changing the size for it to pass through our scorer
         train_data = train_data[:, None]
 
@@ -140,10 +150,8 @@ if __name__ == '__main__':
     print("Now testing")
     sorted_lists = 0
     for i in range(1000):
-        # Creating a uniform distribution between [r1, r2]
-        r1 = 0
-        r2 = 100
-        train_data = (r1-r2) * torch.rand(100) + r2
+
+        train_data = get_training_data(100)
 
         # Changing the size for it to pass through our scorer
         prediction = sc(train_data[:, None])
@@ -152,17 +160,7 @@ if __name__ == '__main__':
         sorted_indices = torch.argsort(prediction)
         train_data_predicted_rank = train_data[sorted_indices].numpy()
 
-        """
-        # check if ascendent sorted
-        if all(train_data_predicted_rank[:-1] <= train_data_predicted_rank[1:]):
-            sorted_lists += 1
-        """
-
-        # check if descent sorted
-        if all(train_data_predicted_rank[:-1] >= train_data_predicted_rank[1:]):
+        if(is_sorted(train_data_predicted_rank, reverse=True)):
             sorted_lists += 1
 
     print("Sorted percentage : ", sorted_lists * 100 / 1000)
-
-
-
