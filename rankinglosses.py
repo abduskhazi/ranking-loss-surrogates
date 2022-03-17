@@ -106,6 +106,7 @@ def remove_top_1_element(predicted_scores: torch.Tensor, actual_scores: torch.Te
 
 
 def is_sorted(l, reverse=False):
+    # https://stackoverflow.com/questions/3755136/pythonic-way-to-check-if-a-list-is-sorted-or-not
     if reverse:
         # check if descent sorted
         return all(l[:-1] >= l[1:])
@@ -119,8 +120,11 @@ if __name__ == '__main__':
     #   Can our loss function train the model to sort numbers?
     #   List of numbers to train with = {1 to 100}
     #   List of numbers to validate with = {1 to 100}
+    #       Result -> Sorting possible provided the output range of the model not restricted
     #       For now we sample train/val data from the same distribution.
     #   List of numbers to test with = {-1 to -100}
+    #       Result -> This is not possible because the model will map this to extreme values as it
+    #                 is not distribution dependent.
     #   Check the percentage of the lists in the correct sorted order.
     epochs = 1000
     sc = Scorer(input_dim=1)
