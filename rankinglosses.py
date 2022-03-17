@@ -130,7 +130,7 @@ if __name__ == '__main__':
         train_data = train_data[:, None]
 
         prediction = sc(train_data)
-        loss = loss_list_wise_mle(prediction, train_data)
+        loss = loss_list_wise_mle(prediction, -1 * train_data)
 
         loss.backward()
         optimizer.step()
@@ -143,7 +143,7 @@ if __name__ == '__main__':
         # Creating a uniform distribution between [r1, r2]
         r1 = 0
         r2 = 100
-        train_data = (r1-r2) * torch.rand(14) + r2
+        train_data = (r1-r2) * torch.rand(100) + r2
 
         # Changing the size for it to pass through our scorer
         prediction = sc(train_data[:, None])
@@ -152,11 +152,17 @@ if __name__ == '__main__':
         sorted_indices = torch.argsort(prediction)
         train_data_predicted_rank = train_data[sorted_indices].numpy()
 
+        """
         # check if ascendent sorted
         if all(train_data_predicted_rank[:-1] <= train_data_predicted_rank[1:]):
             sorted_lists += 1
+        """
 
-    print(sorted_lists * 100 / 1000)
+        # check if descent sorted
+        if all(train_data_predicted_rank[:-1] >= train_data_predicted_rank[1:]):
+            sorted_lists += 1
+
+    print("Sorted percentage : ", sorted_lists * 100 / 1000)
 
 
 
