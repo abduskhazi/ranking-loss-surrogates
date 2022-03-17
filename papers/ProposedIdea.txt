@@ -1,0 +1,21 @@
+Main Idea:
+    We need to use ranking losses instead of other methods for the purpose of HPO algorithms.
+
+
+Documentation (Agenda):
+    First we need to Implement/create the infrastructure to learn ranking loss functions.
+    So we need to read and understand / revise the ranking losses concept.
+
+    We decided to model a ranking function using a deep neural network.
+        Reason: reprentation capacity.
+        For now defined a [input_dim, (32, RELU) , (32, RELU), 1]
+
+    Creating a toy example to build and run our ranking function
+        Can our scoring function learn to sort a list of numbers? 
+
+    Obervations after completing the implementation of toy example with list wise ranking function.
+        1. We do not have any output range of values as a reference. Hence the model can learn score values arbitrarily large
+        2. We must control the output domain so that the training does not lead to underflow or overflow.
+        3. This may make the output domain restrictive. Works for now, however, we may need a better solution for this.
+
+    Applying this to HPOB... (With or without query)
