@@ -14,7 +14,6 @@ class Scorer(nn.Module):
         self.fc1 = nn.Linear(input_dim, 32)
         self.fc2 = nn.Linear(32, 32)
         self.fc3 = nn.Linear(32, 1)
-        self.hidden_layers = []
 
     def forward(self, x):
         x = self.fc1(x)
@@ -26,7 +25,11 @@ class Scorer(nn.Module):
         x = self.fc3(x)
         # The last layer must not be passed through relu
 
-        return x
+        # however we pass it through torch.tanh to keep the output in a resonable range
+        # I had answered regarding this on stackoverflow
+        # https://ai.stackexchange.com/questions/31595/are-the-q-values-of-dqn-bounded-at-a-single-timestep/31648#31648
+        # The range of our modelled function should be large enough to correctly map all input domain values.
+        return 2 * torch.tanh(0.01 * x)
 
 
 #######################################################################################
@@ -69,7 +72,7 @@ def loss_list_wise_mle(predicted_scores: torch.Tensor, actual_scores: torch.Tens
     #     Subtracting a constant from predicted_scores has no impact on result.
     #     This is because we use exp as our strictly positive increasing function
     #     to make sure that the calculated probabilities are positive.
-    predicted_scores = predicted_scores - torch.max(predicted_scores)
+    predicted_scores = predicted_scores - torch.max(predicted_scores)  # dim = -1?
     predicted_scores = torch.exp(predicted_scores)
 
     # Making sure that the given actual score list is unchanged.
@@ -78,7 +81,7 @@ def loss_list_wise_mle(predicted_scores: torch.Tensor, actual_scores: torch.Tens
 
     # Loop through the object selection process (without replacement) and sum results
     log_probability_sum = 0
-    n = torch.numel(actual_scores)
+    n = torch.numel(actual_scores)  # dim = -1?
     for _ in range(n):
         # Calculate the top 1 log probability and remove the items from both
         # actual and predicted list (Hence the cloning was important)
@@ -90,13 +93,70 @@ def loss_list_wise_mle(predicted_scores: torch.Tensor, actual_scores: torch.Tens
 
 
 def top_1_log_prob(predicted_scores: torch.Tensor, actual_scores: torch.Tensor):
-    max_index = torch.argmax(actual_scores)
+    max_index = torch.argmax(actual_scores)  # dim = -1?
     prob = predicted_scores[max_index] / torch.sum(predicted_scores)
     return torch.log(prob)
 
 
 def remove_top_1_element(predicted_scores: torch.Tensor, actual_scores: torch.Tensor):
-    max_index = torch.argmax(actual_scores)
+    max_index = torch.argmax(actual_scores)  # dim = -1?
     mask = torch.ones_like(predicted_scores, dtype=torch.bool)
     mask[max_index] = False
     return predicted_scores[mask], actual_scores[mask]
+
+
+if __name__ == '__main__':
+    # Unit testing our loss functions
+    # IDEA:
+    #   Can our loss function train the model to sort numbers?
+    #   List of numbers to train with = {1 to 100}
+    #   List of numbers to validate with = {1 to 100}
+    #       For now we sample train/val data from the same distribution.
+    #   List of numbers to test with = {-1 to -100}
+    #   Check the percentage of the lists in the correct sorted order.
+    epochs = 1000
+    sc = Scorer(input_dim=1)
+
+    optimizer = torch.optim.Adam(sc.parameters(), lr=0.0001)
+    for _ in range(epochs):
+        optimizer.zero_grad()
+
+        # Creating a uniform distribution between [r1, r2]
+        r1 = 0
+        r2 = 100
+        train_data = (r1-r2) * torch.rand(14) + r2
+
+        # Changing the size for it to pass through our scorer
+        train_data = train_data[:, None]
+
+        prediction = sc(train_data)
+        loss = loss_list_wise_mle(prediction, train_data)
+
+        loss.backward()
+        optimizer.step()
+
+        print("Epoch[", _, "] ==>", loss.item())
+
+    print("Now testing")
+    sorted_lists = 0
+    for i in range(1000):
+        # Creating a uniform distribution between [r1, r2]
+        r1 = 0
+        r2 = 100
+        train_data = (r1-r2) * torch.rand(14) + r2
+
+        # Changing the size for it to pass through our scorer
+        prediction = sc(train_data[:, None])
+        prediction = prediction.flatten()
+
+        sorted_indices = torch.argsort(prediction)
+        train_data_predicted_rank = train_data[sorted_indices].numpy()
+
+        # check if ascendent sorted
+        if all(train_data_predicted_rank[:-1] <= train_data_predicted_rank[1:]):
+            sorted_lists += 1
+
+    print(sorted_lists * 100 / 1000)
+
+
+
