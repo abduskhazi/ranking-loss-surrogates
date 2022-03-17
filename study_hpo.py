@@ -116,50 +116,39 @@ def plot_rank_graph(n_keys, n_trials):
     # Loading previous outputs
     rs = load_object("./optimization_results/rs_evaluation")
     gp = load_object("./optimization_results/gp_evaluation")
-    # de = load_object("./optimization_results/de_evaluate_32x32_E1000_l0_02_random_start")
-    # dkt1 = load_object("./optimization_results/intermittent_dkt_evaluation_32x4_500_03_cosAnn")
-    dkt2 = load_object("./optimization_results/intermittent_dkt_evaluation_32x4_100_03_cosAnn")
+    de = load_object("./optimization_results/de_evaluate_32x32_E1000_l0_02_random_start")
+    dkt = load_object("./optimization_results/dkt_evaluation_32x4_100_03_cosAnn")
+    #dkt2 = load_object("./optimization_results/intermittent_dkt_evaluation_32x4_500_03_cosAnn")
     #dkt3 = load_object("./optimization_results/intermittent_dkt_evaluation_32x4_500_03")
-    #dkt1 = dkt3
-    #dkt2 = dkt3 = dkt1
-    # dkt3 = load_object("./optimization_results/intermittent_dkt_evaluation_32x5_500_1")
-    # de = dkt2
-    # dkt2 = de
+    #dkt4 = load_object("./optimization_results/intermittent_dkt_evaluation_32x5_500_1")
 
-    keys = get_common_keys([rs, gp, dkt2])
+    keys = get_common_keys([rs, gp, de, dkt])
     rs_performance = get_performance_array(rs, keys)[:n_keys, :n_trials]
     gp_performance = get_performance_array(gp, keys)[:n_keys, :n_trials]
-    # de_performance = get_performance_array(de, keys)[:n_keys, :n_trials]
-    # dkt1_performance = get_performance_array(dkt1, keys)[:n_keys, :n_trials]
-    dkt2_performance = get_performance_array(dkt2, keys)[:n_keys, :n_trials]
-    #dkt3_performance = get_performance_array(dkt3, keys)[:n_keys, :n_trials]
-
-    # de_performance = load_object("./optimization_results/de_performance_32x32_E1000_l0_02_random_start")[:n_keys, :n_trials]
+    de_performance = get_performance_array(de, keys)[:n_keys, :n_trials]
+    dkt_performance = get_performance_array(dkt, keys)[:n_keys, :n_trials]
 
     # Creating a rank graph for all above methods
-    performance = np.stack((rs_performance, gp_performance, dkt2_performance), axis=-1)
+    performance = np.stack((rs_performance, gp_performance, de_performance, dkt_performance), axis=-1)
     # Since rank data ranks in the increasing order, we need to multiply by -1
     rg = scipy.stats.rankdata(-1 * performance, axis=-1)
     rank_rs = np.mean(rg[:, :, 0], axis=0)
     rank_gp = np.mean(rg[:, :, 1], axis=0)
-    # rank_de = np.mean(rg[:, :, 2], axis=0)
-    # rank_dkt1 = np.mean(rg[:, :, 3], axis=0)
-    rank_dkt2 = np.mean(rg[:, :, 2], axis=0)
-    #rank_dkt3 = np.mean(rg[:, :, 4], axis=0)
+    rank_de = np.mean(rg[:, :, 2], axis=0)
+    rank_dkt = np.mean(rg[:, :, 3], axis=0)
+
     plt.figure(np.random.randint(999999999))
     plt.plot(rank_rs)
     plt.plot(rank_gp)
-    # plt.plot(rank_de)
-    # plt.plot(rank_dkt1)
-    plt.plot(rank_dkt2)
-    #plt.plot(rank_dkt3)
+    plt.plot(rank_de)
+    plt.plot(rank_dkt)
     legend = ["RS Rank"
               , "GP Rank"
-              # , "DE Rank [32,32] ep=1000 lr=0.02 (Rand.)"
-              # , "DKT Rank [32x4] ft=500 ft_lr=0.03 (CosAnne)"
+              , "DE Rank [32,32] ep=1000 lr=0.02 (Rand.)"
               , "DKT Rank [32x4] ft=100 ft_lr=0.03 (CosAnne) + static_val"
+              # , "DKT Rank [32x4] ft=500 ft_lr=0.03 (CosAnne)"
               # , "DKT Rank [32x4] ft=100 ft_lr=0.01"
-              #, "DKT Rank [32x4] ft=500 ft_lr=0.03 (CosAnne)"
+              # , "DKT Rank [32x4] ft=500 ft_lr=0.03 (CosAnne)"
               # , "DKT Rank [32x5] ft=500 ft_lr=0.1 (CosAnne)"
               ]
     plt.legend(legend)
