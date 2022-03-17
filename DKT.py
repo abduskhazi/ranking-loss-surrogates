@@ -60,6 +60,7 @@ class DKT(nn.Module):
         X = val_data["X"]
         y = val_data["y"]
 
+        """
         # 50 support points and 200 (or remaining) query points distinct sets
         # Originally 50 and 200
         # Changed this to 10 and 3000... while 500 lr 0.03 still running.
@@ -76,6 +77,10 @@ class DKT(nn.Module):
         idx_support = np.random.choice(X.shape[0], size=n_support_points, replace=False)
         query_choice = np.delete(np.arange(X.shape[0]), idx_support)
         idx_query = np.random.choice(query_choice, size=n_query_points, replace=False)
+        """
+
+        idx_support = val_data["support"]
+        idx_query = val_data["query"]
 
         X_support = torch.from_numpy(X[idx_support])
         y_support = torch.from_numpy(y[idx_support].flatten())
@@ -189,8 +194,8 @@ class DKT(nn.Module):
         loss.backward()
         optimizer.step()
 
-        mse = self.mse(predictions.mean, y)
-        if epoch % 40 == 0:
+        if (epoch+1) % 100 == 0:
+            mse = self.mse(predictions.mean, y)
             print('[%d] - Loss: %.3f MSE: %.3f noise: %.3f' % (
                 epoch, loss.item(), mse.item(),
                 self.model.likelihood.noise.item()

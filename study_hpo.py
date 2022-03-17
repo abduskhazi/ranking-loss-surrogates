@@ -49,7 +49,7 @@ def get_all_combinations(hpob_hdlr, n_trials):
     evaluation_list = []
     for search_space in hpob_hdlr.get_search_spaces():
         for dataset in hpob_hdlr.get_datasets(search_space):
-            for seed in seed_list:  # ["test2"]:  # seed_list: # use this for running on all possible seeds
+            for seed in seed_list: # ["test2"]:  # seed_list: # use this for running on all possible seeds
                 evaluation_list += [(search_space, dataset, seed, n_trials)]
 
     return evaluation_list
@@ -97,16 +97,18 @@ def evaluate_DE(hpob_hdlr, keys_to_evaluate):
     return performance
 
 def evaluate_FSBO(hpob_hdlr, keys_to_evaluate):
-    performance = []
-    for key in keys_to_evaluate:
+    performance = load_object("./optimization_results/intermittent_dkt_evaluation_32x4_100_03_cosAnn")  # []
+    # load_object("./optimization_results/intermittent_dkt_evaluation_32x4_500_03")
+    for key in [k for k in keys_to_evaluate if k not in get_keys(performance)]:
         search_space_id, dataset, _, _ = key
         input_dim = hpob_hdlr.get_input_dim(search_space_id, dataset)
         method_fsbo = FSBO(search_space_id, input_dim=input_dim,
-                          latent_dim=32, batch_size=70, num_batches=50)
+                          latent_dim=32, batch_size=100, num_batches=1000)
         res = evaluate_combinations(hpob_hdlr, method_fsbo, keys_to_evaluate=[key])
         performance += res
         # Keep storing the evaluated FSBO.
-        store_object(performance, "./optimization_results/intermittent_dkt_evaluation_32x5_500_1")
+        store_object(performance, "./optimization_results/intermittent_dkt_evaluation_32x4_100_03_cosAnn")
+        # gc.collect()
 
     return performance
 
@@ -114,34 +116,51 @@ def plot_rank_graph(n_keys, n_trials):
     # Loading previous outputs
     rs = load_object("./optimization_results/rs_evaluation")
     gp = load_object("./optimization_results/gp_evaluation")
-    # de = load_object("./optimization_results/de_evaluation")
-    dkt = load_object("./optimization_results/intermittent_dkt_evaluation_32x5_500_1")
+    # de = load_object("./optimization_results/de_evaluate_32x32_E1000_l0_02_random_start")
+    # dkt1 = load_object("./optimization_results/intermittent_dkt_evaluation_32x4_500_03_cosAnn")
+    dkt2 = load_object("./optimization_results/intermittent_dkt_evaluation_32x4_100_03_cosAnn")
+    #dkt3 = load_object("./optimization_results/intermittent_dkt_evaluation_32x4_500_03")
+    #dkt1 = dkt3
+    #dkt2 = dkt3 = dkt1
+    # dkt3 = load_object("./optimization_results/intermittent_dkt_evaluation_32x5_500_1")
+    # de = dkt2
+    # dkt2 = de
 
-    keys = get_common_keys([rs, gp, dkt])
+    keys = get_common_keys([rs, gp, dkt2])
     rs_performance = get_performance_array(rs, keys)[:n_keys, :n_trials]
     gp_performance = get_performance_array(gp, keys)[:n_keys, :n_trials]
     # de_performance = get_performance_array(de, keys)[:n_keys, :n_trials]
-    dkt_performance = get_performance_array(dkt, keys)[:n_keys, :n_trials]
+    # dkt1_performance = get_performance_array(dkt1, keys)[:n_keys, :n_trials]
+    dkt2_performance = get_performance_array(dkt2, keys)[:n_keys, :n_trials]
+    #dkt3_performance = get_performance_array(dkt3, keys)[:n_keys, :n_trials]
 
     # de_performance = load_object("./optimization_results/de_performance_32x32_E1000_l0_02_random_start")[:n_keys, :n_trials]
 
     # Creating a rank graph for all above methods
-    performance = np.stack((rs_performance, gp_performance, dkt_performance), axis=-1)
+    performance = np.stack((rs_performance, gp_performance, dkt2_performance), axis=-1)
     # Since rank data ranks in the increasing order, we need to multiply by -1
     rg = scipy.stats.rankdata(-1 * performance, axis=-1)
     rank_rs = np.mean(rg[:, :, 0], axis=0)
     rank_gp = np.mean(rg[:, :, 1], axis=0)
-    #rank_de = np.mean(rg[:, :, 2], axis=0)
-    rank_dkt = np.mean(rg[:, :, 2], axis=0)
+    # rank_de = np.mean(rg[:, :, 2], axis=0)
+    # rank_dkt1 = np.mean(rg[:, :, 3], axis=0)
+    rank_dkt2 = np.mean(rg[:, :, 2], axis=0)
+    #rank_dkt3 = np.mean(rg[:, :, 4], axis=0)
     plt.figure(np.random.randint(999999999))
     plt.plot(rank_rs)
     plt.plot(rank_gp)
-    #plt.plot(rank_de)
-    plt.plot(rank_dkt)
-    legend = ["RS Rank",
-              "GP Rank",
-              #"DE Rank [32,32] ep=1000 lr=0.02 (Rand.)",
-              "DKT Rank [32x5] ft=500 ft_lr=0.1"
+    # plt.plot(rank_de)
+    # plt.plot(rank_dkt1)
+    plt.plot(rank_dkt2)
+    #plt.plot(rank_dkt3)
+    legend = ["RS Rank"
+              , "GP Rank"
+              # , "DE Rank [32,32] ep=1000 lr=0.02 (Rand.)"
+              # , "DKT Rank [32x4] ft=500 ft_lr=0.03 (CosAnne)"
+              , "DKT Rank [32x4] ft=100 ft_lr=0.03 (CosAnne) + static_val"
+              # , "DKT Rank [32x4] ft=100 ft_lr=0.01"
+              #, "DKT Rank [32x4] ft=500 ft_lr=0.03 (CosAnne)"
+              # , "DKT Rank [32x5] ft=500 ft_lr=0.1 (CosAnne)"
               ]
     plt.legend(legend)
     plt.show()
@@ -234,20 +253,20 @@ def study_FSBO(conf_fsbo, n_keys, n_trails):
             meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
             meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
             method_fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_train_data),
-                               latent_dim=32, batch_size=100, num_batches=1000)
+                               latent_dim=32, batch_size=100, num_batches=300)
             loss_list, val_loss_list = method_fsbo.train(meta_train_data, meta_val_data)
 
 
     if conf_fsbo.evaluate:
-        print("Evaluate test set (training meta dataset)")
+        print("Evaluate test set (testing meta dataset)")
         hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
         dkt_keys = get_all_combinations(hpob_hdlr, 100)[:n_keys]
         dkt_performance = evaluate_FSBO(hpob_hdlr, keys_to_evaluate=dkt_keys)
-        store_object(dkt_performance, "./optimization_results/dkt_evaluation_32x5_500_1")
+        store_object(dkt_performance, "./optimization_results/dkt_evaluation_32x4_100_03_cosAnn")
 
 def main():
-    n_trails = 100
-    n_keys = 77
+    n_trails = 101
+    n_keys = 1000
 
     if conf.evaluate_random:
         study_random_search()  # Evaluating it for 100 trials by default since computationally cheap

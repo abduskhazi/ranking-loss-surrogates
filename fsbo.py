@@ -7,6 +7,8 @@ from DKT import DKT
 import argparse
 from scipy.stats import norm
 import matplotlib.pyplot as plt
+# For memory management
+import gc
 
 from HPO_B.hpob_handler import HPOBHandler
 
@@ -61,7 +63,7 @@ def parse_args_regression(script):
     parser.add_argument('--seed', default=0, type=int, help='Seed for Numpy and pyTorch. Default: 0 (None)')
     parser.add_argument('--model', default='DNN', help='model: DNN')
     parser.add_argument('--method', default='DKT', help='DKT')
-    parser.add_argument('--dataset', default='HPOB_32x4_matern_val_updated', help='HPOB meta data set')
+    parser.add_argument('--dataset', default='all_HPOB_32x4_matern_multistep_epoch', help='HPOB meta data set')
     parser.add_argument('--spectral', action='store_true', help='Use a spectral covariance kernel function')
 
     if script == 'train_regression':
@@ -100,6 +102,22 @@ def convert_meta_data_to_np_dictionary(meta_data):
 
     return temp_meta_data
 
+def add_query_points(meta_val_data, n_support_points):
+    n_query_points = 3000
+
+    for k in meta_val_data.keys():
+        X = meta_val_data[k]["X"]
+        idx_support = np.random.choice(X.shape[0], size=n_support_points, replace=False)
+        meta_val_data[k]["support"] = idx_support
+
+        if n_query_points > X.shape[0] - n_support_points:
+            n_query_points = X.shape[0] - n_support_points
+        query_choice = np.delete(np.arange(X.shape[0]), idx_support)
+        idx_query = np.random.choice(query_choice, size=n_query_points, replace=False)
+        meta_val_data[k]["query"] = idx_query
+
+    return meta_val_data
+
 class FSBO:
     # Note: num_batches is referred to as b_n in the paper.
     def __init__(self, ssid, input_dim, latent_dim, batch_size, num_batches):
@@ -127,6 +145,7 @@ class FSBO:
 
         meta_data = convert_meta_data_to_np_dictionary(meta_data)
         meta_val_data = convert_meta_data_to_np_dictionary(meta_val_data)
+        meta_val_data = add_query_points(meta_val_data, 20)
 
         div_count = 0
         for epoch in range(epochs):  # params.stop_epoch
@@ -149,7 +168,7 @@ class FSBO:
                 div_count += 1
             else:
                 div_count = 0
-            if div_count > 20:  # Maybe 30? probably not a good idea
+            if div_count > 10:  # Maybe 30? probably not a good idea
                 break
                 # no_breaking = True
 
@@ -171,25 +190,25 @@ class FSBO:
     # a little bit more specific to this.
     def finetune(self, X, y):
         self.dkt.load_checkpoint(self.params.checkpoint_dir)
-        epochs = 500  # ....
+        epochs = 100  # ....
 
-        scheduler_function_ft = lambda x,y: torch.optim.lr_scheduler.CosineAnnealingLR(x, y, eta_min=1e-4)
-
-        self.optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.03},
-                                           {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.03}])
-        scheduler = scheduler_function_ft(self.optimizer, epochs)
+        scheduler_fn = lambda x, y: torch.optim.lr_scheduler.CosineAnnealingLR(x, y, eta_min=1e-4)
+        # 500 with 0.1 giving best results
+        optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.03},
+                                      {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.03}])
+        scheduler = scheduler_fn(optimizer, epochs)
 
         loss_list = []
         for epoch in range(epochs):
             # Run the model training loop for a smaller number of times for finetuning.
             # Do not use scaling when doing fine tuning.
-            loss = self.dkt.fine_tune_loop(epoch, self.optimizer, X, y)
-            scheduler.step()
+            loss = self.dkt.fine_tune_loop(epoch, optimizer, X, y)
             loss_list += [loss]
+            scheduler.step()
 
         plt.figure(np.random.randint(999999999))
-        plt.plot(np.array(loss_list, dtype=np.float32))
-        legend = ["Fine tune Loss"]
+        plt.plot(np.array(loss_list[-40:], dtype=np.float32))
+        legend = ["Fine tune Loss (last 40)"]
         plt.legend(legend)
         plt.savefig(self.params.checkpoint_dir + "_fine_tune_loss.png")
         plt.close()
