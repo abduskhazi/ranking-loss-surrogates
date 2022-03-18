@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import numpy as np
 
 # Defining our ranking model as a DNN.
 # Keeping the model simple for now.
@@ -56,8 +56,8 @@ E.g: Let the list of scores predicted = [20, 3, 56, 9].
      Since the scores can be negative, we use a strictly increasing positive function like exp
      as a helper and convert all the predictions to exp(predictions)
 @Interface:
-    predicted_scores: Score list predicted by a score function
-    actual_scores: Score list known to us
+    predicted_scores: Score list predicted by a score function. Shape expected = [..., listsize]
+    actual_scores: Score list known to us. Shape expected = [..., listsize]
 @Return:
     Negative log likelihood of required permutation being selected using the predicted score list.
 """
@@ -68,15 +68,12 @@ def loss_list_wise_mle(predicted_scores: torch.Tensor, actual_scores: torch.Tens
     if predicted_scores.size() != actual_scores.size():
         raise Exception("loss_list_wise_mle: predicted_scores.size() != actual_scores.size()")
 
-    # Current implementation does not support high dimensional tensor.
-    if len(predicted_scores.size()) > 1:
-        raise Exception("len(predicted_scores.size()) > 1")
-
     # Numerical stability:
     #     Subtracting a constant from predicted_scores has no impact on result.
     #     This is because we use exp as our strictly positive increasing function
     #     to make sure that the calculated probabilities are positive.
-    predicted_scores = predicted_scores - torch.max(predicted_scores)  # dim = -1?
+    max_predicted, _ = torch.max(predicted_scores, dim=-1, keepdim=True)
+    predicted_scores = predicted_scores - max_predicted
     predicted_scores = torch.exp(predicted_scores)
 
     # Making sure that the given actual score list is unchanged.
@@ -85,7 +82,7 @@ def loss_list_wise_mle(predicted_scores: torch.Tensor, actual_scores: torch.Tens
 
     # Loop through the object selection process (without replacement) and sum results
     log_probability_sum = 0
-    n = torch.numel(actual_scores)  # dim = -1?
+    n = actual_scores.shape[-1]  # Number of elements in a list / list size.
     for _ in range(n):
         # Calculate the top 1 log probability and remove the items from both
         # actual and predicted list (Hence the cloning was important)
@@ -97,16 +94,41 @@ def loss_list_wise_mle(predicted_scores: torch.Tensor, actual_scores: torch.Tens
 
 
 def top_1_log_prob(predicted_scores: torch.Tensor, actual_scores: torch.Tensor):
-    max_index = torch.argmax(actual_scores)  # dim = -1?
-    prob = predicted_scores[max_index] / torch.sum(predicted_scores)
+    # Viewing everything as a 2D tensor.
+    y_actual = actual_scores.view(-1, actual_scores.shape[-1])
+    y_predicted = predicted_scores.view(-1, predicted_scores.shape[-1])
+
+    # Calculate the max indices and values in the 2D view.
+    max_indices = torch.argmax(y_actual, dim=-1)
+    max_values = y_predicted[np.arange(max_indices.shape[0]), max_indices]
+
+    # View the max values in (n-1)D view.
+    max_values = max_values.view(predicted_scores.shape[:-1])
+    prob = max_values / torch.sum(predicted_scores, dim=-1)
+
     return torch.log(prob)
 
 
 def remove_top_1_element(predicted_scores: torch.Tensor, actual_scores: torch.Tensor):
-    max_index = torch.argmax(actual_scores)  # dim = -1?
-    mask = torch.ones_like(predicted_scores, dtype=torch.bool)
-    mask[max_index] = False
-    return predicted_scores[mask], actual_scores[mask]
+    # Calculate the max indices in the 2D view.
+    y_actual = actual_scores.view(-1, actual_scores.shape[-1])
+    max_indices = torch.argmax(y_actual, dim=-1)
+
+    # Get the nD max indices however viewing it as 1D. (Note: torch.argmax reduces the dimension by 1)
+    max_indices = np.arange(max_indices.shape[0]) * predicted_scores.shape[-1] + max_indices.numpy()
+    max_indices = torch.from_numpy(max_indices)
+
+    # View everything with a 1D view.
+    y_predicted = predicted_scores.view(-1)
+    y_actual = actual_scores.view(-1)
+
+    # Create the mask indices in 1D view and calculate the new shape.
+    mask = torch.ones_like(y_predicted, dtype=torch.bool)
+    mask[max_indices] = False
+    new_view_shape = actual_scores.shape[:-1] + (actual_scores.shape[-1]-1,)
+
+    # Return the remaining elements in the new shaped view.
+    return y_predicted[mask].view(new_view_shape), y_actual[mask].view(new_view_shape)
 
 
 def is_sorted(l, reverse=False):
@@ -136,7 +158,7 @@ if __name__ == '__main__':
     # Creating a uniform distribution between [r1, r2]
     r1 = 0
     r2 = 100
-    get_training_data = lambda x: (r1 - r2) * torch.rand(x, 1) + r2
+    get_training_data = lambda x: (r1 - r2) * torch.rand(x + (1,)) + r2
 
     optimizer = torch.optim.Adam(sc.parameters(), lr=0.0001)
     for _ in range(epochs):
@@ -144,13 +166,15 @@ if __name__ == '__main__':
         optimizer.zero_grad()
 
         # Changing the size for it to pass through our scorer
-        train_data = get_training_data(14)
+        train_data = get_training_data((10, 10, 3))
         prediction = sc(train_data)
 
-        prediction = prediction.flatten()
-        train_data = train_data.flatten()
+        flatten_from_dim = len(train_data.shape) - 2
+        prediction = torch.flatten(prediction, start_dim=flatten_from_dim)
+        train_data = torch.flatten(train_data, start_dim=flatten_from_dim)
 
         loss = loss_list_wise_mle(prediction, -1 * train_data)
+        loss = torch.mean(loss)
 
         loss.backward()
         optimizer.step()
@@ -162,7 +186,7 @@ if __name__ == '__main__':
     for i in range(1000):
 
         # Changing the size for it to pass through our scorer
-        train_data = get_training_data(100)
+        train_data = get_training_data((100,))
         prediction = sc(train_data)
 
         prediction = prediction.flatten()
