@@ -16,8 +16,20 @@ Documentation (Agenda):
     Obervations after completing the implementation of toy example with list wise ranking function.
         1. We do not have any output range of values as a reference. Hence the model can learn score values arbitrarily large
         2. We must control the output domain so that the training does not lead to underflow or overflow.
+            This is because we use the exp function for getting the strict positive increasing function.
+            Perhaps using other increasing positive function helps? (More reading/research required on this topic)
         3. This may make the output domain restrictive. Works for now, however, we may need a better solution for this.
         4. The learnt model is extremely sensitive to the learning rate and the number of epochs
 
 
     Applying this to HPOB... (With or without query)
+
+
+Advantages of the proposed Idea:
+    The amount of data instances for training is exponential in number. Which is very good for a deep learning model
+    For example if we have 100 observation set and we use a list size of 15 to train our model, we will have 100C15
+    unique instances to train.
+
+
+Observed disadvantages:
+    The learnt model is extremely sensitive to the learning rate and the number of epochs

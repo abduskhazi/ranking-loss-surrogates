@@ -71,6 +71,8 @@ Understanding listwise loss function:
     Q = {Set of Queries}
     f : QxD -> R [Note: Here D is conditioned on Q]. The function is defined for 1 (query, document) pair.
 
+    Point to note - Each feature input = a concatenation of the query vector and the document vector.
+
     One instance of our training data is (X, Y) where X = {Set of all documents returned by query} Y = {Set of the respective ground
     truth scores}. Basically 1 query is one instance. Hence our loss function has to take in vector of outputs from f.
 
@@ -119,4 +121,4 @@ Understanding listwise loss function:
 
     Both the papers use linear network model for some simplicity. But we can use the non-linearity due to available library
         implementations
-    Very nice summary of both loss functions : https://arxiv.org/pdf/1707.05438.pdf 
+    Very nice summary of both loss functions section 3.2.1 : https://arxiv.org/pdf/1707.05438.pdf 
