@@ -136,7 +136,7 @@ if __name__ == '__main__':
     # Creating a uniform distribution between [r1, r2]
     r1 = 0
     r2 = 100
-    get_training_data = lambda x: (r1 - r2) * torch.rand(x) + r2
+    get_training_data = lambda x: (r1 - r2) * torch.rand(x, 1) + r2
 
     optimizer = torch.optim.Adam(sc.parameters(), lr=0.0001)
     for _ in range(epochs):
@@ -145,8 +145,10 @@ if __name__ == '__main__':
 
         # Changing the size for it to pass through our scorer
         train_data = get_training_data(14)
-        prediction = sc(train_data[:, None])
+        prediction = sc(train_data)
+
         prediction = prediction.flatten()
+        train_data = train_data.flatten()
 
         loss = loss_list_wise_mle(prediction, -1 * train_data)
 
@@ -161,8 +163,10 @@ if __name__ == '__main__':
 
         # Changing the size for it to pass through our scorer
         train_data = get_training_data(100)
-        prediction = sc(train_data[:, None])
+        prediction = sc(train_data)
+
         prediction = prediction.flatten()
+        train_data = train_data.flatten()
 
         sorted_indices = torch.argsort(prediction)
         train_data_predicted_rank = train_data[sorted_indices].numpy()
