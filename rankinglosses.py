@@ -232,15 +232,17 @@ if __name__ == '__main__':
     # test_toy_problem()
 
     # Pretrain Ranking loss surrogate with a single search space
-    search_space_id = '5527'
+    search_space_id = '5859'
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
     meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
+    meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
 
     dataset_key = list(meta_train_data.keys())[0]
     input_dim = np.array(meta_train_data[dataset_key]["X"]).shape[1]
     print("Input dim of", search_space_id, "=", input_dim)
 
     meta_train_data = convert_meta_data_to_np_dictionary(meta_train_data)
+    meta_val_data = convert_meta_data_to_np_dictionary(meta_val_data)
 
     epochs = 500
     batch_size = 100
@@ -249,7 +251,9 @@ if __name__ == '__main__':
 
     optimizer = torch.optim.Adam(sc.parameters(), lr=0.01)
     loss_list = []
+    val_loss_list = []
     for _ in range(epochs):
+        sc.train()
         optimizer.zero_grad()
 
         train_data, train_labels = get_batch_HPBO(meta_train_data, batch_size, list_size)
@@ -265,12 +269,27 @@ if __name__ == '__main__':
         loss.backward()
         optimizer.step()
 
-        print("Epoch[", _, "] ==>", loss.item()/list_size)
+        with torch.no_grad():
+            sc.eval()
+            val_data, val_labels = get_batch_HPBO(meta_val_data, batch_size, list_size)
+            pred_val = sc(val_data)
+
+            flatten_from_dim = len(pred_val.shape) - 2
+            pred_val = torch.flatten(pred_val, start_dim=flatten_from_dim)
+            val_labels = torch.flatten(val_labels, start_dim=flatten_from_dim)
+
+            val_loss = loss_list_wise_mle(pred_val, val_labels)
+            val_loss = torch.mean(val_loss)
+
+        print("Epoch[", _, "] ==> Loss =", loss.item()/list_size, "; Val_loss =", val_loss.item()/list_size)
         loss_list += [loss.item()/list_size]
+        val_loss_list += [val_loss.item()/list_size]
 
     plt.figure(np.random.randint(999999999))
     plt.plot(np.array(loss_list, dtype=np.float32))
+    plt.plot(np.array(val_loss_list, dtype=np.float32))
     legend = ["Loss",
+              "Validation Loss"
               ]
     plt.legend(legend)
     plt.show()
