@@ -203,18 +203,36 @@ def test_toy_problem():
     print("Sorted percentage : ", sorted_lists * 100 / 1000)
 
 
-def get_training_batch_HPBO(X, y, batch_size, list_size):
-    idx = np.random.choice(X.shape[0], size=(batch_size, list_size), replace=True)
-    batch = torch.from_numpy(X[idx])
-    batch_labels = torch.from_numpy(y[idx])
-    return batch, batch_labels
+def get_batch_HPBO(meta_data, batch_size, list_size):
+    batch = []
+    batch_labels = []
+    # Sample all tasks and form a high dimensional tensor of size
+    #   (tasks, batch_size, list_size, input_dim)
+    for data_task_id in meta_data.keys():
+        data = meta_data[data_task_id]
+        X = data["X"]
+        y = data["y"]
+        idx = np.random.choice(X.shape[0], size=(batch_size, list_size), replace=True)
+        batch += [torch.from_numpy(X[idx])]
+        batch_labels += [torch.from_numpy(y[idx])]
+
+    return torch.stack(batch), torch.stack(batch_labels)
+
+def convert_meta_data_to_np_dictionary(meta_data):
+    temp_meta_data = {}
+    for k in meta_data.keys():
+        X = np.array(meta_data[k]["X"], dtype=np.float32)
+        y = np.array(meta_data[k]["y"], dtype=np.float32)
+        temp_meta_data[k] = {"X": X, "y": y}
+
+    return temp_meta_data
 
 if __name__ == '__main__':
     # Unit testing our loss functions
     # test_toy_problem()
 
     # Pretrain Ranking loss surrogate with a single search space
-    search_space_id = '5636'
+    search_space_id = '5527'
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
     meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
 
@@ -222,13 +240,9 @@ if __name__ == '__main__':
     input_dim = np.array(meta_train_data[dataset_key]["X"]).shape[1]
     print("Input dim of", search_space_id, "=", input_dim)
 
-    # Sample a task and keep the dataset same during training.
-    data_task_id = np.random.choice(list(meta_train_data.keys()))
-    data = meta_train_data[data_task_id]
-    X = np.array(data["X"], dtype=np.float32)
-    y = np.array(data["y"], dtype=np.float32)
+    meta_train_data = convert_meta_data_to_np_dictionary(meta_train_data)
 
-    epochs = 1000
+    epochs = 500
     batch_size = 100
     list_size = 100
     sc = Scorer(input_dim=input_dim)
@@ -238,7 +252,7 @@ if __name__ == '__main__':
     for _ in range(epochs):
         optimizer.zero_grad()
 
-        train_data, train_labels = get_training_batch_HPBO(X, y, batch_size, list_size)
+        train_data, train_labels = get_batch_HPBO(meta_train_data, batch_size, list_size)
         prediction = sc(train_data)
 
         flatten_from_dim = len(prediction.shape) - 2
