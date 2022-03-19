@@ -2,6 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+import matplotlib.pyplot as plt
+# Local imports
+from HPO_B.hpob_handler import HPOBHandler
 
 # Defining our ranking model as a DNN.
 # Keeping the model simple for now.
@@ -199,6 +202,61 @@ def test_toy_problem():
 
     print("Sorted percentage : ", sorted_lists * 100 / 1000)
 
+
+def get_training_batch_HPBO(X, y, batch_size, list_size):
+    idx = np.random.choice(X.shape[0], size=(batch_size, list_size), replace=True)
+    batch = torch.from_numpy(X[idx])
+    batch_labels = torch.from_numpy(y[idx])
+    return batch, batch_labels
+
 if __name__ == '__main__':
     # Unit testing our loss functions
-    test_toy_problem()
+    # test_toy_problem()
+
+    # Pretrain Ranking loss surrogate with a single search space
+    search_space_id = '5636'
+    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
+    meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
+
+    dataset_key = list(meta_train_data.keys())[0]
+    input_dim = np.array(meta_train_data[dataset_key]["X"]).shape[1]
+    print("Input dim of", search_space_id, "=", input_dim)
+
+    # Sample a task and keep the dataset same during training.
+    data_task_id = np.random.choice(list(meta_train_data.keys()))
+    data = meta_train_data[data_task_id]
+    X = np.array(data["X"], dtype=np.float32)
+    y = np.array(data["y"], dtype=np.float32)
+
+    epochs = 1000
+    batch_size = 100
+    list_size = 100
+    sc = Scorer(input_dim=input_dim)
+
+    optimizer = torch.optim.Adam(sc.parameters(), lr=0.01)
+    loss_list = []
+    for _ in range(epochs):
+        optimizer.zero_grad()
+
+        train_data, train_labels = get_training_batch_HPBO(X, y, batch_size, list_size)
+        prediction = sc(train_data)
+
+        flatten_from_dim = len(prediction.shape) - 2
+        prediction = torch.flatten(prediction, start_dim=flatten_from_dim)
+        train_labels = torch.flatten(train_labels, start_dim=flatten_from_dim)
+
+        loss = loss_list_wise_mle(prediction, train_labels)
+        loss = torch.mean(loss)
+
+        loss.backward()
+        optimizer.step()
+
+        print("Epoch[", _, "] ==>", loss.item()/list_size)
+        loss_list += [loss.item()/list_size]
+
+    plt.figure(np.random.randint(999999999))
+    plt.plot(np.array(loss_list, dtype=np.float32))
+    legend = ["Loss",
+              ]
+    plt.legend(legend)
+    plt.show()
