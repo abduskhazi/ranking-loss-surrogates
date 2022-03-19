@@ -140,8 +140,7 @@ def is_sorted(l, reverse=False):
         # check if ascendent sorted
         return all(l[:-1] <= l[1:])
 
-if __name__ == '__main__':
-    # Unit testing our loss functions
+def test_toy_problem():
     # IDEA:
     #   Can our loss function train the model to sort numbers?
     #   List of numbers to train with = {1 to 100}
@@ -199,3 +198,7 @@ if __name__ == '__main__':
             sorted_lists += 1
 
     print("Sorted percentage : ", sorted_lists * 100 / 1000)
+
+if __name__ == '__main__':
+    # Unit testing our loss functions
+    test_toy_problem()
