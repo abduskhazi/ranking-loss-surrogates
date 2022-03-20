@@ -298,9 +298,9 @@ def pre_train_HPOB():
         meta_train_data = convert_meta_data_to_np_dictionary(meta_train_data)
         meta_val_data = convert_meta_data_to_np_dictionary(meta_val_data)
 
-        epochs = 500
-        batch_size = 20
-        list_size = 20
+        epochs = 1000
+        batch_size = 100
+        list_size = 100
         rlsurrogate = RankingLossSurrogate(input_dim=input_dim)
         loss_list, val_loss_list = \
             rlsurrogate.train(meta_train_data, meta_val_data, epochs, batch_size, list_size)
