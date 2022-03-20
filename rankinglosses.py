@@ -283,6 +283,8 @@ class RankingLossSurrogate():
         file_name = self.save_folder + file_name
         state_dict = torch.load(file_name)
         self.input_dim = state_dict["input_dim"]
+        # Creating scorer.
+        self.sc = Scorer(input_dim=self.input_dim)
         self.sc.load_state_dict(state_dict["scorer"])
 
 def pre_train_HPOB():
