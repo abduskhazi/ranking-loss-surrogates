@@ -223,6 +223,7 @@ def get_batch_HPBO(meta_data, batch_size, list_size):
 class RankingLossSurrogate():
     def __init__(self, input_dim, file_name=None):
         self.save_folder = "./save/rlsurrogates/"
+        self.file_name = file_name
         if not os.path.isdir(self.save_folder):
             os.makedirs(self.save_folder)
 
