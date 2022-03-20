@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 # Local imports
 from HPO_B.hpob_handler import HPOBHandler
@@ -221,6 +222,10 @@ def get_batch_HPBO(meta_data, batch_size, list_size):
 
 class RankingLossSurrogate():
     def __init__(self, input_dim, file_name=None):
+        self.save_folder = "./save/rlsurrogates/"
+        if not os.path.isdir(self.save_folder):
+            os.makedirs(self.save_folder)
+
         if file_name:
             self.load(file_name)
         else:
@@ -269,10 +274,12 @@ class RankingLossSurrogate():
         return loss_list, val_loss_list
 
     def save(self, file_name):
+        file_name = self.save_folder + file_name
         state_dict = self.sc.state_dict()
         torch.save({"input_dim": input_dim, "scorer": state_dict}, file_name)
 
     def load(self, file_name):
+        file_name = self.save_folder + file_name
         state_dict = torch.load(file_name)
         self.input_dim = state_dict["input_dim"]
         self.sc.load_state_dict(state_dict["scorer"])
@@ -299,6 +306,8 @@ if __name__ == '__main__':
     rlsurrogate = RankingLossSurrogate(input_dim=input_dim)
     loss_list, val_loss_list = \
         rlsurrogate.train(meta_train_data, meta_val_data, epochs, batch_size, list_size)
+
+    rlsurrogate.save(search_space_id)
 
     plt.figure(np.random.randint(999999999))
     plt.plot(np.array(loss_list, dtype=np.float32))
