@@ -12,6 +12,7 @@ import time
 import pickle
 import configs as conf
 
+from rankinglosses import RankingLossSurrogate
 # For memory management
 import gc
 
@@ -110,6 +111,17 @@ def evaluate_FSBO(hpob_hdlr, keys_to_evaluate):
         store_object(performance, "./optimization_results/intermittent_dkt_evaluation_32x4_100_03_cosAnn")
         # gc.collect()
 
+    return performance
+
+def evaluate_ranking_losses(hpob_hdlr, keys_to_evaluate):
+    performance = []
+    for key in keys_to_evaluate:
+        search_space_id, dataset, _, _ = key
+        input_dim = hpob_hdlr.get_input_dim(search_space_id, dataset)
+        method_rl = RankingLossSurrogate(input_dim=input_dim, file_name=search_space_id)
+        res = evaluate_combinations(hpob_hdlr, method_rl, keys_to_evaluate=[key])
+        performance += res
+        store_object(performance, "./optimization_results/intermittent_rl_evaluation")
     return performance
 
 def plot_rank_graph(n_keys, n_trials):
@@ -268,6 +280,13 @@ def main():
 
     if conf.FSBO.pretrain or conf.FSBO.evaluate:
         study_FSBO(conf.FSBO, n_keys=n_keys, n_trails=n_trails)
+
+    if conf.evaluate_RankingLosses:
+        print("RankingLosses: Evaluate test set (testing meta dataset)")
+        hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
+        rl_keys = get_all_combinations(hpob_hdlr, 100)[:n_keys]
+        rl_performance = evaluate_ranking_losses(hpob_hdlr, keys_to_evaluate=rl_keys)
+        store_object(rl_performance, "./optimization_results/rl_evaluation")
 
     if conf.plot_ranks:
         plot_rank_graph(n_keys=n_keys, n_trials=n_trails)
