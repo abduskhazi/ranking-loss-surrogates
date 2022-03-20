@@ -276,7 +276,7 @@ class RankingLossSurrogate():
     def save(self, file_name):
         file_name = self.save_folder + file_name
         state_dict = self.sc.state_dict()
-        torch.save({"input_dim": input_dim, "scorer": state_dict}, file_name)
+        torch.save({"input_dim": self.input_dim, "scorer": state_dict}, file_name)
 
     def load(self, file_name):
         file_name = self.save_folder + file_name
