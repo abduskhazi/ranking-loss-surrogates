@@ -288,32 +288,33 @@ if __name__ == '__main__':
     # Unit testing our loss functions
     # test_toy_problem()
 
-    # Pretrain Ranking loss surrogate with a single search space
-    search_space_id = '5965'
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
-    meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
-    meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
 
-    input_dim = get_input_dim(meta_train_data)
-    print("Input dim of", search_space_id, "=", input_dim)
+    # Pretrain Ranking loss surrogate with all search spaces
+    for search_space_id in hpob_hdlr.get_search_spaces():
+        meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
+        meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
 
-    meta_train_data = convert_meta_data_to_np_dictionary(meta_train_data)
-    meta_val_data = convert_meta_data_to_np_dictionary(meta_val_data)
+        input_dim = get_input_dim(meta_train_data)
+        print("Input dim of", search_space_id, "=", input_dim)
 
-    epochs = 500
-    batch_size = 20
-    list_size = 20
-    rlsurrogate = RankingLossSurrogate(input_dim=input_dim)
-    loss_list, val_loss_list = \
-        rlsurrogate.train(meta_train_data, meta_val_data, epochs, batch_size, list_size)
+        meta_train_data = convert_meta_data_to_np_dictionary(meta_train_data)
+        meta_val_data = convert_meta_data_to_np_dictionary(meta_val_data)
 
-    rlsurrogate.save(search_space_id)
+        epochs = 500
+        batch_size = 20
+        list_size = 20
+        rlsurrogate = RankingLossSurrogate(input_dim=input_dim)
+        loss_list, val_loss_list = \
+            rlsurrogate.train(meta_train_data, meta_val_data, epochs, batch_size, list_size)
 
-    plt.figure(np.random.randint(999999999))
-    plt.plot(np.array(loss_list, dtype=np.float32))
-    plt.plot(np.array(val_loss_list, dtype=np.float32))
-    legend = ["Loss",
-              "Validation Loss"
-              ]
-    plt.legend(legend)
-    plt.show()
+        rlsurrogate.save(search_space_id)
+
+        plt.figure(np.random.randint(999999999))
+        plt.plot(np.array(loss_list, dtype=np.float32))
+        plt.plot(np.array(val_loss_list, dtype=np.float32))
+        legend = ["Loss",
+                  "Validation Loss"
+                  ]
+        plt.legend(legend)
+        plt.savefig(rlsurrogate.save_folder + "loss_" + search_space_id + ".png")
