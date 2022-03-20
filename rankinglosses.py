@@ -219,12 +219,74 @@ def get_batch_HPBO(meta_data, batch_size, list_size):
 
     return torch.stack(batch), torch.stack(batch_labels)
 
+class RankingLossSurrogate():
+    def __init__(self, input_dim, file_name=None):
+        if file_name:
+            self.load(file_name)
+        else:
+            self.input_dim = input_dim
+            self.sc = Scorer(input_dim=input_dim)
+
+    def flatten_for_loss_list(self, pred, y):
+        flatten_from_dim = len(pred.shape) - 2
+        pred = torch.flatten(pred, start_dim=flatten_from_dim)
+        y = torch.flatten(y, start_dim=flatten_from_dim)
+        return pred, y
+
+    def train(self, meta_train_data, meta_val_data, epochs, batch_size, list_size):
+        optimizer = torch.optim.Adam(self.sc.parameters(), lr=0.01)
+        loss_list = []
+        val_loss_list = []
+        for _ in range(epochs):
+            self.sc.train()
+            optimizer.zero_grad()
+
+            train_data, train_labels = get_batch_HPBO(meta_train_data, batch_size, list_size)
+            prediction = self.sc(train_data)
+
+            flatten_from_dim = len(prediction.shape) - 2
+            prediction = torch.flatten(prediction, start_dim=flatten_from_dim)
+            train_labels = torch.flatten(train_labels, start_dim=flatten_from_dim)
+
+            loss = loss_list_wise_mle(prediction, train_labels)
+            loss = torch.mean(loss)
+
+            loss.backward()
+            optimizer.step()
+
+            with torch.no_grad():
+                self.sc.eval()
+                val_data, val_labels = get_batch_HPBO(meta_val_data, batch_size, list_size)
+                pred_val = self.sc(val_data)
+
+                flatten_from_dim = len(pred_val.shape) - 2
+                pred_val = torch.flatten(pred_val, start_dim=flatten_from_dim)
+                val_labels = torch.flatten(val_labels, start_dim=flatten_from_dim)
+
+                val_loss = loss_list_wise_mle(pred_val, val_labels)
+                val_loss = torch.mean(val_loss)
+
+            print("Epoch[", _, "] ==> Loss =", loss.item() / list_size, "; Val_loss =", val_loss.item() / list_size)
+            loss_list += [loss.item() / list_size]
+            val_loss_list += [val_loss.item() / list_size]
+
+        return loss_list, val_loss_list
+
+    def save(self, file_name):
+        state_dict = self.sc.state_dict()
+        torch.save({"input_dim": input_dim, "scorer": state_dict}, file_name)
+
+    def load(self, file_name):
+        state_dict = torch.load(file_name)
+        self.input_dim = state_dict["input_dim"]
+        self.sc.load_state_dict(state_dict["scorer"])
+
 if __name__ == '__main__':
     # Unit testing our loss functions
     # test_toy_problem()
 
     # Pretrain Ranking loss surrogate with a single search space
-    search_space_id = '5859'
+    search_space_id = '5965'
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
     meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
     meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
@@ -236,45 +298,11 @@ if __name__ == '__main__':
     meta_val_data = convert_meta_data_to_np_dictionary(meta_val_data)
 
     epochs = 500
-    batch_size = 100
-    list_size = 100
-    sc = Scorer(input_dim=input_dim)
-
-    optimizer = torch.optim.Adam(sc.parameters(), lr=0.01)
-    loss_list = []
-    val_loss_list = []
-    for _ in range(epochs):
-        sc.train()
-        optimizer.zero_grad()
-
-        train_data, train_labels = get_batch_HPBO(meta_train_data, batch_size, list_size)
-        prediction = sc(train_data)
-
-        flatten_from_dim = len(prediction.shape) - 2
-        prediction = torch.flatten(prediction, start_dim=flatten_from_dim)
-        train_labels = torch.flatten(train_labels, start_dim=flatten_from_dim)
-
-        loss = loss_list_wise_mle(prediction, train_labels)
-        loss = torch.mean(loss)
-
-        loss.backward()
-        optimizer.step()
-
-        with torch.no_grad():
-            sc.eval()
-            val_data, val_labels = get_batch_HPBO(meta_val_data, batch_size, list_size)
-            pred_val = sc(val_data)
-
-            flatten_from_dim = len(pred_val.shape) - 2
-            pred_val = torch.flatten(pred_val, start_dim=flatten_from_dim)
-            val_labels = torch.flatten(val_labels, start_dim=flatten_from_dim)
-
-            val_loss = loss_list_wise_mle(pred_val, val_labels)
-            val_loss = torch.mean(val_loss)
-
-        print("Epoch[", _, "] ==> Loss =", loss.item()/list_size, "; Val_loss =", val_loss.item()/list_size)
-        loss_list += [loss.item()/list_size]
-        val_loss_list += [val_loss.item()/list_size]
+    batch_size = 20
+    list_size = 20
+    rlsurrogate = RankingLossSurrogate(input_dim=input_dim)
+    loss_list, val_loss_list = \
+        rlsurrogate.train(meta_train_data, meta_val_data, epochs, batch_size, list_size)
 
     plt.figure(np.random.randint(999999999))
     plt.plot(np.array(loss_list, dtype=np.float32))
