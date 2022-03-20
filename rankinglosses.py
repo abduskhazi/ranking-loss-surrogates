@@ -244,9 +244,7 @@ class RankingLossSurrogate():
             train_data, train_labels = get_batch_HPBO(meta_train_data, batch_size, list_size)
             prediction = self.sc(train_data)
 
-            flatten_from_dim = len(prediction.shape) - 2
-            prediction = torch.flatten(prediction, start_dim=flatten_from_dim)
-            train_labels = torch.flatten(train_labels, start_dim=flatten_from_dim)
+            prediction, train_labels = self.flatten_for_loss_list(prediction, train_labels)
 
             loss = loss_list_wise_mle(prediction, train_labels)
             loss = torch.mean(loss)
@@ -259,9 +257,7 @@ class RankingLossSurrogate():
                 val_data, val_labels = get_batch_HPBO(meta_val_data, batch_size, list_size)
                 pred_val = self.sc(val_data)
 
-                flatten_from_dim = len(pred_val.shape) - 2
-                pred_val = torch.flatten(pred_val, start_dim=flatten_from_dim)
-                val_labels = torch.flatten(val_labels, start_dim=flatten_from_dim)
+                pred_val, val_labels = self.flatten_for_loss_list(pred_val, val_labels)
 
                 val_loss = loss_list_wise_mle(pred_val, val_labels)
                 val_loss = torch.mean(val_loss)
