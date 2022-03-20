@@ -287,6 +287,22 @@ class RankingLossSurrogate():
         self.sc = Scorer(input_dim=self.input_dim)
         self.sc.load_state_dict(state_dict["scorer"])
 
+    def observe_and_suggest(self, X_obs, y_obs, X_pen):
+        X_obs = np.array(X_obs, dtype=np.float32)
+        y_obs = np.array(y_obs, dtype=np.float32)
+        X_pen = np.array(X_pen, dtype=np.float32)
+        X_obs = torch.from_numpy(X_obs)
+        y_obs = torch.from_numpy(y_obs)
+        X_pen = torch.from_numpy(X_pen)
+
+        # Doing restarts from the saved model
+        restarted_model = RankingLossSurrogate(input_dim=-1, file_name=self.file_name)
+        scores = restarted_model.sc(X_pen)
+        scores = scores.detach().numpy()
+
+        idx = np.argmax(scores)
+        return idx
+
 def pre_train_HPOB():
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
 
