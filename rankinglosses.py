@@ -284,10 +284,7 @@ class RankingLossSurrogate():
         self.input_dim = state_dict["input_dim"]
         self.sc.load_state_dict(state_dict["scorer"])
 
-if __name__ == '__main__':
-    # Unit testing our loss functions
-    # test_toy_problem()
-
+def pre_train_HPOB():
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
 
     # Pretrain Ranking loss surrogate with all search spaces
@@ -318,3 +315,9 @@ if __name__ == '__main__':
                   ]
         plt.legend(legend)
         plt.savefig(rlsurrogate.save_folder + "loss_" + search_space_id + ".png")
+
+if __name__ == '__main__':
+    # Unit testing our loss functions
+    # test_toy_problem()
+
+    pre_train_HPOB()
