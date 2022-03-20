@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 # Local imports
 from HPO_B.hpob_handler import HPOBHandler
+from fsbo import convert_meta_data_to_np_dictionary, get_input_dim
 
 # Defining our ranking model as a DNN.
 # Keeping the model simple for now.
@@ -218,15 +219,6 @@ def get_batch_HPBO(meta_data, batch_size, list_size):
 
     return torch.stack(batch), torch.stack(batch_labels)
 
-def convert_meta_data_to_np_dictionary(meta_data):
-    temp_meta_data = {}
-    for k in meta_data.keys():
-        X = np.array(meta_data[k]["X"], dtype=np.float32)
-        y = np.array(meta_data[k]["y"], dtype=np.float32)
-        temp_meta_data[k] = {"X": X, "y": y}
-
-    return temp_meta_data
-
 if __name__ == '__main__':
     # Unit testing our loss functions
     # test_toy_problem()
@@ -237,8 +229,7 @@ if __name__ == '__main__':
     meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
     meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
 
-    dataset_key = list(meta_train_data.keys())[0]
-    input_dim = np.array(meta_train_data[dataset_key]["X"]).shape[1]
+    input_dim = get_input_dim(meta_train_data)
     print("Input dim of", search_space_id, "=", input_dim)
 
     meta_train_data = convert_meta_data_to_np_dictionary(meta_train_data)
