@@ -288,6 +288,7 @@ class RankingLossSurrogate():
         self.sc.load_state_dict(state_dict["scorer"])
 
     def fine_tune(self, X_obs, y_obs):
+        loss_list = []
         optimizer = torch.optim.Adam(self.sc.parameters(), lr=0.01)
         for i in range(100):
             self.sc.train()
@@ -301,6 +302,18 @@ class RankingLossSurrogate():
 
             loss.backward()
             optimizer.step()
+
+            loss_list += [loss.item()/X_obs.shape[0]]
+
+        # Plotting fine tune loss
+        plt.figure(np.random.randint(999999999))
+        plt.plot(np.array(loss_list, dtype=np.float32))
+        legend = ["Fine tune Loss: Ranking losses"]
+        plt.legend(legend)
+        plt.savefig(self.save_folder + self.file_name + "_fine_tune_loss.png")
+        plt.close()
+
+        return loss_list
 
     def observe_and_suggest(self, X_obs, y_obs, X_pen):
         X_obs = np.array(X_obs, dtype=np.float32)
