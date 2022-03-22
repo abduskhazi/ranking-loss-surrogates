@@ -21,10 +21,6 @@ Documentation (Agenda):
         3. This may make the output domain restrictive. Works for now, however, we may need a better solution for this.
         4. The learnt model is extremely sensitive to the learning rate and the number of epochs
 
-
-    Applying this to HPOB... (With or without query)
-
-
 Advantages of the proposed Idea:
     The amount of data instances for training is exponential in number. Which is very good for a deep learning model
     For example if we have 100 observation set and we use a list size of 15 to train our model, we will have 100C15
@@ -33,3 +29,8 @@ Advantages of the proposed Idea:
 
 Observed disadvantages:
     The learnt model is extremely sensitive to the learning rate and the number of epochs
+
+
+Applying this to HPOB... (With or without query)
+    First learning from first search space.
+    Even with this the loss curves are very smooth if we use 2 * tanh(0.01 * x)
