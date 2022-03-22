@@ -130,34 +130,42 @@ def plot_rank_graph(n_keys, n_trials):
     gp = load_object("./optimization_results/gp_evaluation")
     de = load_object("./optimization_results/de_evaluate_32x32_E1000_l0_02_random_start")
     dkt = load_object("./optimization_results/dkt_evaluation_32x4_100_03_cosAnn")
-    #dkt2 = load_object("./optimization_results/intermittent_dkt_evaluation_32x4_500_03_cosAnn")
-    #dkt3 = load_object("./optimization_results/intermittent_dkt_evaluation_32x4_500_03")
-    #dkt4 = load_object("./optimization_results/intermittent_dkt_evaluation_32x5_500_1")
+    rl = load_object("./optimization_results/rl_evaluation_no_finetuning")
+    rl_finetune = load_object("./optimization_results/rl_evaluation")
 
-    keys = get_common_keys([rs, gp, de, dkt])
+    keys = get_common_keys([rs, gp, de, dkt, rl, rl_finetune])
     rs_performance = get_performance_array(rs, keys)[:n_keys, :n_trials]
     gp_performance = get_performance_array(gp, keys)[:n_keys, :n_trials]
     de_performance = get_performance_array(de, keys)[:n_keys, :n_trials]
     dkt_performance = get_performance_array(dkt, keys)[:n_keys, :n_trials]
+    rl_performance = get_performance_array(rl, keys)[:n_keys, :n_trials]
+    rl_finetune_perf = get_performance_array(rl_finetune, keys)[:n_keys, :n_trials]
 
+    performance_tuple = (rs_performance, gp_performance, de_performance, dkt_performance, rl_performance, rl_finetune_perf)
     # Creating a rank graph for all above methods
-    performance = np.stack((rs_performance, gp_performance, de_performance, dkt_performance), axis=-1)
+    performance = np.stack(performance_tuple, axis=-1)
     # Since rank data ranks in the increasing order, we need to multiply by -1
     rg = scipy.stats.rankdata(-1 * performance, axis=-1)
     rank_rs = np.mean(rg[:, :, 0], axis=0)
     rank_gp = np.mean(rg[:, :, 1], axis=0)
     rank_de = np.mean(rg[:, :, 2], axis=0)
     rank_dkt = np.mean(rg[:, :, 3], axis=0)
+    rank_rl = np.mean(rg[:, :, 4], axis=0)
+    rank_rl_finetune = np.mean(rg[:, :, 5], axis=0)
 
     plt.figure(np.random.randint(999999999))
     plt.plot(rank_rs)
     plt.plot(rank_gp)
     plt.plot(rank_de)
     plt.plot(rank_dkt)
+    plt.plot(rank_rl)
+    plt.plot(rank_rl_finetune)
     legend = ["RS Rank"
               , "GP Rank"
               , "DE Rank [32,32] ep=1000 lr=0.02 (Rand.)"
               , "DKT Rank [32x4] ft=100 ft_lr=0.03 (CosAnne) + static_val"
+              , "RL Rank [32,32] ep=1000 lr=0.01 (Raw)"
+              , "RL Rank [32,32] ep=1000 lr=0.01 (With Fine tuning)"
               # , "DKT Rank [32x4] ft=500 ft_lr=0.03 (CosAnne)"
               # , "DKT Rank [32x4] ft=100 ft_lr=0.01"
               # , "DKT Rank [32x4] ft=500 ft_lr=0.03 (CosAnne)"
