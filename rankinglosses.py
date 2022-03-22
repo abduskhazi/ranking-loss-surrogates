@@ -287,6 +287,21 @@ class RankingLossSurrogate():
         self.sc = Scorer(input_dim=self.input_dim)
         self.sc.load_state_dict(state_dict["scorer"])
 
+    def fine_tune(self, X_obs, y_obs):
+        optimizer = torch.optim.Adam(self.sc.parameters(), lr=0.01)
+        for i in range(100):
+            self.sc.train()
+            optimizer.zero_grad()
+
+            y_pred = self.sc(X_obs)
+            y_pred, y_obs = self.flatten_for_loss_list(y_pred, y_obs)
+
+            loss = loss_list_wise_mle(y_pred, y_obs)
+            loss = torch.mean(loss)
+
+            loss.backward()
+            optimizer.step()
+
     def observe_and_suggest(self, X_obs, y_obs, X_pen):
         X_obs = np.array(X_obs, dtype=np.float32)
         y_obs = np.array(y_obs, dtype=np.float32)
@@ -297,6 +312,7 @@ class RankingLossSurrogate():
 
         # Doing restarts from the saved model
         restarted_model = RankingLossSurrogate(input_dim=-1, file_name=self.file_name)
+        restarted_model.fine_tune(X_obs, y_obs)
         scores = restarted_model.sc(X_pen)
         scores = scores.detach().numpy()
 
