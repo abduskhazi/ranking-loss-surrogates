@@ -34,3 +34,10 @@ Observed disadvantages:
 Applying this to HPOB... (With or without query)
     First learning from first search space.
     Even with this the loss curves are very smooth if we use 2 * tanh(0.01 * x)
+
+
+Possible extensions:
+    Top ranked enhanced loss can be used as it is simple to understand and implement
+    Section 4 in https://arxiv.org/pdf/1707.05438.pdf
+    This is because it is more important to get the correct top rankings than later rankings
+    In fact the top1 rank is what is most important to us in any optimization step of an HPO algorithm.
