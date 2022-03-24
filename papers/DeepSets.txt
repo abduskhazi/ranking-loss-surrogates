@@ -1,0 +1,42 @@
+Papers Referred:
+    https://arxiv.org/pdf/1703.06114.pdf
+    https://arxiv.org/pdf/1810.00825.pdf
+
+Our goal is to find a latent embedding of a set
+This embedding will be used to condition our query on the support set of points (During HPO)
+Traditionally deep learning or machine learning models learn the following:
+    f: R^d -> R^k for regression or f: R^d -> {0,1,2...} for classfication
+Which can be though of as transforming one input space to another.
+
+If we want to take a whole set of objects as inputs:
+    1. The permutation of the objects within that set should be irrevalent for the model (permuation-invariance)
+    2. The cardinality of the set can be variable.
+
+In this case if X = {a, b, c, ... z} is the elements that can comprise of the elements in the input set,
+The set of all subsets of X i.e superset is the domain that our model would map to the ouput.
+    f: 2^X -> R  (or) f: 2^X -> {0, 1}
+
+In this case, permutation invariance requires one permutation invariance operator in our model e.g. + (Addition)
+    Check paper 1 for the equation for this.
+    This is referred to an a pooling operator in paper 2.
+    As long as the pooling operator is permutation invariant, the proposed model by Zaheer et al is permuation
+    invariant. E.g. sum, mean, max etc.
+
+There is another type of problem with sets as input called permutation equivariant:
+    WE do not consider this
+    Permutation equivariant creates issues because we dont care if our latent space is some symmetric
+    mapping of the input space. We want the whole set to be mapped definitively to a latent embedding.
+
+Doubt ==> If we sum the invariant case dont we have a set cardinality issue?
+        If we use the pooling operator mean, then this can reduce the effect
+        Another way of looking : WE can use the sum operator with rationale, higher evidence gives more
+        more stronger signal.
+
+Implementation details:
+    Deep set output space maybe kept as the same as the search space size, so as not to make the
+    emebbing to constraint with smaller range.
+    We would given the input to our Deep set a set of values { (x1:y1), (x2:y2) ... (xn:yn) } to a DNN : phi
+    Here x1:y1 means that input and the HPO oberved values in meta data are concated to form a bigger tensor.
+    The output is then summed and given as input to another DNN : Rho
+    The output of Rho is then given as input to the scorer (concateanted with our query)
+    The training will be carried out together for phi, Rho and the scorer DNN.
