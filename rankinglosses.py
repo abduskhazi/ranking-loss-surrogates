@@ -8,6 +8,42 @@ import matplotlib.pyplot as plt
 from HPO_B.hpob_handler import HPOBHandler
 from fsbo import convert_meta_data_to_np_dictionary, get_input_dim
 
+class DeepSet(nn.Module):
+    def __init__(self, input_dim=1, latent_dim=1, output_dim=1):
+        super(DeepSet, self).__init__()
+        self.input_dim = input_dim
+        self.latent_dim = latent_dim
+        self.output_dim = output_dim
+
+        self.phi = nn.Sequential(
+            nn.Linear(input_dim, 32),
+            nn.ReLU(),
+            nn.Linear(32, 32),
+            nn.ReLU(),
+            nn.Linear(32, latent_dim)
+        )
+
+        self.rho = nn.Sequential(
+            nn.Linear(latent_dim, 32),
+            nn.ReLU(),
+            nn.Linear(32, 32),
+            nn.ReLU(),
+            nn.Linear(32, output_dim)
+        )
+
+    def forward(self, x):
+        # Encoder: First get the latent embedding of the whole batch
+        x = self.phi(x)
+
+        # Pool: Agregate all the outputs to a single output. (i.e accross size of support set)
+        # x = torch.sum(x, dim=-2)
+        x = torch.mean(x, dim=-2)  # Using mean as the validation error is jumping too much
+
+        # Decoder: Decode the latent output to result
+        x = self.rho(x)
+
+        return x
+
 # Defining our ranking model as a DNN.
 # Keeping the model simple for now.
 class Scorer(nn.Module):
@@ -15,19 +51,16 @@ class Scorer(nn.Module):
     def __init__(self, input_dim=1):
         super(Scorer, self).__init__()
         self.input_dim = input_dim
-        # Here fc is an abbreviation fully connected
-        self.fc1 = nn.Linear(input_dim, 32)
-        self.fc2 = nn.Linear(32, 32)
-        self.fc3 = nn.Linear(32, 1)
+        self.model = nn.Sequential(
+            nn.Linear(input_dim, 32),
+            nn.ReLU(),
+            nn.Linear(32, 32),
+            nn.ReLU(),
+            nn.Linear(32, 1)
+        )
 
     def forward(self, x):
-        x = self.fc1(x)
-        x = F.relu(x)
-
-        x = self.fc2(x)
-        x = F.relu(x)
-
-        x = self.fc3(x)
+        x = self.model(x)
         # The last layer must not be passed through relu
 
         # however we pass it through torch.tanh to keep the output in a resonable range
@@ -206,23 +239,28 @@ def test_toy_problem():
 
 
 def get_batch_HPBO(meta_data, batch_size, list_size):
-    batch = []
-    batch_labels = []
+    support_X = []
+    support_y = []
+    query_X = []
+    query_y = []
     # Sample all tasks and form a high dimensional tensor of size
     #   (tasks, batch_size, list_size, input_dim)
     for data_task_id in meta_data.keys():
         data = meta_data[data_task_id]
         X = data["X"]
         y = data["y"]
-        idx = np.random.choice(X.shape[0], size=(batch_size, list_size), replace=True)
-        batch += [torch.from_numpy(X[idx])]
-        batch_labels += [torch.from_numpy(y[idx])]
+        idx_support = np.random.choice(X.shape[0], size=(batch_size, 50), replace=True)
+        support_X += [torch.from_numpy(X[idx_support])]
+        support_y += [torch.from_numpy(y[idx_support])]
+        idx_query = np.random.choice(X.shape[0], size=(batch_size, list_size), replace=True)
+        query_X += [torch.from_numpy(X[idx_query])]
+        query_y += [torch.from_numpy(y[idx_query])]
 
-    return torch.stack(batch), torch.stack(batch_labels)
+    return torch.stack(support_X), torch.stack(support_y), torch.stack(query_X), torch.stack(query_y)
 
 class RankingLossSurrogate():
     def __init__(self, input_dim, file_name=None):
-        self.save_folder = "./save/rlsurrogates/"
+        self.save_folder = "./save/rlsurrogates_deepset/"
         self.file_name = file_name
         if not os.path.isdir(self.save_folder):
             os.makedirs(self.save_folder)
@@ -231,7 +269,8 @@ class RankingLossSurrogate():
             self.load(file_name)
         else:
             self.input_dim = input_dim
-            self.sc = Scorer(input_dim=input_dim)
+            self.ds_embedder = DeepSet(input_dim=input_dim+1, latent_dim=32, output_dim=input_dim)
+            self.sc = Scorer(input_dim=input_dim*2)
 
     def flatten_for_loss_list(self, pred, y):
         flatten_from_dim = len(pred.shape) - 2
@@ -240,19 +279,30 @@ class RankingLossSurrogate():
         return pred, y
 
     def train(self, meta_train_data, meta_val_data, epochs, batch_size, list_size):
-        optimizer = torch.optim.Adam(self.sc.parameters(), lr=0.01)
+        optimizer = torch.optim.Adam([{'params': self.sc.parameters(), 'lr': 0.01},
+                                      {'params': self.ds_embedder.parameters(), 'lr': 0.01},])
         loss_list = []
         val_loss_list = []
         for _ in range(epochs):
             self.sc.train()
+            self.ds_embedder.train()
             optimizer.zero_grad()
 
-            train_data, train_labels = get_batch_HPBO(meta_train_data, batch_size, list_size)
-            prediction = self.sc(train_data)
+            s_train_X, s_train_y, q_train_X, q_train_y = get_batch_HPBO(meta_train_data, batch_size, list_size)
 
-            prediction, train_labels = self.flatten_for_loss_list(prediction, train_labels)
+            # Creating an embedding of X:y for the embedder
+            s_train_X = torch.cat((s_train_X, s_train_y), dim=-1)
+            s_train_X = self.ds_embedder(s_train_X)
 
-            loss = loss_list_wise_mle(prediction, train_labels)
+            # Creating an input for the scorer.
+            s_train_X = s_train_X[..., None, :].repeat(1, 1, batch_size, 1)
+            q_train_X = torch.cat((s_train_X, q_train_X), dim=-1)
+
+            prediction = self.sc(q_train_X)
+
+            prediction, q_train_y = self.flatten_for_loss_list(prediction, q_train_y)
+
+            loss = loss_list_wise_mle(prediction, q_train_y)
             loss = torch.mean(loss)
 
             loss.backward()
@@ -260,12 +310,22 @@ class RankingLossSurrogate():
 
             with torch.no_grad():
                 self.sc.eval()
-                val_data, val_labels = get_batch_HPBO(meta_val_data, batch_size, list_size)
-                pred_val = self.sc(val_data)
+                self.ds_embedder.eval()
+                s_val_X, s_val_y, q_val_X, q_val_y = get_batch_HPBO(meta_val_data, batch_size, list_size)
 
-                pred_val, val_labels = self.flatten_for_loss_list(pred_val, val_labels)
+                # Creating an embedding of X:y for the embedder
+                s_val_X = torch.cat((s_val_X, s_val_y), dim=-1)
+                s_val_X = self.ds_embedder(s_val_X)
 
-                val_loss = loss_list_wise_mle(pred_val, val_labels)
+                # Creating an input for the scorer.
+                s_val_X = s_val_X[..., None, :].repeat(1, 1, batch_size, 1)
+                q_val_X = torch.cat((s_val_X, q_val_X), dim=-1)
+
+                pred_val = self.sc(q_val_X)
+
+                pred_val, q_val_y = self.flatten_for_loss_list(pred_val, q_val_y)
+
+                val_loss = loss_list_wise_mle(pred_val, q_val_y)
                 val_loss = torch.mean(val_loss)
 
             print("Epoch[", _, "] ==> Loss =", loss.item() / list_size, "; Val_loss =", val_loss.item() / list_size)
@@ -277,14 +337,21 @@ class RankingLossSurrogate():
     def save(self, file_name):
         file_name = self.save_folder + file_name
         state_dict = self.sc.state_dict()
-        torch.save({"input_dim": self.input_dim, "scorer": state_dict}, file_name)
+        embedder_state_dict = self.ds_embedder.state_dict()
+        torch.save({"input_dim": self.input_dim,
+                    "scorer": state_dict,
+                    "deep_set": embedder_state_dict},
+                   file_name)
 
     def load(self, file_name):
         file_name = self.save_folder + file_name
         state_dict = torch.load(file_name)
         self.input_dim = state_dict["input_dim"]
+        # Creating the deep set embedder
+        self.ds_embedder = DeepSet(input_dim=self.input_dim+1, latent_dim=32, output_dim=self.input_dim)
+        self.ds_embedder.load_state_dict(state_dict["deep_set"])
         # Creating scorer.
-        self.sc = Scorer(input_dim=self.input_dim)
+        self.sc = Scorer(input_dim=self.input_dim*2)
         self.sc.load_state_dict(state_dict["scorer"])
 
     def fine_tune(self, X_obs, y_obs):
@@ -325,7 +392,7 @@ class RankingLossSurrogate():
 
         # Doing restarts from the saved model
         restarted_model = RankingLossSurrogate(input_dim=-1, file_name=self.file_name)
-        restarted_model.fine_tune(X_obs, y_obs)
+        # restarted_model.fine_tune(X_obs, y_obs) # disabling fine tuning for now
         scores = restarted_model.sc(X_pen)
         scores = scores.detach().numpy()
 
@@ -362,6 +429,7 @@ def pre_train_HPOB():
                   "Validation Loss"
                   ]
         plt.legend(legend)
+        plt.title("SSID: " + search_space_id + "; Input dim: " + str(input_dim))
         plt.savefig(rlsurrogate.save_folder + "loss_" + search_space_id + ".png")
 
 if __name__ == '__main__':
