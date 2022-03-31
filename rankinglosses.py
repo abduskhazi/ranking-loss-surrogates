@@ -373,6 +373,7 @@ class RankingLossSurrogate(nn.Module):
         plt.plot(np.array(loss_list, dtype=np.float32))
         legend = ["Fine tune Loss: Ranking losses"]
         plt.legend(legend)
+        plt.title("SSID: " + self.file_name + "; Input dim: " + str(self.input_dim))
         plt.savefig(self.save_folder + self.file_name + "_fine_tune_loss.png")
         plt.close()
 
