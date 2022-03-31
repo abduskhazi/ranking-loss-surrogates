@@ -1,0 +1,9 @@
+Paper: https://arxiv.org/pdf/2012.06731.pdf
+
+Key Idea:
+    Use permutation matrices to represent sorting. Learn the matrix with the loss function.
+    [0 1 0] [x]    [y]
+    |1 0 0| |y|  = |x|
+    [0 0 1] [z]    [z]
+    Permutation Matrices are not smooth in the input space Hence relaxation is necessary for differentiability
+    Relaxation is done by using a double schocastic matrices i.e all row and column matrices sum to 1.
