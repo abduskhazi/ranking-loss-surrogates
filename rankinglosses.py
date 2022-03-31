@@ -366,15 +366,17 @@ class RankingLossSurrogate(nn.Module):
 
     def fine_tune(self, X_obs, y_obs):
         loss_list = []
-        optimizer = torch.optim.Adam(self.sc.parameters(), lr=0.01)
-        for i in range(100):
-            self.sc.train()
+        optimizer = torch.optim.Adam([{'params': self.parameters(), 'lr': 0.001},])
+        for i in range(200):
+            self.train()
             optimizer.zero_grad()
 
-            y_pred = self.sc(X_obs)
-            y_pred, y_obs = self.flatten_for_loss_list(y_pred, y_obs)
+            s_ft_X, s_ft_y, q_ft_X, q_ft_y = self.get_fine_tune_batch(X_obs, y_obs)
 
-            loss = loss_list_wise_mle(y_pred, y_obs)
+            q_ft_y_pred = self.forward((s_ft_X, s_ft_y, q_ft_X))
+            q_ft_y_pred, q_ft_y = self.flatten_for_loss_list(q_ft_y_pred, q_ft_y)
+
+            loss = loss_list_wise_mle(q_ft_y_pred, q_ft_y)
             loss = torch.mean(loss)
 
             loss.backward()
