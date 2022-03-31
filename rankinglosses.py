@@ -350,6 +350,20 @@ class RankingLossSurrogate(nn.Module):
         self.sc = Scorer(input_dim=self.input_dim*2)
         self.sc.load_state_dict(state_dict["scorer"])
 
+    def get_fine_tune_batch(self, X_obs, y_obs):
+
+        # Taking 20% of the data as the support set.
+        support_size = int(0.2 * X_obs.shape[0])
+        idx_support = np.random.choice(X_obs.shape[0], size=support_size, replace=False)
+        idx_query = np.delete(np.arange(X_obs.shape[0]), idx_support)
+
+        s_ft_X = X_obs[idx_support]
+        s_ft_y = y_obs[idx_support]
+        q_ft_X = X_obs[idx_query]
+        q_ft_y = y_obs[idx_query]
+
+        return s_ft_X, s_ft_y, q_ft_X, q_ft_y
+
     def fine_tune(self, X_obs, y_obs):
         loss_list = []
         optimizer = torch.optim.Adam(self.sc.parameters(), lr=0.01)
