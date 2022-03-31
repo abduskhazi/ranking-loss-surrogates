@@ -294,28 +294,17 @@ class RankingLossSurrogate(nn.Module):
         y = torch.flatten(y, start_dim=flatten_from_dim)
         return pred, y
 
-    def train(self, meta_train_data, meta_val_data, epochs, batch_size, list_size):
-        optimizer = torch.optim.Adam([{'params': self.sc.parameters(), 'lr': 0.01},
-                                      {'params': self.ds_embedder.parameters(), 'lr': 0.01},])
+    def train_model(self, meta_train_data, meta_val_data, epochs, batch_size, list_size):
+        optimizer = torch.optim.Adam([{'params': self.parameters(), 'lr': 0.01},])
         loss_list = []
         val_loss_list = []
         for _ in range(epochs):
-            self.sc.train()
-            self.ds_embedder.train()
+            self.train()
             optimizer.zero_grad()
 
             s_train_X, s_train_y, q_train_X, q_train_y = get_batch_HPBO(meta_train_data, batch_size, list_size)
 
-            # Creating an embedding of X:y for the embedder
-            s_train_X = torch.cat((s_train_X, s_train_y), dim=-1)
-            s_train_X = self.ds_embedder(s_train_X)
-
-            # Creating an input for the scorer.
-            s_train_X = s_train_X[..., None, :].repeat(1, 1, batch_size, 1)
-            q_train_X = torch.cat((s_train_X, q_train_X), dim=-1)
-
-            prediction = self.sc(q_train_X)
-
+            prediction = self.forward((s_train_X, s_train_y, q_train_X))
             prediction, q_train_y = self.flatten_for_loss_list(prediction, q_train_y)
 
             loss = loss_list_wise_mle(prediction, q_train_y)
@@ -325,20 +314,11 @@ class RankingLossSurrogate(nn.Module):
             optimizer.step()
 
             with torch.no_grad():
-                self.sc.eval()
-                self.ds_embedder.eval()
+                self.eval()
+
                 s_val_X, s_val_y, q_val_X, q_val_y = get_batch_HPBO(meta_val_data, batch_size, list_size)
 
-                # Creating an embedding of X:y for the embedder
-                s_val_X = torch.cat((s_val_X, s_val_y), dim=-1)
-                s_val_X = self.ds_embedder(s_val_X)
-
-                # Creating an input for the scorer.
-                s_val_X = s_val_X[..., None, :].repeat(1, 1, batch_size, 1)
-                q_val_X = torch.cat((s_val_X, q_val_X), dim=-1)
-
-                pred_val = self.sc(q_val_X)
-
+                pred_val = self.forward((s_val_X, s_val_y, q_val_X))
                 pred_val, q_val_y = self.flatten_for_loss_list(pred_val, q_val_y)
 
                 val_loss = loss_list_wise_mle(pred_val, q_val_y)
@@ -434,7 +414,7 @@ def pre_train_HPOB():
         list_size = 100
         rlsurrogate = RankingLossSurrogate(input_dim=input_dim)
         loss_list, val_loss_list = \
-            rlsurrogate.train(meta_train_data, meta_val_data, epochs, batch_size, list_size)
+            rlsurrogate.train_model(meta_train_data, meta_val_data, epochs, batch_size, list_size)
 
         rlsurrogate.save(search_space_id)
 
