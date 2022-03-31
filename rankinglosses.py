@@ -282,7 +282,7 @@ class RankingLossSurrogate(nn.Module):
 
         # Creating an input for the scorer.
         s_X = s_X[..., None, :]
-        repeat_tuple = (1,) * (len(s_X.shape)-2) + (q_X.shape[0], 1)
+        repeat_tuple = (1,) * (len(s_X.shape)-2) + (q_X.shape[-2], 1)
         s_X = s_X.repeat(repeat_tuple)
         q_X = torch.cat((s_X, q_X), dim=-1)
 
