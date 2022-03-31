@@ -7,5 +7,8 @@ FSBO = namedtuple("FSBO", "pretrain evaluate")
 FSBO.pretrain = False
 FSBO.evaluate = False
 
-evaluate_RankingLosses = True
+RankingLosses = namedtuple("RankingLosses", "pretrain evaluate")
+RankingLosses.pretrain = False
+RankingLosses.evaluate = True
+
 plot_ranks = True

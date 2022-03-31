@@ -258,8 +258,9 @@ def get_batch_HPBO(meta_data, batch_size, list_size):
 
     return torch.stack(support_X), torch.stack(support_y), torch.stack(query_X), torch.stack(query_y)
 
-class RankingLossSurrogate():
+class RankingLossSurrogate(nn.Module):
     def __init__(self, input_dim, file_name=None):
+        super(RankingLossSurrogate, self).__init__()
         self.save_folder = "./save/rlsurrogates_deepset/"
         self.file_name = file_name
         if not os.path.isdir(self.save_folder):
@@ -271,6 +272,21 @@ class RankingLossSurrogate():
             self.input_dim = input_dim
             self.ds_embedder = DeepSet(input_dim=input_dim+1, latent_dim=32, output_dim=input_dim)
             self.sc = Scorer(input_dim=input_dim*2)
+
+    def forward(self, input):
+        s_X, s_y, q_X = input
+
+        # Creating an embedding of X:y for the support data using the embedder
+        s_X = torch.cat((s_X, s_y), dim=-1)
+        s_X = self.ds_embedder(s_X)
+
+        # Creating an input for the scorer.
+        s_X = s_X[..., None, :]
+        repeat_tuple = (1,) * (len(s_X.shape)-2) + (q_X.shape[0], 1)
+        s_X = s_X.repeat(repeat_tuple)
+        q_X = torch.cat((s_X, q_X), dim=-1)
+
+        return self.sc(q_X)
 
     def flatten_for_loss_list(self, pred, y):
         flatten_from_dim = len(pred.shape) - 2
@@ -393,7 +409,7 @@ class RankingLossSurrogate():
         # Doing restarts from the saved model
         restarted_model = RankingLossSurrogate(input_dim=-1, file_name=self.file_name)
         # restarted_model.fine_tune(X_obs, y_obs) # disabling fine tuning for now
-        scores = restarted_model.sc(X_pen)
+        scores = restarted_model((X_obs, y_obs, X_pen))
         scores = scores.detach().numpy()
 
         idx = np.argmax(scores)
