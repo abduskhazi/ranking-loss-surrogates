@@ -1,4 +1,5 @@
 Paper: https://arxiv.org/pdf/2012.06731.pdf
+       (Impt Ref) https://arxiv.org/pdf/1903.08850.pdf
 
 Key Idea:
     Use permutation matrices to represent sorting. Learn the matrix with the loss function.
@@ -7,3 +8,11 @@ Key Idea:
     [0 0 1] [z]    [z]
     Permutation Matrices are not smooth in the input space Hence relaxation is necessary for differentiability
     Relaxation is done by using a double schocastic matrices i.e all row and column matrices sum to 1.
+
+    Unimodal
+    Double schochastic
+
+The idea of Permutation Matrices is taken from Neural sort - Neural sort (Impt ref)
+
+PLACKETT-LUCE DISTRIBUTIONS -> Very important to explain the rationale about using score as a probability
+    measure for our scoring function (Check section 2.1 of paper 2 (Neural Sort)) 
