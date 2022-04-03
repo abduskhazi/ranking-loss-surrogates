@@ -37,7 +37,9 @@ class DeepSet(nn.Module):
 
         # Pool: Agregate all the outputs to a single output. (i.e accross size of support set)
         # x = torch.sum(x, dim=-2)
-        x = torch.mean(x, dim=-2)  # Using mean as the validation error is jumping too much
+        x = torch.mean(x, dim=-2)
+        # Using mean as the validation error is jumping too much
+        # Also because the cardinality should be irrelevant
 
         # Decoder: Decode the latent output to result
         x = self.rho(x)
@@ -245,6 +247,8 @@ def get_batch_HPBO(meta_data, batch_size, list_size):
     query_y = []
     # Sample all tasks and form a high dimensional tensor of size
     #   (tasks, batch_size, list_size, input_dim)
+    #   Suggestion : Take a tensor batch_size, list_size, input_dim for one gradient step.
+    #   For segregation. https://numpy.org/doc/stable/reference/generated/numpy.setdiff1d.html
     for data_task_id in meta_data.keys():
         data = meta_data[data_task_id]
         X = data["X"]
