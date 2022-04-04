@@ -265,7 +265,7 @@ def get_batch_HPBO(meta_data, batch_size, list_size):
 class RankingLossSurrogate(nn.Module):
     def __init__(self, input_dim, file_name=None):
         super(RankingLossSurrogate, self).__init__()
-        self.save_folder = "./save/rlsurrogates_deepset/"
+        self.save_folder = "./save/rlsurrogates_deepset_16/"
         self.file_name = file_name
         if not os.path.isdir(self.save_folder):
             os.makedirs(self.save_folder)
@@ -274,8 +274,30 @@ class RankingLossSurrogate(nn.Module):
             self.load(file_name)
         else:
             self.input_dim = input_dim
-            self.ds_embedder = DeepSet(input_dim=input_dim+1, latent_dim=32, output_dim=input_dim)
-            self.sc = Scorer(input_dim=input_dim*2)
+            self.ds_embedder, self.sc = self.create_embedder_scorer(self.input_dim)
+
+    def create_embedder_scorer(self, in_dim):
+        embedder = DeepSet(input_dim=in_dim+1, latent_dim=32, output_dim=16)
+        sc = Scorer(input_dim=16 + in_dim)
+        return embedder, sc
+
+    def save(self, file_name):
+        file_name = self.save_folder + file_name
+        state_dict = self.sc.state_dict()
+        embedder_state_dict = self.ds_embedder.state_dict()
+        torch.save({"input_dim": self.input_dim,
+                    "scorer": state_dict,
+                    "deep_set": embedder_state_dict},
+                   file_name)
+
+    def load(self, file_name):
+        file_name = self.save_folder + file_name
+        state_dict = torch.load(file_name)
+        self.input_dim = state_dict["input_dim"]
+        # Creating and initializing the deep set embedder and scorer
+        self.ds_embedder, self.sc = self.create_embedder_scorer(self.input_dim)
+        self.ds_embedder.load_state_dict(state_dict["deep_set"])
+        self.sc.load_state_dict(state_dict["scorer"])
 
     def forward(self, input):
         s_X, s_y, q_X = input
@@ -333,26 +355,6 @@ class RankingLossSurrogate(nn.Module):
             val_loss_list += [val_loss.item() / list_size]
 
         return loss_list, val_loss_list
-
-    def save(self, file_name):
-        file_name = self.save_folder + file_name
-        state_dict = self.sc.state_dict()
-        embedder_state_dict = self.ds_embedder.state_dict()
-        torch.save({"input_dim": self.input_dim,
-                    "scorer": state_dict,
-                    "deep_set": embedder_state_dict},
-                   file_name)
-
-    def load(self, file_name):
-        file_name = self.save_folder + file_name
-        state_dict = torch.load(file_name)
-        self.input_dim = state_dict["input_dim"]
-        # Creating the deep set embedder
-        self.ds_embedder = DeepSet(input_dim=self.input_dim+1, latent_dim=32, output_dim=self.input_dim)
-        self.ds_embedder.load_state_dict(state_dict["deep_set"])
-        # Creating scorer.
-        self.sc = Scorer(input_dim=self.input_dim*2)
-        self.sc.load_state_dict(state_dict["scorer"])
 
     def get_fine_tune_batch(self, X_obs, y_obs):
 
