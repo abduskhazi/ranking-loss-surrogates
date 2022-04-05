@@ -253,7 +253,7 @@ def get_batch_HPBO(meta_data, batch_size, list_size):
         data = meta_data[data_task_id]
         X = data["X"]
         y = data["y"]
-        idx_support = np.random.choice(X.shape[0], size=(batch_size, 50), replace=True)
+        idx_support = np.random.choice(X.shape[0], size=(batch_size, 20), replace=True)
         support_X += [torch.from_numpy(X[idx_support])]
         support_y += [torch.from_numpy(y[idx_support])]
         idx_query = np.random.choice(X.shape[0], size=(batch_size, list_size), replace=True)
@@ -261,6 +261,24 @@ def get_batch_HPBO(meta_data, batch_size, list_size):
         query_y += [torch.from_numpy(y[idx_query])]
 
     return torch.stack(support_X), torch.stack(support_y), torch.stack(query_X), torch.stack(query_y)
+
+def get_batch_HPBO_single(meta_train_data, batch_size, list_size):
+    support_size = 5 + np.random.choice(95)
+    data = meta_train_data[np.random.choice(list(meta_train_data.keys()))]
+    support_X = []
+    support_y = []
+    query_X = []
+    query_y = []
+    X = data["X"]
+    y = data["y"]
+    idx_support = np.random.choice(X.shape[0], size=(batch_size, support_size), replace=True)
+    support_X += [torch.from_numpy(X[idx_support])]
+    support_y += [torch.from_numpy(y[idx_support])]
+    idx_query = np.random.choice(X.shape[0], size=(batch_size, list_size), replace=True)
+    query_X += [torch.from_numpy(X[idx_query])]
+    query_y += [torch.from_numpy(y[idx_query])]
+    return torch.stack(support_X), torch.stack(support_y), torch.stack(query_X), torch.stack(query_y)
+
 
 class RankingLossSurrogate(nn.Module):
     def __init__(self, input_dim, file_name=None):
@@ -321,23 +339,29 @@ class RankingLossSurrogate(nn.Module):
         return pred, y
 
     def train_model(self, meta_train_data, meta_val_data, epochs, batch_size, list_size):
-        optimizer = torch.optim.Adam([{'params': self.parameters(), 'lr': 0.01},])
+        optimizer = torch.optim.Adam([{'params': self.parameters(), 'lr': 0.0001},])
         loss_list = []
         val_loss_list = []
         for _ in range(epochs):
             self.train()
-            optimizer.zero_grad()
+            # optimizer.zero_grad()
 
-            s_train_X, s_train_y, q_train_X, q_train_y = get_batch_HPBO(meta_train_data, batch_size, list_size)
+            batch_loss = []
+            for __ in range(100):
+                optimizer.zero_grad()
+                s_train_X, s_train_y, q_train_X, q_train_y = get_batch_HPBO_single(meta_train_data, batch_size, list_size)
 
-            prediction = self.forward((s_train_X, s_train_y, q_train_X))
-            prediction, q_train_y = self.flatten_for_loss_list(prediction, q_train_y)
+                prediction = self.forward((s_train_X, s_train_y, q_train_X))
+                prediction, q_train_y = self.flatten_for_loss_list(prediction, q_train_y)
 
-            loss = loss_list_wise_mle(prediction, q_train_y)
-            loss = torch.mean(loss)
+                loss = loss_list_wise_mle(prediction, q_train_y)
+                loss = torch.mean(loss)
 
-            loss.backward()
-            optimizer.step()
+                loss.backward()
+                optimizer.step()
+                batch_loss += [loss]
+
+            loss = sum(batch_loss) / len(batch_loss)
 
             with torch.no_grad():
                 self.eval()
