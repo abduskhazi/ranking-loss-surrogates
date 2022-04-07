@@ -499,7 +499,7 @@ class RankingLossSurrogate(nn.Module):
 
         # Doing restarts from the saved model
         restarted_model = RankingLossSurrogate(input_dim=-1, file_name=self.file_name)
-        # restarted_model.fine_tune(X_obs, y_obs) # disabling fine tuning for now
+        restarted_model.fine_tune(X_obs, y_obs) # disabling fine tuning for now
         scores = restarted_model((X_obs, y_obs, X_pen))
         scores = scores.detach().numpy()
 
