@@ -8,6 +8,41 @@ import matplotlib.pyplot as plt
 from HPO_B.hpob_handler import HPOBHandler
 from fsbo import convert_meta_data_to_np_dictionary, get_input_dim
 
+DEFAULT_EPS = 1e-10
+
+def listMLE(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=-1):
+    """
+    ListMLE loss introduced in "Listwise Approach to Learning to Rank - Theory and Algorithm".
+    :param y_pred: predictions from the model, shape [batch_size, slate_length]
+    :param y_true: ground truth labels, shape [batch_size, slate_length]
+    :param eps: epsilon value, used for numerical stability
+    :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
+    :return: loss value, a torch.Tensor
+    """
+    # shuffle for randomised tie resolution
+    random_indices = torch.randperm(y_pred.shape[-1])
+    y_pred_shuffled = y_pred[:, random_indices]
+    y_true_shuffled = y_true[:, random_indices]
+
+    y_true_sorted, indices = y_true_shuffled.sort(descending=True, dim=-1)
+
+    mask = y_true_sorted == padded_value_indicator
+
+    preds_sorted_by_true = torch.gather(y_pred_shuffled, dim=1, index=indices)
+    preds_sorted_by_true[mask] = float("-inf")
+
+    max_pred_values, _ = preds_sorted_by_true.max(dim=1, keepdim=True)
+
+    preds_sorted_by_true_minus_max = preds_sorted_by_true - max_pred_values
+
+    cumsums = torch.cumsum(preds_sorted_by_true_minus_max.exp().flip(dims=[1]), dim=1).flip(dims=[1])
+
+    observation_loss = torch.log(cumsums + eps) - preds_sorted_by_true_minus_max
+
+    observation_loss[mask] = 0.0
+
+    return torch.mean(torch.sum(observation_loss, dim=1))
+
 class DeepSet(nn.Module):
     def __init__(self, input_dim=1, latent_dim=1, output_dim=1):
         super(DeepSet, self).__init__()
@@ -263,7 +298,7 @@ def get_batch_HPBO(meta_data, batch_size, list_size):
     return torch.stack(support_X), torch.stack(support_y), torch.stack(query_X), torch.stack(query_y)
 
 def get_batch_HPBO_single(meta_train_data, batch_size, list_size):
-    support_size = 5 + np.random.choice(95)
+    support_size = 20  # 5 + np.random.choice(95)  # With 20 it was a good result curve
     data = meta_train_data[np.random.choice(list(meta_train_data.keys()))]
     support_X = []
     support_y = []
@@ -271,10 +306,20 @@ def get_batch_HPBO_single(meta_train_data, batch_size, list_size):
     query_y = []
     X = data["X"]
     y = data["y"]
-    idx_support = np.random.choice(X.shape[0], size=(batch_size, support_size), replace=True)
+    if support_size > X.shape[0] // 2:
+        support_size = X.shape[0] // 2
+    idx_support = np.random.choice(X.shape[0], size=support_size, replace=False)
     support_X += [torch.from_numpy(X[idx_support])]
     support_y += [torch.from_numpy(y[idx_support])]
-    idx_query = np.random.choice(X.shape[0], size=(batch_size, list_size), replace=True)
+
+    query_choice = np.setdiff1d(np.arange(X.shape[0]), idx_support, assume_unique=False)
+    if list_size > X.shape[0] - support_size:
+        list_size = X.shape[0] - support_size
+    if list_size > query_choice.shape[0]:
+        list_size = query_choice.shape[0]
+
+    idx_query = np.random.choice(query_choice, size=list_size, replace=False)
+
     query_X += [torch.from_numpy(X[idx_query])]
     query_y += [torch.from_numpy(y[idx_query])]
     return torch.stack(support_X), torch.stack(support_y), torch.stack(query_X), torch.stack(query_y)
@@ -349,30 +394,49 @@ class RankingLossSurrogate(nn.Module):
             batch_loss = []
             for __ in range(100):
                 optimizer.zero_grad()
-                s_train_X, s_train_y, q_train_X, q_train_y = get_batch_HPBO_single(meta_train_data, batch_size, list_size)
+                s_train_X, s_train_y, q_train_X, q_train_y = get_batch_HPBO_single(meta_train_data, 1, list_size)
 
                 prediction = self.forward((s_train_X, s_train_y, q_train_X))
                 prediction, q_train_y = self.flatten_for_loss_list(prediction, q_train_y)
 
-                loss = loss_list_wise_mle(prediction, q_train_y)
-                loss = torch.mean(loss)
+                # Viewing everything as a 2D tensor.
+                q_train_y = q_train_y.view(-1, q_train_y.shape[-1])
+                prediction = prediction.view(-1, prediction.shape[-1])
+
+                loss = listMLE(prediction, q_train_y)
+                # loss = loss_list_wise_mle(prediction, q_train_y)
+                # loss = torch.mean(loss)
 
                 loss.backward()
                 optimizer.step()
                 batch_loss += [loss]
 
-            loss = sum(batch_loss) / len(batch_loss)
-
             with torch.no_grad():
                 self.eval()
+                # Calculating training loss
+                s_train_X, s_train_y, q_train_X, q_train_y = get_batch_HPBO(meta_train_data, batch_size, list_size)
 
+                prediction = self.forward((s_train_X, s_train_y, q_train_X))
+                prediction, q_train_y = self.flatten_for_loss_list(prediction, q_train_y)
+
+                # Viewing everything as a 2D tensor.
+                q_train_y = q_train_y.view(-1, q_train_y.shape[-1])
+                prediction = prediction.view(-1, prediction.shape[-1])
+
+                loss = listMLE(prediction, q_train_y)
+
+                # Calculating validation loss
                 s_val_X, s_val_y, q_val_X, q_val_y = get_batch_HPBO(meta_val_data, batch_size, list_size)
 
                 pred_val = self.forward((s_val_X, s_val_y, q_val_X))
                 pred_val, q_val_y = self.flatten_for_loss_list(pred_val, q_val_y)
 
-                val_loss = loss_list_wise_mle(pred_val, q_val_y)
-                val_loss = torch.mean(val_loss)
+                # Viewing everything as a 2D tensor.
+                q_val_y = q_val_y.view(-1, q_val_y.shape[-1])
+                pred_val = pred_val.view(-1, pred_val.shape[-1])
+
+                val_loss = listMLE(pred_val, q_val_y)
+                # val_loss = torch.mean(val_loss)
 
             print("Epoch[", _, "] ==> Loss =", loss.item() / list_size, "; Val_loss =", val_loss.item() / list_size)
             loss_list += [loss.item() / list_size]
