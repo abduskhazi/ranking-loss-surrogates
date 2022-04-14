@@ -122,7 +122,7 @@ def evaluate_ranking_losses(hpob_hdlr, keys_to_evaluate):
         method_rl = RankingLossSurrogate(input_dim=input_dim, file_name=search_space_id)
         res = evaluate_combinations(hpob_hdlr, method_rl, keys_to_evaluate=[key])
         performance += res
-        store_object(performance, "./optimization_results/intermittent_rl_evaluation_deep_set")
+        store_object(performance, "./optimization_results/intermittent_rl_evaluation_deep_set_weighted")
     return performance
 
 def plot_rank_graph(n_keys, n_trials):
@@ -298,7 +298,7 @@ def main():
         hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
         rl_keys = get_all_combinations(hpob_hdlr, 100)[:n_keys]
         rl_performance = evaluate_ranking_losses(hpob_hdlr, keys_to_evaluate=rl_keys)
-        store_object(rl_performance, "./optimization_results/rl_evaluation_deep_set")
+        store_object(rl_performance, "./optimization_results/rl_evaluation_deep_set_weighted")
 
     if conf.plot_ranks:
         plot_rank_graph(n_keys=n_keys, n_trials=n_trails)
