@@ -335,7 +335,7 @@ def get_batch_HPBO_single(meta_train_data, batch_size, list_size):
 class RankingLossSurrogate(nn.Module):
     def __init__(self, input_dim, file_name=None):
         super(RankingLossSurrogate, self).__init__()
-        self.save_folder = "./save/rlsurrogates_deepset_16/"
+        self.save_folder = "./save/rlsurrogates_deepset_16_5000/"
         self.file_name = file_name
         if not os.path.isdir(self.save_folder):
             os.makedirs(self.save_folder)
@@ -532,7 +532,7 @@ def pre_train_HPOB():
         meta_train_data = convert_meta_data_to_np_dictionary(meta_train_data)
         meta_val_data = convert_meta_data_to_np_dictionary(meta_val_data)
 
-        epochs = 1000
+        epochs = 5000
         batch_size = 100
         list_size = 100
         rlsurrogate = RankingLossSurrogate(input_dim=input_dim)
