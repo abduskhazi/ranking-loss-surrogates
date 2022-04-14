@@ -466,9 +466,12 @@ class RankingLossSurrogate(nn.Module):
         return s_ft_X, s_ft_y, q_ft_X, q_ft_y
 
     def fine_tune(self, X_obs, y_obs):
+        epochs = 300
         loss_list = []
         optimizer = torch.optim.Adam([{'params': self.parameters(), 'lr': 0.001},])
-        for i in range(200):
+        scheduler_fn = lambda x, y: torch.optim.lr_scheduler.CosineAnnealingLR(x, y, eta_min=0.0001)
+        scheduler = scheduler_fn(optimizer, epochs)
+        for i in range(epochs):
             self.train()
             optimizer.zero_grad()
 
@@ -487,6 +490,7 @@ class RankingLossSurrogate(nn.Module):
 
             loss.backward()
             optimizer.step()
+            scheduler.step()
 
             loss_list += [loss.item()/X_obs.shape[0]]
 
