@@ -9,8 +9,9 @@ from HPO_B.hpob_handler import HPOBHandler
 from fsbo import convert_meta_data_to_np_dictionary, get_input_dim
 
 DEFAULT_EPS = 1e-10
+PADDED_Y_VALUE = -1
 
-def listMLE(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=-1):
+def listMLE(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_VALUE):
     """
     ListMLE loss introduced in "Listwise Approach to Learning to Rank - Theory and Algorithm".
     :param y_pred: predictions from the model, shape [batch_size, slate_length]
@@ -40,6 +41,12 @@ def listMLE(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=-1):
     observation_loss = torch.log(cumsums + eps) - preds_sorted_by_true_minus_max
 
     observation_loss[mask] = 0.0
+
+    # Weighted ranking because it is more important to get the the first ranks right than the rest
+    weight = np.log(np.arange(observation_loss.shape[-1]) + 2) # To prevent loss of log(1)
+    weight = np.array(weight, dtype=np.float32)
+    weight = torch.from_numpy(weight)[None, :]
+    observation_loss = observation_loss / weight
 
     return torch.mean(torch.sum(observation_loss, dim=1))
 
@@ -384,7 +391,7 @@ class RankingLossSurrogate(nn.Module):
         return pred, y
 
     def train_model(self, meta_train_data, meta_val_data, epochs, batch_size, list_size):
-        optimizer = torch.optim.Adam([{'params': self.parameters(), 'lr': 0.0001},])
+        optimizer = torch.optim.Adam([{'params': self.parameters(), 'lr': 0.001},])  # 0.0001 giving good results
         loss_list = []
         val_loss_list = []
         for _ in range(epochs):
@@ -470,8 +477,13 @@ class RankingLossSurrogate(nn.Module):
             q_ft_y_pred = self.forward((s_ft_X, s_ft_y, q_ft_X))
             q_ft_y_pred, q_ft_y = self.flatten_for_loss_list(q_ft_y_pred, q_ft_y)
 
-            loss = loss_list_wise_mle(q_ft_y_pred, q_ft_y)
-            loss = torch.mean(loss)
+            q_ft_y = q_ft_y.view(-1, q_ft_y.shape[-1])
+            q_ft_y_pred = q_ft_y_pred.view(-1, q_ft_y_pred.shape[-1])
+
+            loss = listMLE(q_ft_y_pred, q_ft_y)
+
+            # loss = loss_list_wise_mle(q_ft_y_pred, q_ft_y) # !!!!! NOt using loss ... issues..
+            # loss = torch.mean(loss)
 
             loss.backward()
             optimizer.step()
