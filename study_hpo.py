@@ -305,6 +305,25 @@ def main():
 
     return
 
+def convert_to_json(eval_file):
+    obj = load_object(eval_file)
+    json_obj = {}
+    for key, value in obj:
+        ss_id, dataset_id, rand_start, _ = key
+
+        if ss_id not in json_obj.keys():
+            json_obj[ss_id] = {}
+        if dataset_id not in json_obj[ss_id].keys():
+            json_obj[ss_id][dataset_id] = {}
+
+        json_obj[ss_id][dataset_id][rand_start] = value
+
+    import json
+    with open(eval_file + '.json', 'w') as f:
+        json.dump(json_obj, f)
+
+    pass
+
 if __name__ == '__main__':
     mp.freeze_support()
     main()
