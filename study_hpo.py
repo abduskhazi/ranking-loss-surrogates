@@ -115,14 +115,18 @@ def evaluate_FSBO(hpob_hdlr, keys_to_evaluate):
     return performance
 
 def evaluate_ranking_losses(hpob_hdlr, keys_to_evaluate):
-    performance = []
+    try:
+        performance = load_object("./optimization_results/intermittent_rl_evaluation_deep_set_weighted_early_stopping")
+    except:
+        performance = []
+    keys_to_evaluate = [k for k in keys_to_evaluate if k not in get_keys(performance)]
     for key in keys_to_evaluate:
         search_space_id, dataset, _, _ = key
         input_dim = hpob_hdlr.get_input_dim(search_space_id, dataset)
         method_rl = RankingLossSurrogate(input_dim=input_dim, file_name=search_space_id)
         res = evaluate_combinations(hpob_hdlr, method_rl, keys_to_evaluate=[key])
         performance += res
-        store_object(performance, "./optimization_results/intermittent_rl_evaluation_deep_set_weighted")
+        store_object(performance, "./optimization_results/intermittent_rl_evaluation_deep_set_weighted_early_stopping")
     return performance
 
 def plot_rank_graph(n_keys, n_trials):
@@ -298,7 +302,7 @@ def main():
         hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
         rl_keys = get_all_combinations(hpob_hdlr, 100)[:n_keys]
         rl_performance = evaluate_ranking_losses(hpob_hdlr, keys_to_evaluate=rl_keys)
-        store_object(rl_performance, "./optimization_results/rl_evaluation_deep_set_weighted")
+        store_object(rl_performance, "./optimization_results/rl_evaluation_deep_set_weighted_early_stopping")
 
     if conf.plot_ranks:
         plot_rank_graph(n_keys=n_keys, n_trials=n_trails)
