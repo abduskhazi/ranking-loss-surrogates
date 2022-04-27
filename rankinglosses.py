@@ -335,7 +335,7 @@ def get_batch_HPBO_single(meta_train_data, batch_size, list_size):
 class RankingLossSurrogate(nn.Module):
     def __init__(self, input_dim, file_name=None):
         super(RankingLossSurrogate, self).__init__()
-        self.save_folder = "./save/rlsurrogates_deepset_16_5000/"
+        self.save_folder = "./save/rlsurrogates_deepset_16_5000_early_stopping/"
         self.file_name = file_name
         if not os.path.isdir(self.save_folder):
             os.makedirs(self.save_folder)
@@ -390,7 +390,7 @@ class RankingLossSurrogate(nn.Module):
         y = torch.flatten(y, start_dim=flatten_from_dim)
         return pred, y
 
-    def train_model(self, meta_train_data, meta_val_data, epochs, batch_size, list_size):
+    def train_model(self, meta_train_data, meta_val_data, epochs, batch_size, list_size, search_space_id):
         optimizer = torch.optim.Adam([{'params': self.parameters(), 'lr': 0.001},])  # 0.0001 giving good results
         loss_list = []
         val_loss_list = []
@@ -444,6 +444,9 @@ class RankingLossSurrogate(nn.Module):
 
                 val_loss = listMLE(pred_val, q_val_y)
                 # val_loss = torch.mean(val_loss)
+
+            if val_loss.item() < min(val_loss_list + [np.inf]):
+                self.save(search_space_id)
 
             print("Epoch[", _, "] ==> Loss =", loss.item() / list_size, "; Val_loss =", val_loss.item() / list_size)
             loss_list += [loss.item() / list_size]
@@ -546,9 +549,9 @@ def pre_train_HPOB():
         list_size = 100
         rlsurrogate = RankingLossSurrogate(input_dim=input_dim)
         loss_list, val_loss_list = \
-            rlsurrogate.train_model(meta_train_data, meta_val_data, epochs, batch_size, list_size)
+            rlsurrogate.train_model(meta_train_data, meta_val_data, epochs, batch_size, list_size, search_space_id)
 
-        rlsurrogate.save(search_space_id)
+        rlsurrogate.load(search_space_id)
 
         plt.figure(np.random.randint(999999999))
         plt.plot(np.array(loss_list, dtype=np.float32))
