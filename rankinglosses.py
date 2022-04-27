@@ -492,6 +492,9 @@ class RankingLossSurrogate(nn.Module):
             optimizer.step()
             scheduler.step()
 
+            if loss.item() < min(loss_list + [float('inf')]):
+                self.save(self.file_name + "_ft_early_stop")
+
             loss_list += [loss.item()/X_obs.shape[0]]
 
         # Plotting fine tune loss
@@ -502,6 +505,8 @@ class RankingLossSurrogate(nn.Module):
         plt.title("SSID: " + self.file_name + "; Input dim: " + str(self.input_dim))
         plt.savefig(self.save_folder + self.file_name + "_fine_tune_loss.png")
         plt.close()
+
+        self.load(self.file_name + "_ft_early_stop")
 
         return loss_list
 
