@@ -89,12 +89,12 @@ $$
 $$
 
 \label{ProblemOverviewlabel}
-\subsection{Understanding Hyper Parameter Optimization}
+\subsection{Hyper-Parameter Optimization Constraints}
 
-Hyper-Parameter optimisation is different from other optimisation methods because it has different constraints.
-This is because of the peculiar properties of the hyper parameter search space in question.
-Finding out the correct hyper-parameter setting is generally not feasible in a brute-force approach i.e trying out the all possible combinations of hyper-parameters because the search space itself has a lot of dimensions. 
-This makes the possible number of combinations exponentially large.
+Hyper-parameter optimisation is different from other optimisation methods because it has different constraints.
+This is because of the peculiar properties of the hyper-parameter search spaces.
+Finding out the correct hyper-parameter setting is generally not feasible using a brute-force approach (i.e trying out the all possible combinations of hyper-parameters) because the search space itself has a lot of dimensions. 
+This makes the possible number of configurations exponentially large.
 More specifically,  some of the important constraints of this optimisation problem are:
 
 \begin{enumerate}
@@ -106,16 +106,44 @@ More specifically,  some of the important constraints of this optimisation probl
 Using a gradient method is hence not trivial.
 \end{enumerate}
 
-This thesis was completed in the representation learning lab of Albert-Ludwig-Universität Freiburg.  (Figure~\ref{fig:UniLogo})
 
-\begin{figure}[htb]
-  \centering
-    \includegraphics[scale=0.35]{images/logo}
-    \caption{Logo: Albert-Ludwig-Universität Freiburg}
-    \label{fig:UniLogo}
-\end{figure}
 
 \section{Literature Review}
+To deal with the constraints of HPO problems, researchers have used different strategies for developing HPO algorithms and models.
+Some of the straightforward methods include
+\begin{itemize}
+\item Manual Search
+\item Grid Search
+\item Random Search
+\end{itemize}
+
+
+Manual Search in the HPO search space is feasible when we have expert knowledge of the problem and the given model. 
+The idea is to select configurations step by step by observing the results obtained
+so that we do not waste computation time evaluating similar configurations through intuition.
+This approach may be helpful for small models with lesser constraints.
+However, as the HPO search space becomes very large or conditional constraints become too complex, the selection of configurations becomes more and more difficult.
+Hence a more systematic and automated approach is more practical.
+
+Grid search is a more systematic approach in which we divide the search space into grid points similar to ones in a Euclidean graph.
+Let there be $m$ dimensions in the search space $\mathbb{S}$. Let the selected number of values for each dimension be $n_1, n_2, ... n_m$. In the case of a discrete variable, the selected values will be a subset of the possible values, whereas, in the case of a continuous variable, we need to select the values based on a selected granularity.
+The cross-product of the selected subsets gives us the configurations to be evaluated. Hence, the number of configurations to evaluate will be $n_1 * n_2 * ... n_m$.
+The number of configurations we need to evaluate in this approach becomes a big issue for this method as the dimensions of the search spaces increase.
+Hence this approach becomes intractability for large search spaces.
+
+One issue with the Grid Search approach is that we assume that all dimensions in the HPO search space are equally important. It is not the case in many HPO problems. For example, the learning rate in deep neural networks is much more important than many other parameters. If dimension $p$ is the most important in the search space, then it makes sense to evaluate more values of $p$. Random Search helps us solve this problem. Hence Random Search can be used as a trivial baseline for comparing other HPO models.
+
+One advantage of these methods is that there are no restrictions on the HPO search spaces. Hence, they are suitable for any HPO problem at hand.
+On the other hand, these methods are non-probabilistic.
+Hence they cannot deal with noisy evaluations of the HPO configuration well.
+Moreover, these methods are computationally expensive. The reason is that they do not use surrogate evaluators and hence train and evaluate the whole model.
+Also, these search methods give us optimal HPO configurations only by chance.
+
+In the remainder of this section, we discuss some sophisticated probabilistic models for doing HPO that use surrogates to reduce computational costs.
+
+
+\subsection{Random Search}
+
 \subsection{Gaussian Processes}
 \subsection{Deep Ensembles}
 One way to do Hyper Parameter Optimization is by using 
@@ -146,5 +174,13 @@ Uncertainty prediction is the key in the paper. \cite{DeepEnsemblePaper}
 
 \section{Appendix}
 \subsection{More information}
+This thesis was completed in the representation learning lab of Albert-Ludwig-Universität Freiburg.  (Figure~\ref{fig:UniLogo})
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.35]{images/logo}
+    \caption{Logo: Albert-Ludwig-Universität Freiburg}
+    \label{fig:UniLogo}
+\end{figure}
 
 \end{document}
