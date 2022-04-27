@@ -51,6 +51,60 @@ Abstract goes here
 \newpage
 
 \section{Introduction}
+The performance of any machine learning model is very sensitive to the hyper-parameters used during the training of the model. 
+Many a time, instead of using a new model type, it is more helpful to tune the hyper-parameters of an existing model that performs well on a given problem (or dataset).
+Learning the best hyper-parameter for an ML model is called Hyper parameter optimization (HPO in short).
+This thesis studies various existing approaches to HPO and proposes a new idea for the same using the concept of ranking.
+The proposed idea is called, \textbf{HPO using Ranking Loss Surrogates}. 
+The results obtained using this model are benchmarked against the results of state of the art models like FSBO,  RGPE,  TAF and others. 
+
+\subsection{Problem Definition}
+To find out the best hyper-parameter for any machine learning model $m$ , we must first quantify a given hyper-parameter configuration $\textbf{x}$ by a real valued number $v \in \mathbb{R}$.  If we define that
+$$
+\textbf{x}_1 \succ  \textbf{x}_2 \iff v_{\textbf{x}_1} < v_{\textbf{x}_2}
+$$
+then HPO can be defined mathematically by an abstract function, say,  $f(\textbf{x}) \mapsto \mathbb{R}$ as
+$$
+     \underset{\rm \textbf{x}}{\rm argmin}  f(\textbf{x}) \;\;\;  \forall \textbf{x} \in \mathbb{S}
+$$
+where $\mathbb{S}$ is the hyper-parameter search space.
+
+This function $f(\textbf{x}) \mapsto \mathbb{R}$ is evaluated in the following chronological steps:
+\begin{enumerate}
+\item Using a given hyper-parameter configuration $\textbf{x}$,  we train our model $m$ to obtain the model $m^{trained}_\textbf{x}$.   This consists of learning the parameters of our model, E.g.  learning the weights and biases of a Deep Neural Network.
+We use the training data to learn this model.
+\item The validation data is passed through $m^{trained}_\textbf{x}$ to obtain the required results.
+These results are evaluated based on a required evaluation criteria, '$\textrm{eval}$', which is different for different types of problems e.g. Regression,  Classification etc.
+The result of this evaluation is a real value that quantifies a given configuration $\textbf{x}$.
+\end{enumerate}
+
+Hence the function $f(\textbf{x}) \mapsto \mathbb{R}$ can be written as 
+$$
+\textrm{eval}(m^{trained}_\textbf{x} (\textrm{Data}_\textrm{val})) \mapsto \mathbb{R}
+$$
+
+Finally,  our complete problem can be defined as
+$$
+\underset{\rm \textbf{x}}{\rm argmin} \;\; \textrm{eval}(m^{trained}_\textbf{x} (\textrm{Data}_\textrm{val})) \mapsto \mathbb{R}   \;\;\;  \forall \textbf{x} \in \mathbb{S}
+$$
+
+\label{ProblemOverviewlabel}
+\subsection{Understanding Hyper Parameter Optimization}
+
+Hyper-Parameter optimisation is different from other optimisation methods because it has different constraints.
+This is because of the peculiar properties of the hyper parameter search space in question.
+Finding out the correct hyper-parameter setting is generally not feasible in a brute-force approach i.e trying out the all possible combinations of hyper-parameters because the search space itself has a lot of dimensions. 
+This makes the possible number of combinations exponentially large.
+More specifically,  some of the important constraints of this optimisation problem are:
+
+\begin{enumerate}
+\item By definition the evaluation of a given HPO configuration is computationally expensive.
+\item It is a non-convex optimization problem.
+\item The process of getting $m^{trained}_\textbf{x}$ from $m$ is stochastic hence the value $v_{\textbf{x}}$ is noisy.
+\item Some dimensions have conditional constrains i.e the values of some dimensions may depend on values of other dimensions e.g.  the number of neurons in layer 3 only makes sense if we have 3 or more layers in a neural network.
+\item The search space is hybrid in terms of continuity i.e some of the dimensions (variables) may be continuous and others may be discrete.
+Using a gradient method is hence not trivial.
+\end{enumerate}
 
 This thesis was completed in the representation learning lab of Albert-Ludwig-Universität Freiburg.  (Figure~\ref{fig:UniLogo})
 
@@ -61,20 +115,25 @@ This thesis was completed in the representation learning lab of Albert-Ludwig-Un
     \label{fig:UniLogo}
 \end{figure}
 
-\subsection{Problem Overview}
-\label{ProblemOverviewlabel}
-\subsection{Understanding Hyper Parameter Optimization}
-\subsection{Understanding Ranking Losses}
-
 \section{Literature Review}
-\subsection{Deep Ensembles}
-Uncertainty prediction is the key in the paper. \cite{DeepEnsemblePaper}
 \subsection{Gaussian Processes}
+\subsection{Deep Ensembles}
+One way to do Hyper Parameter Optimization is by using 
+Uncertainty prediction is the key in the paper. \cite{DeepEnsemblePaper}
+
+\subsection{Few Shot BO : Deep Kernel Learning}
+
 
 \section{Existing Methods}
 
-\section{Datasets}
+\section{Dataset}
 \subsection{HPO\_B Dataset}
+
+\section{Proposed Idea : Ranking Loss Surrogates}
+
+\subsection{Understanding Ranking Losses}
+
+
 
 \section{Evaluation and Ablation Study}
 \subsection{Testing}
