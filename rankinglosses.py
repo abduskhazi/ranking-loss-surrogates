@@ -282,11 +282,14 @@ def test_toy_problem():
     print("Sorted percentage : ", sorted_lists * 100 / 1000)
 
 
-def get_batch_HPBO(meta_data, batch_size, list_size):
+def get_batch_HPBO(meta_data, batch_size, list_size, random_state=None):
     support_X = []
     support_y = []
     query_X = []
     query_y = []
+
+    rand_num_gen = np.random.RandomState(seed=random_state)
+
     # Sample all tasks and form a high dimensional tensor of size
     #   (tasks, batch_size, list_size, input_dim)
     #   Suggestion : Take a tensor batch_size, list_size, input_dim for one gradient step.
@@ -295,10 +298,10 @@ def get_batch_HPBO(meta_data, batch_size, list_size):
         data = meta_data[data_task_id]
         X = data["X"]
         y = data["y"]
-        idx_support = np.random.choice(X.shape[0], size=(batch_size, 20), replace=True)
+        idx_support = rand_num_gen.choice(X.shape[0], size=(batch_size, 20), replace=True)
         support_X += [torch.from_numpy(X[idx_support])]
         support_y += [torch.from_numpy(y[idx_support])]
-        idx_query = np.random.choice(X.shape[0], size=(batch_size, list_size), replace=True)
+        idx_query = rand_num_gen.choice(X.shape[0], size=(batch_size, list_size), replace=True)
         query_X += [torch.from_numpy(X[idx_query])]
         query_y += [torch.from_numpy(y[idx_query])]
 
@@ -433,7 +436,7 @@ class RankingLossSurrogate(nn.Module):
                 loss = listMLE(prediction, q_train_y)
 
                 # Calculating validation loss
-                s_val_X, s_val_y, q_val_X, q_val_y = get_batch_HPBO(meta_val_data, batch_size, list_size)
+                s_val_X, s_val_y, q_val_X, q_val_y = get_batch_HPBO(meta_val_data, batch_size, list_size, int(search_space_id))
 
                 pred_val = self.forward((s_val_X, s_val_y, q_val_X))
                 pred_val, q_val_y = self.flatten_for_loss_list(pred_val, q_val_y)
