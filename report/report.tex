@@ -142,6 +142,50 @@ Also, these search methods give us optimal HPO configurations only by chance.
 In the remainder of this section, we discuss some sophisticated probabilistic models for doing HPO that use surrogates to reduce computational costs.
 
 \subsection{Bayesian Optimization}
+Bayesian optimization tries to solve both computational costs and noisy evaluations of our objective function (section 1).
+It does this by building a model of the HPO objective function. This model is called a surrogate function.
+Bayesian optimization uses known evaluations as its data to build the surrogate model. The data is of the form {x, f(x)} pairs.
+The surrogate model is a probabilistic model. Hence, it also learns about the noise in the evaluations of the objective function.
+
+The core procedure of the optimization process is the following:
+\begin{itemize}
+\item From known data $D = {(x_1, f(x_1)), (x_2, f(x_2)), (x_3, f(x_3)) .... }$, build a probabilistic model that learns the mean and variance of the objective function
+\item Use the surrogate to sample the next best HPO configuration x'. Evaluate f(x')
+\item Append (x', f(x')) to D and repeat the process.
+\end{itemize}
+
+The above process repeats till the computational resources are finished (here time) or we find an acceptable HPO configuration.
+This procedure is also called SMBO (Sequential model-based Optimization).
+The procedure alternates between collecting data and fitting the model with the 
+collected data. \cite{SMBOPaper}
+
+There are two essential components of Bayesian optimization:
+
+\begin{itemize}
+\item Probabilistic model of the objective function
+\item The acquisition function
+\end{itemize}
+
+There are many probabilistic models such as Random Forests, Gaussian Processes, Tree parson Estimators, etc.
+But for the purpose of this thesis, we briefly mention Random forests and discuss in-depth the Gaussian processes.
+
+
+\subsubsection{Random (Regression) Forest}
+     The core idea of this model is to train a Random Regression Forest, using the known data as in any SMBO procedure \cite{SMBOPaper}.
+Random regression forests are an ensemble of regression trees. 
+This property is used to our advantage to predict the mean and the variance. 
+The mean of the prediction of all the trees is the mean of the surrogate model.
+The variance in the prediction of all trees is the variance of the surrogate model.
+
+   The advantages of this model are
+   \begin{itemize}
+   \item It can handle both continuous and discrete variables trivially without any modifications to the model.
+The data splitting during training is done using any variable be it discrete or continuous.
+\item It can handle conditional variables, unlike Gaussian processes, by making sure that no variable is split till it is guaranteed that the conditionality does not break by doing the split.
+   \end{itemize}
+
+
+\subsubsection{Gaussian Processes}
 
 \subsection{Deep Ensembles}
 One way to do Hyper Parameter Optimization is by using 
