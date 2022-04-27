@@ -122,3 +122,7 @@ Understanding listwise loss function:
     Both the papers use linear network model for some simplicity. But we can use the non-linearity due to available library
         implementations
     Very nice summary of both loss functions section 3.2.1 : https://arxiv.org/pdf/1707.05438.pdf 
+
+Advantages:
+    Can be used to select best n configs and then evaluated at random based on the ranks. This is not as trivial to get in other
+    places. So there is an amount of parallelism that can be built it.
