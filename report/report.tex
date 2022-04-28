@@ -188,72 +188,72 @@ The data splitting during training is done using any variable be it discrete or 
 \subsubsection{Gaussian Process Regression}
 
 Gaussian processes \cite{GPTutorial} are predictive machine learning models that work well with few data points (or data pairs). 
-They are inherently capable of modelling uncertainty.
-Hence,  they are widely used in problems such as hyper-parameter optimization where uncertainty estimation is essential.
-In this section we briefly explain the Gaussian process regression intuitively.
+They are inherently capable of modeling uncertainty.
+Hence, they are used widely in problems such as hyperparameter optimization, where uncertainty estimation is essential.
+In this section, we briefly explain the Gaussian process regression intuitively.
 
 Before we proceed,  we need to understand normal (Gaussian) distributions. 
-Consider a scalar random variable $X$ which is normally distributed (a.k.a Gaussian distribution) around a mean $\mu$ with a variance of $\sigma^2$.
-The probability density function of $X$ is then given by the following equation 
+Consider a scalar random variable $X$ that is distributed normally  (a.k.a Gaussian distribution) around a mean $\mu$ with a variance of $\sigma^2$.
+The following equation defines the probability density function (PDF) of $X$: 
 $$
 P_X(x) = \frac{1}{\sqrt[2]{2\pi}\sigma}\exp\left(- \frac{(x - \mu)^2}{2\sigma^2}\right)
 $$
-where $X$ represents the random variable and $x$ represents an instance of the variable\cite{GPTutorial}.
-In this case,  the mean $\mu$,  variance $\sigma^2$ and any sample $x$ are all scalars.
+Here, $X$ represents the random variable, and $x$ represents an instance of the variable\cite{GPTutorial}.
+In this case,  the mean $\mu$,  variance $\sigma^2$, and any sample $x$ are all scalars.
 
-If the random variable $\textbf{X}$ is a vector in $\mathbb{R}^d$ where ($d \in I^{+}$),  then each value in the vector can be considered as a random variable.
-In this case the mean $\boldsymbol{\mu} \in \mathbb{R}^d$ whereas variance,  represented by $\Sigma \in R^{d \times d}$.
-This is because the variance of all dimensions in any random valued vector $\textbf{X}$ variable should contain the following 2 components
+If the random variable $\textbf{X}$ is a vector in $\mathbb{R}^d$ where $d \in I^{+}$,  then each component of the vector can be considered as a random variable.
+In this case the mean $\boldsymbol{\mu} \in \mathbb{R}^d$ whereas variance, represented by $\Sigma$, is in the $R^{d \times d}$ space.
+It is because the variance of all components in any valued vector random variable $\textbf{X}$ should contain the following two types of variance
 \begin{itemize}
-\item Variance of a dimension with respect to itself.
-This component has $d$ values which are represented by the diagonal of the matrix $\Sigma$.
-\item Variance of each dimension with respect to all other dimensions (a.k.a Covariance).
-This components have $d \choose 2$ values.
-These values are represented by the upper/lower triangular values in the matrix $\Sigma$.
+\item Variance of a vector component w.r.t itself.
+$d$ diagonal values of the matrix $\Sigma$ represent this variance.
+\item Variance of each vector component w.r.t all other components. These variances are represented by the upper/lower triangular values in the matrix $\Sigma$.
 \end{itemize}
+The matrix $\Sigma$, also known as the Covariance matrix, thus has all values necessary to represent the variance of any vector-valued random variable.
 
-The probability density function of a vector variable $\textbf{X} \in \mathbb{R}^d$ (multivariate normal distribution) with a mean $\boldsymbol{\mu}$ and covariance matrix $\Sigma$ is given by: \cite{MITMLBook}
+
+The probability density function of a vector valued variable $\textbf{X} \in \mathbb{R}^d$ with a mean $\boldsymbol{\mu}$ and covariance matrix $\Sigma$ is given by: \cite{MITMLBook}
 
 $$
 \mathcal{N}(\textbf{x} | \boldsymbol{\mu},  \Sigma) = 
 \frac{1}{(2\pi)^{\frac{d}{2}} |\Sigma|^{\frac{d}{2}}}
 \exp\left( - \frac{1}{2} (\textbf{x} - \boldsymbol{\mu})^T  \Sigma^{-1}   (\textbf{x} - \boldsymbol{\mu}) \right)
 $$
-
+This equation defines the PDF of a multivariate normal distribution.
 
 The core idea used in the Gaussian processes is that functions can be considered as vectors of infinite dimensions.
 Consider any function $f$ that has a domain $\mathbb{R}$.
 If $f$ is considered to be a vector in $\mathbb{R}^{\infty}$,
 then each point $i \in \mathbb{R}$  can be represented by a component $f_i$ of the function $f$.
 A function,  hence,  is nothing but a sample from $\mathbb{R}^{\infty}$.
-Unfortunately,  a function sampled from $\mathbb{R}^{\infty}$ is too general and not useful by itself.
+Unfortunately, functions sampled from $\mathbb{R}^{\infty}$ are too general and not useful by themselves.
 
 The idea of Gaussian processes is to sample smooth functions from $\mathbb{R}^{\infty}$.
-Which is to say points close by in a domain of $f$ will have similar values in its range.
-This can be mathematically represented as
+In any smooth function $f$, if any point $g$ is close to $x$ in the domain of $f$, then $f(g) \approx f(x)$.
+It is mathematically represented by the following equation:
 $$
 \lim_{\delta x \to 0} f_{x + \delta x} \approx f^{+}_x  \;\; \textrm{and} \;\; 
 \lim_{\delta x \to 0} f_{x - \delta x} \approx f^{-}_x 
 $$
 $$\;\; \textrm{where} \;\; \delta x > 0 \;\; \textrm{and} \;\; x, \delta x \in \mathbb{R}
 $$
-This is nothing but the definition of a smooth function in terms of vector notation. 
-This smoothness can be obtained if the nearby components of $f$ "vary" similarly with respect to each other.
-This can be very naturally obtained by the required covariance matrix.
-Hence, if we sample our function from a multivariate normal distribution with the required covariance matrix,  we will get smooth functions.
-More formally,  the Gaussian process restricts the function sample space to a multivariate normal distribution space.
+The above definition is nothing but the definition of a smooth function in terms of vector notation. 
+Moreover, nearby components of $f$ "vary" similarly w.r.t each other.
+These properties can be naturally encoded using a covariance matrix.
+Hence, we obtain smooth functions if we sample them from a multivariate normal distribution with the required covariance matrix.
+The Gaussian process restricts the function sample space to a multivariate normal distribution.
 
-The similarity between 2 points in a domain can be defined by a function.
-Using this function, the required covariance matrix can be populated.
-This function is called the \textbf{kernel} of the Gaussian process.
-The smoothness of the sampled function $f$ can be controlled by the kernel in the GP process.
-More formally kernel $k$ is defined as,
+The similarity between 2 points in a domain is defined by a function called \textbf{kernel} in Gaussian processes.
+Using this kernel function, the values in the required covariance matrix are populated.
+The smoothness of the sampled function $f$ is controlled by the kernel in the GP process.
+Formally kernel $k$ is defined as,
 $$
 k(\textbf{x}, \textbf{x'}) \mapsto \mathbb{R}
 $$
 
 Here, $\textbf{x}, \textbf{x'}$ belong to a domain in the most abstract sense.
 For example,  when the input domain is a euclidean space,  $\textbf{x} \in \mathbb{R}^{\mathbb{I}^+}$.
+
 
 \subsection{Deep Ensembles}
 One way to do Hyper Parameter Optimization is by using 
