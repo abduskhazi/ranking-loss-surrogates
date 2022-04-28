@@ -126,3 +126,7 @@ Understanding listwise loss function:
 Advantages:
     Can be used to select best n configs and then evaluated at random based on the ranks. This is not as trivial to get in other
     places. So there is an amount of parallelism that can be built it.
+
+Best Model for training and ft giving auful resuts - Reason can be that we are selecting a very unfitted model due to too much variation in the validation losses.
+Hence we are start only ft best model. Ih the hope that we will get better resutls.
+only fine tune best fit is not giving good results. Investigation in progress.
