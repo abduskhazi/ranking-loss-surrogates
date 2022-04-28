@@ -13,3 +13,7 @@ https://pytorch.org/docs/stable/generated/torch.nn.ModuleList.html
 The learning rate depends greately on weather we are doing mean or sum in the final batch..!!
 
 Saving and loading works as is because we use module dict which has a state_dict
+
+Observation:
+    At first the uncertainty is very important as we do not have enough data to build / fine tune the surrogate
+    Later, as more and more data comes, uncertainty becomes less relavant. Which makes the uncertainty less useful.
