@@ -1,0 +1,14 @@
+Learning very slow if we use mean for all the scorer lists.
+Hence doing addition.
+
+
+Doing sum also does not decrease the loss very fast
+This is the problem ---> Using a list also creates this problem.
+
+
+The issue is the there was no registration happening if we used list
+SO we have to use nn.ModuleList
+https://pytorch.org/docs/stable/generated/torch.nn.ModuleList.html
+
+The learning rate depends greately on weather we are doing mean or sum in the final batch..!!
+

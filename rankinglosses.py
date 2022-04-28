@@ -338,7 +338,7 @@ def get_batch_HPBO_single(meta_train_data, batch_size, list_size):
 class RankingLossSurrogate(nn.Module):
     def __init__(self, input_dim, file_name=None):
         super(RankingLossSurrogate, self).__init__()
-        self.save_folder = "./save/rlsurrogates_deepset_16_5000_early_stopping/"
+        self.save_folder = "./save/rlsurrogates_deepset_16_5000_uncertainty/"
         self.file_name = file_name
         if not os.path.isdir(self.save_folder):
             os.makedirs(self.save_folder)
@@ -347,12 +347,19 @@ class RankingLossSurrogate(nn.Module):
             self.load(file_name)
         else:
             self.input_dim = input_dim
-            self.ds_embedder, self.sc = self.create_embedder_scorer(self.input_dim)
+            self.ds_embedder, self.sc = self.create_embedder_scorers_uncertainty(self.input_dim)
 
     def create_embedder_scorer(self, in_dim):
         embedder = DeepSet(input_dim=in_dim+1, latent_dim=32, output_dim=16)
-        sc = Scorer(input_dim=16 + in_dim)
+        sc = nn.ModuleList([Scorer(input_dim=16 + in_dim)])
         return embedder, sc
+
+    def create_embedder_scorers_uncertainty(self, in_dim):
+        embedder = DeepSet(input_dim=in_dim+1, latent_dim=32, output_dim=16)
+        sc_list = []
+        for i in range(5):
+            sc_list += [Scorer(input_dim=16 + in_dim)]
+        return embedder, nn.ModuleList(sc_list)
 
     def save(self, file_name):
         file_name = self.save_folder + file_name
@@ -385,7 +392,16 @@ class RankingLossSurrogate(nn.Module):
         s_X = s_X.repeat(repeat_tuple)
         q_X = torch.cat((s_X, q_X), dim=-1)
 
-        return self.sc(q_X)
+        # return self.sc(q_X)
+        predictions = []
+        for s in self.sc:
+            predictions += [s(q_X)]
+
+        # return predictions[0]
+
+        predictions = torch.stack(predictions)
+        return torch.mean(predictions, dim=0)  #  self.sc(q_X)
+        # return torch.sum(predictions, dim=0)  # self.sc(q_X)
 
     def flatten_for_loss_list(self, pred, y):
         flatten_from_dim = len(pred.shape) - 2
@@ -448,12 +464,14 @@ class RankingLossSurrogate(nn.Module):
                 val_loss = listMLE(pred_val, q_val_y)
                 # val_loss = torch.mean(val_loss)
 
-            if val_loss.item() < min(val_loss_list + [np.inf]):
-                self.save(search_space_id)
+            # if val_loss.item() < min(val_loss_list + [np.inf]):
+            #    self.save(search_space_id)
 
             print("Epoch[", _, "] ==> Loss =", loss.item() / list_size, "; Val_loss =", val_loss.item() / list_size)
             loss_list += [loss.item() / list_size]
             val_loss_list += [val_loss.item() / list_size]
+
+        self.save(search_space_id)
 
         return loss_list, val_loss_list
 
