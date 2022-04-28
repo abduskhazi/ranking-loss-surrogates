@@ -255,9 +255,23 @@ Here, $\textbf{x}, \textbf{x'}$ belong to a domain in the most abstract sense.
 For example,  when the input domain is a euclidean space,  $\textbf{x} \in \mathbb{R}^{\mathbb{I}^+}$.
 
 
+Due to the robustness of the GP process, we use this as one of the baselines in our thesis.
 \subsection{Deep Ensembles}
 One way to do Hyper Parameter Optimization is by using 
 Uncertainty prediction is the key in the paper \cite{DeepEnsemblePaper}.
+
+\subsubsection{Requirement of restarting training}
+We find in our experiments that the deep ensemble performance much better in our HPO cycle when we train it from scratch at every acquisition step.
+This is counter intuitive because an already trained model will converge to a local optima quickly.
+The reason for this performance however is that the model gets biased towards the points that are observed in the beginning.
+Lets say we have 2 models 
+\begin{itemize}
+\item $\textrm{DE}_{\textrm{restart}}$ which always restarts training at every acquisition step
+\item $\textrm{DE}_{\textrm{reuse}}$ which uses the previously trained model for subsequent training of the optimization cycle.
+\end{itemize}
+
+The following figures show the number of times each observed data points is used for training at 25th 50th and 100th optimization cycle.
+At the optimization cycle 
 
 \subsection{Few Shot BO: Deep Kernel Learning}
 
