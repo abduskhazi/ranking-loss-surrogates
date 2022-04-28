@@ -332,6 +332,8 @@ if __name__ == '__main__':
     mp.freeze_support()
     main()
 
+    # convert_to_json("./optimization_results/rl_evaluation_deep_set_weighted_early_stopping")
+
 
 """
 # Average plotting code. (Backup)
