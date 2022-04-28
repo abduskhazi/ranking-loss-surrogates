@@ -375,7 +375,7 @@ class RankingLossSurrogate(nn.Module):
         state_dict = torch.load(file_name)
         self.input_dim = state_dict["input_dim"]
         # Creating and initializing the deep set embedder and scorer
-        self.ds_embedder, self.sc = self.create_embedder_scorer(self.input_dim)
+        self.ds_embedder, self.sc = self.create_embedder_scorers_uncertainty(self.input_dim)
         self.ds_embedder.load_state_dict(state_dict["deep_set"])
         self.sc.load_state_dict(state_dict["scorer"])
 
