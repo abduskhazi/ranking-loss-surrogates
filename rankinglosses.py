@@ -4,12 +4,26 @@ import torch.nn.functional as F
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from scipy.stats import norm
 # Local imports
 from HPO_B.hpob_handler import HPOBHandler
 from fsbo import convert_meta_data_to_np_dictionary, get_input_dim
 
 DEFAULT_EPS = 1e-10
 PADDED_Y_VALUE = -1
+
+def acquisition_EI(X, y, X_query, rl_model):
+    # https://towardsdatascience.com/bayesian-optimization-a-step-by-step-approach-a1cb678dd2ec
+    # Find the best value of the objective function so far according to data.
+    # Is this according to the gaussian fit or according to the actual values.???
+    # For now using the best according to the actual values.
+    best_y = np.max(y.detach().cpu().numpy())
+    # Calculate the predicted mean & variance values of all the required samples
+    mean, variance = rl_model.forward_mean_var((X, y, X_query))
+    mean = mean.detach().cpu().numpy()
+    std_dev = torch.sqrt(variance).detach().cpu().numpy()
+    z = (mean - best_y) / (std_dev + 1E-9)
+    return (mean - best_y) * norm.cdf(z) + (std_dev + 1E-9) * norm.pdf(z)
 
 def listMLE(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_VALUE):
     """
@@ -379,6 +393,30 @@ class RankingLossSurrogate(nn.Module):
         self.ds_embedder.load_state_dict(state_dict["deep_set"])
         self.sc.load_state_dict(state_dict["scorer"])
 
+    def forward_mean_var(self, input):
+        s_X, s_y, q_X = input
+
+        # Creating an embedding of X:y for the support data using the embedder
+        s_X = torch.cat((s_X, s_y), dim=-1)
+        s_X = self.ds_embedder(s_X)
+
+        # Creating an input for the scorer.
+        s_X = s_X[..., None, :]
+        repeat_tuple = (1,) * (len(s_X.shape) - 2) + (q_X.shape[-2], 1)
+        s_X = s_X.repeat(repeat_tuple)
+        q_X = torch.cat((s_X, q_X), dim=-1)
+
+        # return self.sc(q_X)
+        predictions = []
+        for s in self.sc:
+            predictions += [s(q_X)]
+
+        predictions = torch.stack(predictions)
+        mean = torch.mean(predictions, dim=0)
+        variance = torch.var(predictions, dim=0, keepdim=True)[0]
+
+        return mean, variance
+
     def forward(self, input):
         s_X, s_y, q_X = input
 
@@ -516,8 +554,8 @@ class RankingLossSurrogate(nn.Module):
             optimizer.step()
             scheduler.step()
 
-            if loss.item() < min(loss_list + [float('inf')]):
-                self.save(self.file_name + "_ft_early_stop")
+            # if loss.item() < min(loss_list + [float('inf')]):
+            #    self.save(self.file_name + "_ft_early_stop")
 
             loss_list += [loss.item()/X_obs.shape[0]]
 
@@ -530,7 +568,8 @@ class RankingLossSurrogate(nn.Module):
         plt.savefig(self.save_folder + self.file_name + "_fine_tune_loss.png")
         plt.close()
 
-        self.load(self.file_name + "_ft_early_stop")
+        # self.save(self.file_name + "_ft_early_stop")
+        # self.load(self.file_name + "_ft_early_stop")
 
         return loss_list
 
@@ -545,8 +584,9 @@ class RankingLossSurrogate(nn.Module):
         # Doing restarts from the saved model
         restarted_model = RankingLossSurrogate(input_dim=-1, file_name=self.file_name)
         restarted_model.fine_tune(X_obs, y_obs) # disabling fine tuning for now
-        scores = restarted_model((X_obs, y_obs, X_pen))
-        scores = scores.detach().numpy()
+        scores = acquisition_EI(X_obs, y_obs, X_pen, restarted_model)
+        # restarted_model((X_obs, y_obs, X_pen))
+        # scores = scores.detach().numpy()
 
         idx = np.argmax(scores)
         return idx
