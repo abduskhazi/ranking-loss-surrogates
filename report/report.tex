@@ -487,19 +487,52 @@ Fine tune it on 1 dataset and evaluate using Expected Improvement
 Did not use strictGP --> Is it a problem?
 
 \section{Ranking Loss functions}
-Types of ranking losses
 
+Ranking as a concept used in information retrieval to rank documents based on relevance to a query.
+
+Consider a problem of ranking a set of objects $\{d_1, d_2, d_3 ... d_n\}$.
+For this a ranking function (rf) needs to be learnt.
+One can learn the ranking function by modelling this learning process as an optimization problem.
+This optimization needs a criteria (or a loss function in the jargon of machine learning) to do its optimization.
+This criteria is called a ranking loss function.
+This function (rf) is hence learnt by optimizing a ranking loss function.
+
+ After the learning rf,  one can use this function to rank newly given objects.
+
+Ranking functions can be broadly classified into 3 types
+\begin{itemize}
+\item  Point-wise ranking
+\item  Pair-wise ranking
+\item  List-wise ranking
+\end{itemize}
+
+In Point-wise ranking function,  the input to the function is a single data point vector.
+The output of this function is a label or a score for that data point.
+Correspondingly,  the ranking function is called point wise ranking function
+
+In pair-wise ranking functions the input to the function are pairs of input objects.
+This ranking function can be understood as a classification problem. The function tries to separate the input data points as much as possible in the output space.
+Correspondingly,  the loss function that optimizes/learns a pair wise ranking function is called pair-wise ranking loss.
+
+In list-wise ranking functions,  the input to the function is a list of objects to rank. 
+This is the most general ranking function and also the most useful one.
+To understand this,  consider 2 opposite objectives.
+One objective to rank the object.
+The second objective is to put other objects below this one in the list.
+Loss is approximately (by the equation) given by $-$ rank $+$ number of objects below it.
+If the rank is low and more number of objects are below it,  then loss tends to be positive which is not desirable
+On the contrary, if the rank is high it can bear more objects below it as Loss would not be so high.
+           
+Correspondingly,  the loss function that aids in learning this list-wise ranking function is called list wise ranking loss function.
 
 Main Idea:
     Given a set of objects, we need to rank the objects. (E.g. Ranking documents based on relevance to a query)
-    For this a ranking function (rf) needs to be learnt.
-    This function (rf) is learnt by optimizing a criteria (This is called a Ranking Loss)
-    Ranking: This function can be used to rank newly given objects.
+  
+    
+   
 
 3 types of ranking functions:
-    1. Point-wise ranking [Learning Instance = 1 object, Pointwise Ranking loss]
-    2. Pair-wise ranking [Learning Instance = pair, Pairwise RL]
-    3. List-wise ranking [Learning Instance = Entire object/list, Listwise RL]
+
 
 Evalution of learnt RF = Ranking measures.
 Relationship of Ranking measures and RLs is unkown.
@@ -619,67 +652,11 @@ Advantages:
 
 Best Model for training and ft giving auful resuts - Reason can be that we are selecting a very unfitted model due to too much variation in the validation losses.
 Hence we are start only ft best model. Ih the hope that we will get better resutls.
-only fine tune best fit is not giving good results. Investigation in progress.
-
-
-\subsection{Pair wise ranking losses}
-\subsection{...}
-\subsection{List wise ranking losses}
+only fine tune best fit is not giving good results. Investigation in progress. 
 
 
 \section{Deep Sets}
-Research Paper: https://arxiv.org/pdf/1612.01474.pdf
 
-Problem: How can we use DNN to quantify uncertainty in a prediction?
-
-Solutions Previously:
-    1. Bayesian neural networks.
-       A prior over weights and biases is specified. Given the data, a posterior is calculated.
-       Hard and complex to train.
-
-    2. Ensemble approach. E.g Using Monte Carlo Dropout during evaluation. (Behaves like an ensemble)
-       Consider 10 predictions in an ensemble. Using these, we could calculate the variance and the
-       mean of the gaussian. Example: Section 3.2 Regression on toy datasets.
-
-Evaluation of Predictive uncertainties:
-    Scoring rules - Measure quality of predictive uncertainty.
-    Out of distribution uncertainty
-
-Contributions by authors:
-    Non Bayesian approach.
-    Ensemble of neural networks.
-    Adversarial training for smooth predictions (Adversarial training is optional as it improves the prediction uncertainty quality only in some cases).
-
-
-Proposed Implementation:
-%    Given theta are NN parameters, we need to predict p_theta(y|x).
-    p = distribution over real values in regression
-    p = Discrete probablistic distribution for classification.
-%
-    3 step approach - Proper scoring rules, adversarial training and ensemble of NNs.
-
-Understanding proper scoring rules:
-    A scoring function gives a numerical value to the predictive distribution.
-    The better the predictive distribution calibrated to the actual distribution the better the score.
-    Compare p (prediction distribution) and q (original distribution). The closer p and q are the better the score.
-
-Observations:
-   How to combine regression and classification problems in deep ensembles - This is possible by having the correct loss function. For example addition of different parameters.
-   Understand the intuition behind the adversarial examples y = nn(x). We assume that nn is a smooth function hence the small
-   change in x should only have a small change in y. Hence nn( neighbourhood(x) ) = y
-%   For good training use 2^N examples for neighbourhood.
-   Used a custom NN architecture rather than using 1 hidden layer with 50/100 units depending on the data available.
-   This is because the architecture given in the paper was not helpful.
-%
-Evaluations of confidence vs accuracy.
-    The deep ensembles seem to have a better accuracy with higher confidence as compared to MC-Dropout.
-
-For Using Deep Ensembles for HPO:
-    We can only use the regression version of the research because the objective scoring is a real valued number
-    How to model discrete input dimensions as inputs into the Deep Ensemble?
-
-Doubts:
-    Could not understand section 3.5 last paragraph correctly.
 
 \chapter{Baseline Implementations}
 We use expected improvement in all models that deal with uncertainty.
@@ -710,23 +687,44 @@ Also adding 1e-6 for numerical stability
 %    # input_space_range = torch tensor that specifies the range in each dimension
     
 \subsection{Requirement of restarting training}
-We find in our experiments that the deep ensemble performance much better in our HPO cycle when we train it from scratch at every acquisition step.
+We find in our experiments that the deep ensemble performs much better in our HPO cycle when we train it from scratch at every acquisition step.
 This is counter intuitive because an already trained model will converge to a local optima quickly.
-The reason for this performance however is that the model gets biased towards the points that are observed in the beginning.
+The reason for this performance however is that the model gets biased towards the points that are observed at the beginning of the optimisation cycle.
 Lets say we have 2 models 
 \begin{itemize}
-\item $\textrm{DE}_{\textrm{restart}}$ which always restarts training at every acquisition step
+\item $\textrm{DE}_{\textrm{restart}}$ which always restarts training at every acquisition step.
 \item $\textrm{DE}_{\textrm{reuse}}$ which uses the previously trained model for subsequent training of the optimization cycle.
 \end{itemize}
 
-The following figures show the number of times each observed data points is used for training at 25th 50th and 100th optimization cycle.
-All the data is used in the optimization cycle as the amount of data is very less.
-Hence the diagrams are scaled with the number of epochs.
+\begin{figure}[htp]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/bias25}
+\caption{Bias at 25th optimization cycle}
+    \label{fig:bias25}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/bias50}
+\caption{Bias at 50th optimization cycle}
+    \label{fig:bias50}
+\end{minipage}\par
+\vskip\floatsep% normal separation between figures
+\includegraphics[width=0.45\textwidth]{images/bias100}
+\caption{Bias at 100th optimization cycle}
+    \label{fig:bias100}
+\end{figure}
 
-The heavy bias that you can see in the figures is actually not intended.
+
+Let $\textrm{DE}_{\textrm{reuse}}$ be fine tuned for 100 epochs during the optimization cycle.
+Let there be just 1 data point to start with.
+The figures~\ref{fig:bias25},~\ref{fig:bias50},  and ~\ref{fig:bias100} show the number of times each observed data points is used for the fine tuning at the 25th, 50th and 100th optimization cycle by $\textrm{DE}_{\textrm{reuse}}$  respectively.
+Generally all the data is used during fine tuning due to its scarcity at this step.
+Hence, the biases are scaled with the number of epochs.
+$\textrm{DE}_{\textrm{restart}}$ does not face this issue as the fine tuning step restarts everytime.
+
+The heavy bias that is present in the figures is actually not intended.
 This is because all observations should be treated equally in any training/fine-tuning step.
-
-Create Bias diagram...
+Hence it is better to restart the model before fine tuning step at each optimization step.
 
 The second reason is that we may not be able to get out of the local minima.
 Support using a diagram.
