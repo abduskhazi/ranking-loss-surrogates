@@ -146,7 +146,16 @@ The cross-product of the selected subsets gives us the configurations to be eval
 The number of configurations we need to evaluate in this approach becomes a big issue for this method as the dimensions of the search spaces increase.
 Hence this approach becomes intractability for large search spaces.
 
-One issue with the Grid Search approach is that we assume that all dimensions in the HPO search space are equally important. It is not the case in many HPO problems. For example, the learning rate in deep neural networks is much more important than many other parameters. If dimension $p$ is the most important in the search space, then it makes sense to evaluate more values of $p$. Random Search helps us solve this problem. Hence Random Search can be used as a trivial baseline for comparing other HPO models.
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.8]{images/rsgsexample}
+    \caption{Illustrates Grid search and Random search in the case where 2 parameters are not equally important.  Adpated from~\cite{rshpoarticle}.}
+    \label{fig:rshpofig}
+\end{figure}
+
+One issue with the Grid Search approach is that we assume that all dimensions in the HPO search space are equally important. It is not the case in many HPO problems.  The Grid layout in Figure~\ref{fig:rshpofig}(left) shows illustrates this.  For example, the learning rate in deep neural networks is much more important than many other parameters. If dimension $p$ is the most important in the search space, then it makes sense to evaluate more values of $p$. Random Search helps us solve this problem. 
+The Random layout in Figure~\ref{fig:rshpofig}(right) illustrates this. 
+Hence Random Search can be used as a trivial baseline for comparing other HPO models.
 
 One advantage of these methods is that there are no restrictions on the HPO search spaces. Hence, they are suitable for any HPO problem at hand.
 On the other hand, these methods are non-probabilistic.
@@ -172,7 +181,7 @@ The core procedure of the optimization process is the following:
 The above process repeats till the computational resources are finished (here time) or we find an acceptable HPO configuration.
 This procedure is also called SMBO (Sequential model-based Optimization).
 The procedure alternates between collecting data and fitting the model with the 
-collected data. \cite{SMBOPaper}
+collected data~\cite{SMBOPaper}.
 
 There are two essential components of Bayesian optimization:
 
@@ -186,7 +195,7 @@ But for the purpose of this thesis, we briefly mention Random forests and discus
 
 \subsection{Probabilistic models}
 \subsubsection{Random Regression Forest}
-     The core idea of this model is to train a Random Regression Forest, using the known data as in any SMBO procedure \cite{SMBOPaper}.
+     The core idea of this model is to train a Random Regression Forest, using the known data as in any SMBO procedure~\cite{SMBOPaper}.
 Random regression forests are an ensemble of regression trees. 
 This property is used to our advantage to predict the mean and the variance. 
 The mean of the prediction of all the trees is the mean of the surrogate model.
@@ -202,7 +211,7 @@ The data splitting during training is done using any variable be it discrete or 
 
 \subsubsection{Gaussian Process Regression}
 
-Gaussian processes \cite{GPTutorial} are predictive machine learning models that work well with few data points (or data pairs). 
+Gaussian processes~\cite{GPTutorial} are predictive machine learning models that work well with few data points (or data pairs). 
 They are inherently capable of modeling uncertainty.
 Hence, they are used widely in problems such as hyperparameter optimization, where uncertainty estimation is essential.
 In this section, we briefly explain the Gaussian process regression intuitively.
@@ -213,7 +222,7 @@ The following equation defines the probability density function (PDF) of $X$:
 $$
 P_X(x) = \frac{1}{\sqrt[2]{2\pi}\sigma}\exp\left(- \frac{(x - \mu)^2}{2\sigma^2}\right)
 $$
-Here, $X$ represents the random variable, and $x$ represents an instance of the variable\cite{GPTutorial}.
+Here, $X$ represents the random variable, and $x$ represents an instance of the variable~\cite{GPTutorial}.
 In this case,  the mean $\mu$,  variance $\sigma^2$, and any sample $x$ are all scalars.
 
 If the random variable $\textbf{X}$ is a vector in $\mathbb{R}^d$ where $d \in I^{+}$,  then each component of the vector can be considered as a random variable.
@@ -227,7 +236,7 @@ $d$ diagonal values of the matrix $\Sigma$ represent this variance.
 The matrix $\Sigma$, also known as the Covariance matrix, thus has all values necessary to represent the variance of any vector-valued random variable.
 
 
-The probability density function of a vector valued variable $\textbf{X} \in \mathbb{R}^d$ with a mean $\boldsymbol{\mu}$ and covariance matrix $\Sigma$ is given by: \cite{MITMLBook}
+The probability density function of a vector valued variable $\textbf{X} \in \mathbb{R}^d$ with a mean $\boldsymbol{\mu}$ and covariance matrix $\Sigma$ is given by~\cite{MITMLBook}:
 
 $$
 \mathcal{N}(\textbf{x} | \boldsymbol{\mu},  \Sigma) = 
@@ -271,24 +280,25 @@ For example,  when the input domain is a euclidean space,  $\textbf{x} \in \math
 
 \subsection{Acquisition functions}
 
+
 Due to the robustness of the GP process, we use this as one of the baselines in our thesis.
-\subsection{Deep Ensembles}
+\section{Deep Ensembles}
 One way to do Hyper Parameter Optimization is by using 
-Uncertainty prediction is the key in the paper \cite{DeepEnsemblePaper}.
+Uncertainty prediction is the key in the paper~\cite{DeepEnsemblePaper}.
 
-The following figures show the number of times each observed data points is used for training at 25th 50th and 100th optimization cycle.
-All the data is used in the optimization cycle as the amount of data is very less.
-Hence the diagrams are scaled with the number of epochs.
+\section{RGPE}
+This section is necessary because our model performs similar to this
 
-The heavy bias that you can see in the figures is actually not intended.
-This is because all observations should be treated equally in any training/finetuning step.
+\section{TAG}
+Some other model if also necessary and you mention this in your report.
 
-<Create Bias diagram>
+\section{Deep Kernel Learning}
 
-The second reason is that we may not be able to get out of the local minima.
-Support using a diagram.
-
-\subsection{Few Shot BO: Deep Kernel Learning}
+\section{Ranking Loss functions}
+Types of ranking losses
+\subsection{Pair wise ranking losses}
+\subsection{...}
+\subsection{List wise ranking losses}
 
 
 \chapter{Baseline Implementations}
@@ -311,41 +321,102 @@ Lets say we have 2 models
 \item $\textrm{DE}_{\textrm{reuse}}$ which uses the previously trained model for subsequent training of the optimization cycle.
 \end{itemize}
 
-\subsection{Few Shot BO: Deep Kernel Learning}
+The following figures show the number of times each observed data points is used for training at 25th 50th and 100th optimization cycle.
+All the data is used in the optimization cycle as the amount of data is very less.
+Hence the diagrams are scaled with the number of epochs.
+
+The heavy bias that you can see in the figures is actually not intended.
+This is because all observations should be treated equally in any training/fine-tuning step.
+
+Create Bias diagram...
+
+The second reason is that we may not be able to get out of the local minima.
+Support using a diagram.
+
+\section{Few Shot BO: Deep Kernel Learning}
 
 \chapter{Proposed Idea: Ranking Loss Surrogates}
 
 The search spaces that have less data need more uncertainty
 The search spaces having more data need less uncertainty
 
-\section{Ranking Loss functions}
-Types of ranking losses
-\subsection{Pair wise ranking losses}
-\subsection{...}
-\subsection{List wise ranking losses}
-
-We use listwise ranking losses because they have been found to be more efficient
+We use list wise ranking losses because they have been found to be more efficient
 
 \section{case study: Sorting}
 
+\section{Scoring function analysis}
 \subsection{Scoring function range}
-
 
 \section{Optimization cycle}
 \subsection{Meta training}
 \subsection{Fine tuning}
 
-\section{Use of Deep Sets}
-\subsection{Uncertainty implementation}
-Mention about the requirement to use Module list.
+\section{Loss function implementation}
+The loss function used is listMLE
+the implementation is done by removing to element check comments
+The latest implementation is used due to its efficiency otherwise it is the same. (note)
 
-\chapter{Results and Further Work}
-\section{Evaluation and Ablation Study}
+\subsection{Weighted Loss}
+Weighting becomes important because we are doing fine tuning at every step.
+Show the equation for weighting
+Used log weighting because 
+Advantages:
+Can be used to select best n configs and then evaluated at random based on the ranks. This is not as trivial to get in otherplaces. So there is an amount of parallelism that can be built it.
+
+Parallelisation of elements is possible.
+
+show the architecture of with only scorer
+\section{Use of Deep Sets}
+why are deep sets important. 
+
+Architectecture with deep sets.. Image
+
+\section{Uncertainty implementation}
+Mention about the requirement to use Module list.
+Show the new architecture.
+
+\section{Advantages and Limitations}
+Compare this loss function and method with other base lines..
+
+
+\chapter{Experiments and Results}
+
+experiment and results
+protocol
+data split…
+
+First show the resutls of implementation of GP (M = 5 and M =10 )
+Benchmark this...
+
+Next with DKT (Benchmark this)
+
+Next show the best results obtained by architecture.
+
+\section{Evaluation}
 \subsection{Testing}
 \subsection{Ablation}
 
+show the results of raw without deep set.
+
+Next show different strategies used for building the ranking loss model one step at a time.
+First with only scorer.
+then with deep set.
+Then with raw deep set
+fine tuning and deep set
+adding uncertainty
+
+Checking the early stop and hypothesing why is was wrong.
+
+box plot variation of each of the scorers... for 1 or more data sets?
+
+what about training independently , this requires normalization. as explained by sebastian.
 
 \chapter{Conclusion}
+
+\section{Further work}
+Further study required with other baselines that deal with ranking loss.
+
+\section{Conclusion}
 
 \bibliographystyle{plain}
 \bibliography{references}
