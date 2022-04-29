@@ -1,4 +1,5 @@
 \documentclass[12pt]{report}
+%\documentclass[12pt,twoside]{report}
 % \documentclass{article}
 \usepackage{amssymb}
 \usepackage{algpseudocode}
@@ -155,7 +156,7 @@ Also, these search methods give us optimal HPO configurations only by chance.
 
 In the remainder of this section, we discuss some sophisticated probabilistic models for doing HPO that use surrogates to reduce computational costs.
 
-\subsection{Bayesian Optimization}
+\section{Bayesian Optimization}
 Bayesian optimization tries to solve both computational costs and noisy evaluations of our objective function (section 1).
 It does this by building a model of the HPO objective function. This model is called a surrogate function.
 Bayesian optimization uses known evaluations as its data to build the surrogate model. The data is of the form {x, f(x)} pairs.
@@ -183,8 +184,8 @@ There are two essential components of Bayesian optimization:
 There are many probabilistic models such as Random Forests, Gaussian Processes, Tree parson Estimators, etc.
 But for the purpose of this thesis, we briefly mention Random forests and discuss in-depth the Gaussian processes.
 
-
-\subsubsection{Random (Regression) Forest}
+\subsection{Probabilistic models}
+\subsubsection{Random Regression Forest}
      The core idea of this model is to train a Random Regression Forest, using the known data as in any SMBO procedure \cite{SMBOPaper}.
 Random regression forests are an ensemble of regression trees. 
 This property is used to our advantage to predict the mean and the variance. 
@@ -268,21 +269,12 @@ $$
 Here, $\textbf{x}, \textbf{x'}$ belong to a domain in the most abstract sense.
 For example,  when the input domain is a euclidean space,  $\textbf{x} \in \mathbb{R}^{\mathbb{I}^+}$.
 
+\subsection{Acquisition functions}
 
 Due to the robustness of the GP process, we use this as one of the baselines in our thesis.
 \subsection{Deep Ensembles}
 One way to do Hyper Parameter Optimization is by using 
 Uncertainty prediction is the key in the paper \cite{DeepEnsemblePaper}.
-
-\subsubsection{Requirement of restarting training}
-We find in our experiments that the deep ensemble performance much better in our HPO cycle when we train it from scratch at every acquisition step.
-This is counter intuitive because an already trained model will converge to a local optima quickly.
-The reason for this performance however is that the model gets biased towards the points that are observed in the beginning.
-Lets say we have 2 models 
-\begin{itemize}
-\item $\textrm{DE}_{\textrm{restart}}$ which always restarts training at every acquisition step
-\item $\textrm{DE}_{\textrm{reuse}}$ which uses the previously trained model for subsequent training of the optimization cycle.
-\end{itemize}
 
 The following figures show the number of times each observed data points is used for training at 25th 50th and 100th optimization cycle.
 All the data is used in the optimization cycle as the amount of data is very less.
@@ -308,25 +300,44 @@ Various search spaces sizes
 \subsection{HPO\_B Dataset}
 How HPOB datasets is organised.
 
+\section{Deep Ensemble}
+\subsection{Requirement of restarting training}
+We find in our experiments that the deep ensemble performance much better in our HPO cycle when we train it from scratch at every acquisition step.
+This is counter intuitive because an already trained model will converge to a local optima quickly.
+The reason for this performance however is that the model gets biased towards the points that are observed in the beginning.
+Lets say we have 2 models 
+\begin{itemize}
+\item $\textrm{DE}_{\textrm{restart}}$ which always restarts training at every acquisition step
+\item $\textrm{DE}_{\textrm{reuse}}$ which uses the previously trained model for subsequent training of the optimization cycle.
+\end{itemize}
+
+\subsection{Few Shot BO: Deep Kernel Learning}
+
 \chapter{Proposed Idea: Ranking Loss Surrogates}
 
 The search spaces that have less data need more uncertainty
 The search spaces having more data need less uncertainty
 
-\subsection{Understanding Ranking Losses}
+\section{Ranking Loss functions}
+Types of ranking losses
+\subsection{Pair wise ranking losses}
+\subsection{...}
+\subsection{List wise ranking losses}
 
-\subsection{case study: Sorting}
+We use listwise ranking losses because they have been found to be more efficient
 
-\subsubsection{Scoring function range}
+\section{case study: Sorting}
+
+\subsection{Scoring function range}
 
 
-\subsection{Optimization cycle}
-\subsubsection{Meta training}
-\subsubsection{Fine tuning}
+\section{Optimization cycle}
+\subsection{Meta training}
+\subsection{Fine tuning}
 
-\subsection{Use of Deep Sets}
-\subsection{Implementation of Uncertainty}
-Mention about the requirement to use Module list .
+\section{Use of Deep Sets}
+\subsection{Uncertainty implementation}
+Mention about the requirement to use Module list.
 
 \chapter{Results and Further Work}
 \section{Evaluation and Ablation Study}
