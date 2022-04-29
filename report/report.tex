@@ -1,4 +1,5 @@
-\documentclass[11pt]{article}
+\documentclass[12pt]{report}
+% \documentclass{article}
 \usepackage{amssymb}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
@@ -37,11 +38,14 @@
 
 \begin{document}
 
+\pagenumbering{gobble}
+
+
 \maketitle
 \date{}
-\tableofcontents
-\newpage
 
+\newpage
+\pagenumbering{roman}
 \begin{abstract}
 
 Abstract goes here
@@ -50,7 +54,14 @@ Abstract goes here
 
 \newpage
 
-\section{Introduction}
+\tableofcontents
+\newpage
+\newpage
+
+\pagenumbering{arabic}
+
+\chapter{Introduction}
+
 The performance of any machine learning model is sensitive to the hyper-parameters used during the model training. 
 Instead of using a new model type, it is more helpful to tune the hyper-parameters of an existing model to improve its performance.
 Learning the best hyper-parameter for an ML model is called, Hyperparameter optimization (HPO in short).
@@ -58,7 +69,7 @@ This thesis studies various existing approaches to HPO and proposes a new idea f
 The proposed idea in this thesis is called \textbf{HPO using Ranking Loss Surrogates}. 
 The results obtained using this model are compared against the state-of-the-art results obtained using models like FSBO,  RGPE,  TAF, and others. 
 
-\subsection{Problem Definition}
+\section{Problem Definition - HyperParameter Optimization}
 To find out the best hyper-parameter for any machine learning model $m$, we must first quantify a given hyper-parameter configuration $\textbf{x}$ by a real-valued number $v \in \mathbb{R}$.
 If we define that
 $$
@@ -90,7 +101,7 @@ $$
 $$
 
 \label{ProblemOverviewlabel}
-\subsection{Hyper-Parameter Optimization Constraints}
+\section{Optimization Constraints}
 
 Hyper-parameter optimization is different from other optimization methods because it has different constraints.
 It is because of the peculiar properties of the hyper-parameter search spaces.
@@ -107,8 +118,11 @@ Using a gradient method is hence not trivial.
 \end{enumerate}
 
 
+\section{Overview}
+This sections contains the overview of the paper and how the thesis report is organised.
 
-\section{Literature Review}
+
+\chapter{Literature Review}
 To deal with the constraints of HPO problems, researchers have used different strategies for developing HPO algorithms and models.
 Some of the straightforward methods include
 \begin{itemize}
@@ -271,33 +285,64 @@ Lets say we have 2 models
 \end{itemize}
 
 The following figures show the number of times each observed data points is used for training at 25th 50th and 100th optimization cycle.
-At the optimization cycle 
+All the data is used in the optimization cycle as the amount of data is very less.
+Hence the diagrams are scaled with the number of epochs.
+
+The heavy bias that you can see in the figures is actually not intended.
+This is because all observations should be treated equally in any training/finetuning step.
+
+<Create Bias diagram>
+
+The second reason is that we may not be able to get out of the local minima.
+Support using a diagram.
 
 \subsection{Few Shot BO: Deep Kernel Learning}
 
 
-\section{Existing Methods}
-
+\chapter{Baseline Implementations}
 \section{Dataset}
+This section defines the requirement of the dataset and why meta data sets are important
+\subsection{Models used}
+\subsection{Meta dataset}
+Various search spaces sizes
 \subsection{HPO\_B Dataset}
+How HPOB datasets is organised.
 
-\section{Proposed Idea: Ranking Loss Surrogates}
+\chapter{Proposed Idea: Ranking Loss Surrogates}
+
+The search spaces that have less data need more uncertainty
+The search spaces having more data need less uncertainty
 
 \subsection{Understanding Ranking Losses}
 
+\subsection{case study: Sorting}
+
+\subsubsection{Scoring function range}
 
 
+\subsection{Optimization cycle}
+\subsubsection{Meta training}
+\subsubsection{Fine tuning}
+
+\subsection{Use of Deep Sets}
+\subsection{Implementation of Uncertainty}
+Mention about the requirement to use Module list .
+
+\chapter{Results and Further Work}
 \section{Evaluation and Ablation Study}
 \subsection{Testing}
 \subsection{Ablation}
 
-\section{Results}
+
+\chapter{Conclusion}
 
 \bibliographystyle{plain}
 \bibliography{references}
+\pagenumbering{roman}
 
-\section{Appendix}
-\subsection{More information}
+\appendix
+% \chapter*{Appendices}
+\chapter{More information}
 This thesis was completed in the representation learning lab of Albert-Ludwig-Universität Freiburg.  (Figure~\ref{fig:UniLogo})
 
 \begin{figure}[htb]
