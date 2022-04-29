@@ -1,4 +1,4 @@
-\documentclass[12pt]{report}
+\documentclass[11pt]{report}
 %\documentclass[12pt,twoside]{report}
 % \documentclass{article}
 \usepackage{amssymb}
@@ -174,7 +174,7 @@ The surrogate model is a probabilistic model. Hence, it also learns about the no
 The core procedure of the optimization process is the following:
 \begin{itemize}
 \item From known data $D = {(x_1, f(x_1)), (x_2, f(x_2)), (x_3, f(x_3)) .... }$, build a probabilistic model that learns the mean and variance of the objective function
-\item Use the surrogate to sample the next best HPO configuration x'. Evaluate f(x')
+\item Use the surrogate to sample the next best HPO configuration x' using a function known as acquisition function. Evaluate f(x').
 \item Append (x', f(x')) to D and repeat the process.
 \end{itemize}
 
@@ -183,7 +183,7 @@ This procedure is also called SMBO (Sequential model-based Optimization).
 The procedure alternates between collecting data and fitting the model with the 
 collected data~\cite{SMBOPaper}.
 
-There are two essential components of Bayesian optimization:
+Hence, there are two essential components of Bayesian optimization:
 
 \begin{itemize}
 \item Probabilistic model of the objective function
@@ -278,30 +278,414 @@ $$
 Here, $\textbf{x}, \textbf{x'}$ belong to a domain in the most abstract sense.
 For example,  when the input domain is a euclidean space,  $\textbf{x} \in \mathbb{R}^{\mathbb{I}^+}$.
 
+Some well known kernels are:
+\begin{itemize}
+\item \textbf{Radial Basis Function Kernel}
+\item \textbf{Matern Kernel}
+\item \textbf{Periodic Kernel}
+\end{itemize}
+
+Finally,  a Gaussian Process specifies that any new observation $y^*$ for input $\textbf{x}^*$,  is jointly normally distributed with known observations $\textbf{y}$ (corresponding to the input $\textbf{X}$) such that
+\begin{align}
+    Pr\left( \begin{bmatrix}
+           \textbf{y} \\
+           y^*
+         \end{bmatrix}
+         \right)
+         &=  \mathcal{N}\left(m(\textbf{X}), \mathbf{\Sigma}\right)
+\end{align}
+
+Here, $m(\textbf{X})$ is the mean of the vectors which is commonly taken as $\textbf{0}$.
+$\mathbf{\Sigma}$ is the covariance matrix defined as
+$$
+\mathbf{\Sigma} = \begin{bmatrix}
+           \textbf{K} & \textbf{K}_* \\
+           \textbf{K}_*^T & \textbf{K}_{**}
+         \end{bmatrix}
+$$
+  Where $\textbf{K} = k(\textbf{X}, \textbf{X})$,  $\textbf{K}_*  =  k(\textbf{X}, \textbf{x}_*)$ and $\textbf{K}_{**} = k(\textbf{x}_*,  \textbf{x}_*)$ for any given kernel $k$~\cite{GPTutorial}.
+  Due to the robustness of the GP process, we use this as one of the baselines in our thesis.
+
 \subsection{Acquisition functions}
+The acquisition functions need to do balance exploitation of information from the known data points and exploration of unknown data points in their domain.
+The following functions are some of the most prominent acquisition functions found in the literature~\cite{GPTutorial}
+\begin{itemize}
+\item \textbf{Upper Confidence Bound (UCB)}: It returns the best possible using a linear combination of the mean and the standard deviation.
+\item \textbf{Probability of Improvement}: It gives The probability with which we can get better values than the best so far is the acquisition function.
+\item \textbf{Expected Improvement}: Given a gaussian distribution at a new input point, it finds the expectation of improvement i.e ($f(x) - f_{max}$) over the part of normal that is greater than $f_{max}$.
+\end{itemize}
 
-
-Due to the robustness of the GP process, we use this as one of the baselines in our thesis.
 \section{Deep Ensembles}
+
+Artificial Neural Networks are machine learning models with very high representational capacity.
+[high representation capacity reference]
+Due to this property,  one can think of using them as surrogates for our HPO objective function $f$.
+But the issue is that ANNs do not quantify uncertainity trivially.
+In the following section we discuss briefly the methods used to do uncertainty quantification using neural networks.
+
+\subsection{Uncertainty Quantification in ANN}
+
+In the current literature,  uncertainty quantification methods using deep neural networks can be broadly classified into the following methods:
+\begin{itemize}
+\item Bayesian Nueral networks. [citation]
+\item Ensemble Approach using monte carlo.
+\item Ensemble approach using multiple neural networks.
+\end{itemize}
+
+In Bayesian neural network(BNN),  a prior over weights and biases is specified prior to training the BNN.
+Given the data,  a posterior predictive distribution is calculated for all the parameters of the network (Weights and Biases).
+One issue with this approach is that BNNs are very complex and difficult to train.  [citation]
+
+Monte carlo drop out is a regularization technique used during the training of neural networks.
+With a certain probability,  connections between neurons are dropped.
+Using this technique one obtains possibly $2^N$ neural networks where $N$ is the number of connections
+in the artifical neural network.
+We can get an ensemble of high capacity models for free.
+It is normally only used during training to obtain regularization.
+
+However,  if one uses monte carlo dropout during the evaluation,  we can get multiple results from the same input using this approach.
+Given input $x$ and output $y = \textrm{NN}(x)$.  If we have $m$ neural networks obtained using monte carlo dropout,  we get $\{y_1, y_2... y_m\}$ outputs,  we can obtain the mean and variance of 
+$$
+y_\textrm{mean} = \frac{\Sigma_i y_i}{m}  \;\;\;\;\;  y_\textrm{variance} = 
+$$
+There are 2 ways of using an Ensemble of Deep Nueral networks to get uncertainty prediction.
+One is by using Monte Carlo Dropout during evaluation. [citation of monte carlo dropout]
+
+
 One way to do Hyper Parameter Optimization is by using 
 Uncertainty prediction is the key in the paper~\cite{DeepEnsemblePaper}.
 
+% Research Paper: https://arxiv.org/pdf/1612.01474.pdf
+  2 
+  3 Problem: How can we use DNN to quantify uncertainty in a prediction?
+  4 
+  5 Solutions Previously:
+  6     1. Bayesian neural networks.
+  7        A prior over weights and biases is specified. Given the data, a posterior is calculated.
+  8        Hard and complex to train.
+  9 
+ 10     2. Ensemble approach. E.g Using Monte Carlo Dropout during evaluation. (Behaves like an ensemble)
+ 11        Consider 10 predictions in an ensemble. Using these, we could calculate the variance and the
+ 12        mean of the gaussian. Example: Section 3.2 Regression on toy datasets.
+ 13 
+ 14 Evaluation of Predictive uncertainties:
+ 15     Scoring rules - Measure quality of predictive uncertainty.
+ 16     Out of distribution uncertainty
+ 17 
+ 18 Contributions by authors:
+ 19     Non Bayesian approach.
+ 20     Ensemble of neural networks.
+ 21     Adversarial training for smooth predictions (Adversarial training is optional as it improves the prediction uncertainty quality only     in some cases).
+ 22 
+ 23 
+ 24 Proposed Implementation:
+% 25     Given theta are NN parameters, we need to predict p_theta(y|x).
+ 26     p = distribution over real values in regression
+ 27     p = Discrete probablistic distribution for classification.
+ 28 
+ 29     3 step approach - Proper scoring rules, adversarial training and ensemble of NNs.
+ 30 
+ 31 Understanding proper scoring rules:
+ 32     A scoring function gives a numerical value to the predictive distribution.
+ 33     The better the predictive distribution calibrated to the actual distribution the better the score.
+ 34     Compare p (prediction distribution) and q (original distribution). The closer p and q are the better the score.
+ 
+ Observations:
+ 37    How to combine regression and classification problems in deep ensembles - This is possible by having the correct loss function. For ex    ample addition of different parameters.
+ 38    Understand the intuition behind the adversarial examples y = nn(x). We assume that nn is a smooth function hence the small
+ 39    change in x should only have a small change in y. Hence nn( neighbourhood(x) ) = y
+% 40    For good training use 2^N examples for neighbourhood.
+ 41    Used a custom NN architecture rather than using 1 hidden layer with 50/100 units depending on the data available.
+ 42    This is because the architecture given in the paper was not helpful.
+ 43 
+ 44 Evaluations of confidence vs accuracy.
+ 45     The deep ensembles seem to have a better accuracy with higher confidence as compared to MC-Dropout.
+ 46 
+ 47 For Using Deep Ensembles for HPO:
+ 48     We can only use the regression version of the research because the objective scoring is a real valued number
+ 49     How to model discrete input dimensions as inputs into the Deep Ensemble?
+ 50 
+ 51 Doubts:
+ 52     Could not understand section 3.5 last paragraph correctly.
+ 53 
+
+
 \section{RGPE}
+Read the FSBO paper and write the summary like that or read  the RGPE paper
 This section is necessary because our model performs similar to this
 
 \section{TAG}
+Read the TAG paper.
 Some other model if also necessary and you mention this in your report.
 
 \section{Deep Kernel Learning}
 
+Paper: https://arxiv.org/pdf/2101.07667.pdf
+
+Problem Domain: Hyperparameter searching.
+Keyword: Use Deep Kernel surrogates
+
+Key points:
+    1. Use transfer learning surrogates to get faster convergence
+    2. Treat HPO as a few shot learning problem (In the context of transfer learning)
+    3. Use kernel k(phi(x), phi(x')) where phi is a neural network that transforms x to a latent vector
+    4. Learn parameters of phi(W) and kernel(theta) together based on historical meta data
+    5. Fine tune both W and theta based on the given task. If possible use warm start for initialization.
+    6. Learn output range variance by creating augumented tasks.
+
+Conceptual points:
+    1. The deep kernel learnt does not have any task dependent parameters.
+       The task dependent parameters are marginalized out.
+       Hence finetuning during test time (after pretraining) should be complete.
+
+Quick note on expected improvement.
+    First the mean and variance is calculated for the target Hyperparameter Setting.
+    Considering the mean and variance of a particular HP, we calculate the following:
+%        Remove y_max from the set of all values of f(x) and lowerbound it by 0.
+ %       Multiply the above value with the probability of the gaussian curve N(predicted_mean, predicted_variance)
+        For a continous curve we need to integrate.
+    Then we get the Expected Improvement for this HP setting.
+
+
+Gaussian Processes:
+    The output is considered to be a random variable.
+    When have more than 1 data point, the output becomes a multivariate normal
+        The output is a joint gaussian distribution.
+
+Personal points (Probability vs Likelihood)
+    Probability and likelihood are reverse in nature.
+    Probability starts with a given set of parameters and caculates the probability of a given outcome to occur
+    Likelihood starts with a given outcome, and we would like to determine the parameters.
+
+    Marginal likelihood (Likelihood after marginalization of some parameters)
+        integrates the effects of parameters that are not of your interest.
+
+Note:
+    Warm start is not essential for us. (It is not the main contribution of the paper)
+
+Main motive of deep kernel learning:
+    Learn the kernel function in the gaussian process.
+
+How to do implementation with FSBO with HPO-B Metadataset?
+There are 16 search spaces (model optmizations here)
+    The train test split is already done metatraindata has the training data and metatest data has the test data.
+    What about validation?? Really required?
+    The search space id can be used for identifying correct search space for test and training data by using:
+%        hpobhander.meta_test_data[search_space_id][dataset_id]["X"]
+  %      hpobhander.meta_train_data[search_space_id][dataset_id]["X"]
+
+1 ML model optimization
+    1 search space (with a unique searchspace id)
+        Dataset 1 (with unique dataset id)
+        Dataset 2
+        Dataset 3
+
+Pretrain the FSBO model with the train split of the dataset. M'
+Fine tune it on 1 dataset and evaluate using Expected Improvement
+    i.e run loop like the training with the given data.
+
+Did not use strictGP --> Is it a problem?
+
 \section{Ranking Loss functions}
 Types of ranking losses
+
+
+Main Idea:
+    Given a set of objects, we need to rank the objects. (E.g. Ranking documents based on relevance to a query)
+    For this a ranking function (rf) needs to be learnt.
+    This function (rf) is learnt by optimizing a criteria (This is called a Ranking Loss)
+    Ranking: This function can be used to rank newly given objects.
+
+3 types of ranking functions:
+    1. Point-wise ranking [Learning Instance = 1 object, Pointwise Ranking loss]
+    2. Pair-wise ranking [Learning Instance = pair, Pairwise RL]
+    3. List-wise ranking [Learning Instance = Entire object/list, Listwise RL]
+
+Evalution of learnt RF = Ranking measures.
+Relationship of Ranking measures and RLs is unkown.
+
+
+Main AIM:
+    Find relationship between Ranking Measuress and Pointwise/Listwise Ranking Losses.
+    Pointsize relationship already clear
+    Goal to do the same for pair wize and listwise case.
+
+Proposed IDEA:
+    Use an essential loss. (Need more reading)
+
+Loss function understanding:
+Pointwise - Try to get the label as per data
+Pairwise - Try to separate the labels as much as possible. (Because of -z in all forms of phi).
+           It is a classification of 2 objects with a boundary --- Hence the effort to separate things.
+Listwise - The anology of this is that of 2 oppposing forces. One the rank of the object. Secondly
+           the number of objects below it in the list.
+           Loss ===> -rank + number of objects below it.
+                If the rank is low and more number of objects are below it ==> Loss > 0 which is not desirable
+                On the contrary, if the rank is high it can bear more objects below it as Loss would not be so high.
+           Permutation invariance is obtained by using random valid (best case)
+%     Doubt. We talk about permutations. It is only possible if #Lables << #DataPoints.
+        ==> This is true as we are doing K-Layer classfication.
+
+
+Ranking Losses:
+    Point               Pair            List
+    Subset regression   Ranking SVM     ListNET
+    McRank              RankBoost       ListMLE
+                        RankNet
+
+Brief note on Pairwise approach: from the introduction of https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-2007-40.pdf
+    The data is created by creating (x1, x2) -> label tuples for all possible x1, x2 in the ranked list. The label can be -1, 0, or 1
+    ,for instance, if x1 is having lower, equal or higher rank to x2 respectively.
+
+Ranking Measures
+    NDCG = K level ratings
+    MAP = 2 level ratings
+
+    Read: https://faculty.cc.gatech.edu/~zha/CS8803WST/dcg.pdf
+    Read: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/08/letor3.pdf (Page 15 for a clearer picture)
+        CG = Cumulated gain (of information)
+        DCG = Discounted cumulated gain (of information)
+        NDCG = Normalized DCG i.e Divide each position of the DCG by Ideal DCG for the results.
+               You get a list of values in [0,1] which lenght of list = number of rankings considered.
+        NDCG@k = required real valued function of the ranking measure.
+
+    Question: Only 2 level rankings necessary for our case?
+
+Understanding listwise loss function:
+    Queries       Ranking(f(Q, D))      Ground Truth scores
+    q1        [d1, d2, d3 ... d10]      [y1, y2, y3 ... y10]
+    q2        [d1, d2, d3 ... d15]      [y1, y2, y3 ... y15]
+    q3        [d1, d2, d3 ... d7]       [y1, y2, y3 ... y7]
+
+    D = {Set of Documents}
+    Q = {Set of Queries}
+    f : QxD -> R [Note: Here D is conditioned on Q]. The function is defined for 1 (query, document) pair.
+
+    Point to note - Each feature input = a concatenation of the query vector and the document vector.
+
+    One instance of our training data is (X, Y) where X = {Set of all documents returned by query} Y = {Set of the respective ground
+    truth scores}. Basically 1 query is one instance. Hence our loss function has to take in vector of outputs from f.
+
+    Loss = L(Xi , Yi) where Xi and Yi are refer to 1 query qi.
+    Full Batch Loss = mean (L(Xi, Yi) for all elements i in the training objects)
+
+    Here f(Q, D) itself is the scoring function that is the main model to be learnt in our framework.
+
+    *** Complete explanation found in Section 3 and Section 4 of paper:
+        *** https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-2007-40.pdf
+
+    * ListNet
+    * We need to make sure that f returns scores that are SIMILAR IN RELAVANCE/ORDER to the ground truth scores.
+    * This would make the Ranking(f(Q, D)) equal to the ground truth and we would have learnt our ranking function.
+    * Note that we do not need to get the exact ground truth scores. Which increases the space of acceptable functions in the
+      function space F (Here f belongs to F) we are searching from 1 to INF. i.e It becomes easier to search if we only want a subspace and not the exact function.
+    * RANKING is nothing but sorting the results based on their respective scores/relavance (decreasing order)
+    * Since the sorting function is non differentiable, the loss function in question should not be composed of the RANKING function.
+    * Moreover, leaving the sorting function makes our loss permutation independent by making use of the + permutation invariant operator
+      [Check the final step for more clarity on this. Cross entropy uses + operator]
+    * This leaves us with 2 lists -
+        a. List of scores given by our ranking function f
+        b. List of relavance scores given to us by ground truth
+    * The loss function finds the distance of these 2 lists.
+    * A probabilitic approach is taken so as to take into account for any uncertainities.
+%    * The probability of selecting any document can be taken as score_of_document / sum(all document scores) since higher score means
+      a more relavant document
+    * However the score of the document can negative as well. Hence a strictly positive and increasing funciton phi is taken
+%        which makes prob(d) = phi(d) / sum (phi(d_i) for i in Documentsof(QueryGiven))
+    * The probability of a permutation is nothing but the probability of selecting one document after another without replacement
+      (Reminder: Discrete probability calculation){Which itself becomes a probability distribution i.e sigma = 1}
+    * One possible way to find the distance betwen the 2 lists a and b is to find the probabilities of all permutations for a and b
+      and compare both the distriputions. 
+    * Complexity of this O(n!) ==> Intractible
+    * Instead take the probabilities of selecting every document first in any possible permutation. {Which also is a probability 
+      distribution i.e sigma = 1}
+    * The first selection probability (Top 1 probability in the research paper) for a and b are calculated separately using their
+      respective scores.
+    * The final Loss for the list = Cross entropy of probability distribution (a) w.r.t that of b.
+    * This loss is backpropogated through the network to set the parameters.
+%
+    ListMLE: http://icml2008.cs.helsinki.fi/papers/167.pdf
+    * Main difference is that the loss function used is different.
+    * Loss function is intuitive in that they would want to raise the probability of getting the ground truth permutation.
+    * They increase the probability of getting the exact (ground truth) permutation using the scores given by f.
+
+    Both the papers use linear network model for some simplicity. But we can use the non-linearity due to available library
+        implementations
+    Very nice summary of both loss functions section 3.2.1 : https://arxiv.org/pdf/1707.05438.pdf 
+
+Advantages:
+    Can be used to select best n configs and then evaluated at random based on the ranks. This is not as trivial to get in other
+    places. So there is an amount of parallelism that can be built it.
+
+Best Model for training and ft giving auful resuts - Reason can be that we are selecting a very unfitted model due to too much variation in the validation losses.
+Hence we are start only ft best model. Ih the hope that we will get better resutls.
+only fine tune best fit is not giving good results. Investigation in progress.
+
+
 \subsection{Pair wise ranking losses}
 \subsection{...}
 \subsection{List wise ranking losses}
 
 
+\section{Deep Sets}
+Research Paper: https://arxiv.org/pdf/1612.01474.pdf
+
+Problem: How can we use DNN to quantify uncertainty in a prediction?
+
+Solutions Previously:
+    1. Bayesian neural networks.
+       A prior over weights and biases is specified. Given the data, a posterior is calculated.
+       Hard and complex to train.
+
+    2. Ensemble approach. E.g Using Monte Carlo Dropout during evaluation. (Behaves like an ensemble)
+       Consider 10 predictions in an ensemble. Using these, we could calculate the variance and the
+       mean of the gaussian. Example: Section 3.2 Regression on toy datasets.
+
+Evaluation of Predictive uncertainties:
+    Scoring rules - Measure quality of predictive uncertainty.
+    Out of distribution uncertainty
+
+Contributions by authors:
+    Non Bayesian approach.
+    Ensemble of neural networks.
+    Adversarial training for smooth predictions (Adversarial training is optional as it improves the prediction uncertainty quality only in some cases).
+
+
+Proposed Implementation:
+%    Given theta are NN parameters, we need to predict p_theta(y|x).
+    p = distribution over real values in regression
+    p = Discrete probablistic distribution for classification.
+%
+    3 step approach - Proper scoring rules, adversarial training and ensemble of NNs.
+
+Understanding proper scoring rules:
+    A scoring function gives a numerical value to the predictive distribution.
+    The better the predictive distribution calibrated to the actual distribution the better the score.
+    Compare p (prediction distribution) and q (original distribution). The closer p and q are the better the score.
+
+Observations:
+   How to combine regression and classification problems in deep ensembles - This is possible by having the correct loss function. For example addition of different parameters.
+   Understand the intuition behind the adversarial examples y = nn(x). We assume that nn is a smooth function hence the small
+   change in x should only have a small change in y. Hence nn( neighbourhood(x) ) = y
+%   For good training use 2^N examples for neighbourhood.
+   Used a custom NN architecture rather than using 1 hidden layer with 50/100 units depending on the data available.
+   This is because the architecture given in the paper was not helpful.
+%
+Evaluations of confidence vs accuracy.
+    The deep ensembles seem to have a better accuracy with higher confidence as compared to MC-Dropout.
+
+For Using Deep Ensembles for HPO:
+    We can only use the regression version of the research because the objective scoring is a real valued number
+    How to model discrete input dimensions as inputs into the Deep Ensemble?
+
+Doubts:
+    Could not understand section 3.5 last paragraph correctly.
+
 \chapter{Baseline Implementations}
+We use expected improvement in all models that deal with uncertainty.
+This is to maintain constant results across all the models.
+Also due to the advantages of this acquisition function.
+
 \section{Dataset}
 This section defines the requirement of the dataset and why meta data sets are important
 \subsection{Models used}
@@ -309,8 +693,22 @@ This section defines the requirement of the dataset and why meta data sets are i
 Various search spaces sizes
 \subsection{HPO\_B Dataset}
 How HPOB datasets is organised.
+%Assuming that we are dealing with only discrete case ==> X_pen is None.
+First fitting the model based on observations.
+Predicting then the pending configuration for evaluation.
+Returning the index that gives us the best results.
 
 \section{Deep Ensemble}
+Estimator architecuture used.
+
+Enforcing the positivity of the variance as mentioned in the paper.
+Also adding 1e-6 for numerical stability
+
+\subsection{Adverserial training and not using it}
+%    # Generation of adversarial examples
+%    # Using eps as 1\% as recommended in the paper
+%    # input_space_range = torch tensor that specifies the range in each dimension
+    
 \subsection{Requirement of restarting training}
 We find in our experiments that the deep ensemble performance much better in our HPO cycle when we train it from scratch at every acquisition step.
 This is counter intuitive because an already trained model will converge to a local optima quickly.
@@ -334,6 +732,27 @@ The second reason is that we may not be able to get out of the local minima.
 Support using a diagram.
 
 \section{Few Shot BO: Deep Kernel Learning}
+Scaling should be ignored because it gives very bad results.
+if scaling:
+%# Scale the labels according to the l and u for scale invariance.
+%        #     batch_labels = (batch_labels - l) / (u - l)
+
+%%         ## RBF kernel
+ %## Another possibility of a kernel - self.covar_module =
+   %     ## gpytorch.kernels.ScaleKernel(gpytorch.kernels.MaternKernel(nu=config["nu"], ard_num_dims=dims if config["a    rd"] else None))
+
+
+\subsection{Save best model}
+
+\subsection{Early quict}
+
+\subsection{Implementation not in par with that of paper.}
+
+\subsection{Using cosine annehealing }
+during the implementation to get better fine tune loss curves.
+
+
+Issues faced during implementions of all models need to be written.
 
 \chapter{Proposed Idea: Ranking Loss Surrogates}
 
@@ -342,12 +761,81 @@ The search spaces having more data need less uncertainty
 
 We use list wise ranking losses because they have been found to be more efficient
 
+Main Idea:
+    We need to use ranking losses instead of other methods for the purpose of HPO algorithms.
+
+
+Documentation (Agenda):
+    First we need to Implement/create the infrastructure to learn ranking loss functions.
+    So we need to read and understand / revise the ranking losses concept.
+
+    We decided to model a ranking function using a deep neural network.
+        Reason: reprentation capacity.
+%        For now defined a [input_dim, (32, RELU) , (32, RELU), 1]
+%
+    Creating a toy example to build and run our ranking function
+        Can our scoring function learn to sort a list of numbers? 
+
+    Obervations after completing the implementation of toy example with list wise ranking function.
+        1. We do not have any output range of values as a reference. Hence the model can learn score values arbitrarily large
+        2. We must control the output domain so that the training does not lead to underflow or overflow.
+            This is because we use the exp function for getting the strict positive increasing function.
+            Perhaps using other increasing positive function helps? (More reading/research required on this topic)
+        3. This may make the output domain restrictive. Works for now, however, we may need a better solution for this.
+        4. The learnt model is extremely sensitive to the learning rate and the number of epochs
+
+Advantages of the proposed Idea:
+    The amount of data instances for training is exponential in number. Which is very good for a deep learning model
+    For example if we have 100 observation set and we use a list size of 15 to train our model, we will have 100C15
+    unique instances to train.
+
+
+Observed disadvantages:
+    The learnt model is extremely sensitive to the learning rate and the number of epochs
+
+
+Applying this to HPOB... (With or without query)
+    First learning from first search space.
+    Even with this the loss curves are very smooth if we use 2 * tanh(0.01 * x)
+
+
+Possible extensions:
+    Top ranked enhanced loss can be used as it is simple to understand and implement
+    Section 4 in https://arxiv.org/pdf/1707.05438.pdf
+    This is because it is more important to get the correct top rankings than later rankings
+    In fact the top1 rank is what is most important to us in any optimization step of an HPO algorithm.
+    
 \section{case study: Sorting}
+
+Check the affet of list / batch size on the results
+Hence propose using a higher list size.
+
+%    # IDEA:
+%    #   Can our loss function train the model to sort numbers?
+%    #   List of numbers to train with = {1 to 100}
+%    #   List of numbers to validate with = {1 to 100}
+%    #       Result -> Sorting possible provided the output range of the model not restricted
+%    #       For now we sample train/val data from the same distribution.
+  %  #   List of numbers to test with = {-1 to -100}
+%    #       Result -> This is not possible because the model will map this to extreme values as it
+ %   #                 is not distribution dependent.
+ %   #   Check the percentage of the lists in the correct sorted order.
+    
+explain get\_batch\_HPBO implementation how it is important to have all the data sets
+How it is organised into a higher order tensor
+TO compute 2 things can be done
+  1. View it as a 2d tensor (Done by efficient implementation)
+     2. Deal with it direction (Done by us)
+
+replace=False thing in the above function and why it is important.
+
+
 
 \section{Scoring function analysis}
 \subsection{Scoring function range}
 
 \section{Optimization cycle}
+Explain the training loop with an algorithm.
 \subsection{Meta training}
 \subsection{Fine tuning}
 
@@ -357,6 +845,8 @@ the implementation is done by removing to element check comments
 The latest implementation is used due to its efficiency otherwise it is the same. (note)
 
 \subsection{Weighted Loss}
+Paper = Top-Rank Enhanced Listwise Optimization for Statistical Machine Translation
+
 Weighting becomes important because we are doing fine tuning at every step.
 Show the equation for weighting
 Used log weighting because 
@@ -374,6 +864,12 @@ Architectecture with deep sets.. Image
 \section{Uncertainty implementation}
 Mention about the requirement to use Module list.
 Show the new architecture.
+
+\subsection{Independent training}
+
+\subsection{Training with mean and restricted output}
+
+
 
 \section{Advantages and Limitations}
 Compare this loss function and method with other base lines..
@@ -394,7 +890,15 @@ Next show the best results obtained by architecture.
 
 \section{Evaluation}
 \subsection{Testing}
+explain how a ranking graph works ar implemented
+Explain the regret rank@ some location.
+
 \subsection{Ablation}
+
+Result tabulation of case study: sorting:
+1.  Within range
+2.   Outside range 
+mean of 3 times should be written.
 
 show the results of raw without deep set.
 
@@ -409,13 +913,37 @@ Checking the early stop and hypothesing why is was wrong.
 
 box plot variation of each of the scorers... for 1 or more data sets?
 
-what about training independently , this requires normalization. as explained by sebastian.
+show results of independent training and training with output restriction
+
+what about training independently,   this requires normalization. 
+as explained by sebastian.
 
 \chapter{Conclusion}
+
+\section{Limitations}
 
 \section{Further work}
 Further study required with other baselines that deal with ranking loss.
 
+Paper: https://arxiv.org/pdf/2012.06731.pdf
+       (Impt Ref) https://arxiv.org/pdf/1903.08850.pdf
+
+Key Idea:
+    Use permutation matrices to represent sorting. Learn the matrix with the loss function.
+    [0 1 0] [x]    [y]
+    |1 0 0| |y|  = |x|
+    [0 0 1] [z]    [z]
+    Permutation Matrices are not smooth in the input space Hence relaxation is necessary for differentiability
+    Relaxation is done by using a double schocastic matrices i.e all row and column matrices sum to 1.
+
+    Unimodal
+    Double schochastic
+
+The idea of Permutation Matrices is taken from Neural sort - Neural sort (Impt ref)
+
+PLACKETT-LUCE DISTRIBUTIONS -> Very important to explain the rationale about using score as a probability
+    measure for our scoring function (Check section 2.1 of paper 2 (Neural Sort))
+    
 \section{Conclusion}
 
 \bibliographystyle{plain}
