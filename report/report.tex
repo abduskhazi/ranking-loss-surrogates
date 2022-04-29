@@ -726,8 +726,9 @@ The heavy bias that is present in the figures is actually not intended.
 This is because all observations should be treated equally in any training/fine-tuning step.
 Hence it is better to restart the model before fine tuning step at each optimization step.
 
-The second reason is that we may not be able to get out of the local minima.
-Support using a diagram.
+The second reason is that the model may get stuck at a stubborn local minima at any fine tuning step n $1 <= n <= 100$.
+Coming out of this local minima may require vastly different data points than actually seen.
+This is not generally the case in our sequential optimization.
 
 \section{Few Shot BO: Deep Kernel Learning}
 Scaling should be ignored because it gives very bad results.
