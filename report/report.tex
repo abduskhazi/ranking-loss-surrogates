@@ -70,6 +70,8 @@ This thesis studies various existing approaches to HPO and proposes a new idea f
 The proposed idea in this thesis is called \textbf{HPO using Ranking Loss Surrogates}. 
 The results obtained using this model are compared against the state-of-the-art results obtained using models like FSBO,  RGPE,  TAF, and others. 
 
+\section{Methodology}
+
 \section{Problem Definition - HyperParameter Optimization}
 To find out the best hyper-parameter for any machine learning model $m$, we must first quantify a given hyper-parameter configuration $\textbf{x}$ by a real-valued number $v \in \mathbb{R}$.
 If we define that
@@ -106,7 +108,7 @@ $$
 
 Hyper-parameter optimization is different from other optimization methods because it has different constraints.
 It is because of the peculiar properties of the hyper-parameter search spaces.
-Finding out the correct hyper-parameter setting is generally not feasible using a brute-force approach (trying out all possible combinations of hyper-parameters) because the search space itself has many dimensions, and the search space may be continous.
+Finding out the correct hyper-parameter setting is generally not feasible using a brute-force approach (trying out all possible combinations of hyper-parameters) because the search space itself has many dimensions, and the search space may be continuous.
 More specifically,  some of the important constraints of this optimization problem are:
 
 \begin{enumerate}
@@ -317,18 +319,17 @@ The following functions are some of the most prominent acquisition functions fou
 
 \section{Deep Ensembles}
 
-Artificial Neural Networks are machine learning models with very high representational capacity.
-[high representation capacity reference]
-Due to this property,  one can think of using them as surrogates for our HPO objective function $f$.
-But the issue is that ANNs do not quantify uncertainity trivially.
+Deep Neural Networks (DNNs) are machine learning models with very high representational capacity~\cite{Goodfellow-et-al-2016}.
+Due to this property,  one can use them as surrogates for the HPO objective function $f$.
+But the issue is that DNNs do not quantify uncertainity trivially.
 In the following section we discuss briefly the methods used to do uncertainty quantification using neural networks.
 
 \subsection{Uncertainty Quantification in ANN}
 
 In the current literature,  uncertainty quantification methods using deep neural networks can be broadly classified into the following methods:
 \begin{itemize}
-\item Bayesian Nueral networks. [citation]
-\item Ensemble Approach using monte carlo.
+\item Bayesian Nueral networks~\cite{Goan-2020}.
+\item Ensemble Approach using monte carlo~\cite{JMLR:v15:srivastava14a}.
 \item Ensemble approach using multiple neural networks.
 \end{itemize}
 
@@ -659,32 +660,60 @@ only fine tune best fit is not giving good results. Investigation in progress.
 
 
 \chapter{Baseline Implementations}
+
+
+In this thesis 2 baselines have been implemented
+\begin{itemize}
+\item Deep Ensembles
+\item FSBO with Deep Kernel Networks
+\end{itemize}
+
+Both these models have built in capability for uncertainty estimation.
+Hence we have to use an acquisition function during the fine tuning step.
 We use expected improvement in all models that deal with uncertainty.
 This is to maintain constant results across all the models.
+We also use this in the proposed idea.
 Also due to the advantages of this acquisition function.
 
-\section{Dataset}
-This section defines the requirement of the dataset and why meta data sets are important
-\subsection{Models used}
-\subsection{Meta dataset}
-Various search spaces sizes
-\subsection{HPO\_B Dataset}
+Few Shot Bayesian Optimization deals has to be run in 2 chronological steps
+\begin{itemize}
+\item Meta training using the existing meta data
+\item Fine tuning during the optimization cycle.
+\end{itemize}
+
+For the purpose of meta training,  there is an existing meta dataset called HPOB.
+HPOB is a meta dataset for blackbox HPO~\cite{pineda2021hpob}.
+% ~\cite{DBLP:journals/corr/abs-2106-06257}.
+The following section describes HPOB dataset and its organization
+
+\section{Meta Dataset}
+The meta data set in HPOB is divided into test and train data.
+Using meta dataset,  one can learn meta learn a model using the training split.
+Then the model is evaluated in the testing split.
+This data approach is used both in the baselines and proposed idea models.
+
+\subsection{HPO-B Dataset}
 How HPOB datasets is organised.
-%Assuming that we are dealing with only discrete case ==> X_pen is None.
-First fitting the model based on observations.
-Predicting then the pending configuration for evaluation.
-Returning the index that gives us the best results.
+The meta data in HPOB is formatted in a json format.
+
+\subsection{HPO-B evaluation}
+To use the HPO-B code,  one must write function observe\_and\_suggest and observe\_and\_suggest\_continous to deal with discrete and continous optimisation case respectively.
+Due to out of scope nature of the continous case,  in our implementation we assume that we are dealing only with the discrete case only.
+
+The implementation of observe\_and\_suggest functions differs based on the surrogate model used by our problem.
+
+The following 2 sections discuss the implementation details of both these methods.
+
+
 
 \section{Deep Ensemble}
-Estimator architecuture used.
+As discussed in the literature review section,  deep ensemble uses a list of artificial neural networks to find out uncertainties given data points D.
 
-Enforcing the positivity of the variance as mentioned in the paper.
-Also adding 1e-6 for numerical stability
-
-\subsection{Adverserial training and not using it}
-%    # Generation of adversarial examples
-%    # Using eps as 1\% as recommended in the paper
-%    # input_space_range = torch tensor that specifies the range in each dimension
+Some of the important implementation details are
+\begin{itemize}
+\item We make sure that we enforce the positivity of the variance (as mentioned in the paper) by adding $exp(-6)$ to the values for numerical stability.
+\item We do not use adverserial examples because it was giving bad results.
+\end{itemize}
     
 \subsection{Requirement of restarting training}
 We find in our experiments that the deep ensemble performs much better in our HPO cycle when we train it from scratch at every acquisition step.
@@ -730,7 +759,26 @@ The second reason is that the model may get stuck at a stubborn local minima at 
 Coming out of this local minima may require vastly different data points than actually seen.
 This is not generally the case in our sequential optimization.
 
+\subsection{Optimization Procedure}
+Deep ensemble is not a meta transfer model.
+So it does not use the train data of HPO-B meta dataset.
+It directly optimises during the optimisation loop.
+
+The optimization loop can seen in the following algorithm.
+
+The follwoing should be written in an algorithm.
+First fitting the model based on observations.
+Predicting then the pending configuration for evaluation.
+Returning the index that gives us the best results.
+
 \section{Few Shot BO: Deep Kernel Learning}
+
+Some of the important implementation details are
+\begin{itemize}
+\item Scaling is ignore because it gives very bad results.
+\item We first used RBF kernel,  then we used matern kernel for this.
+\end{itemize}
+
 Scaling should be ignored because it gives very bad results.
 if scaling:
 %# Scale the labels according to the l and u for scale invariance.
@@ -740,24 +788,32 @@ if scaling:
  %## Another possibility of a kernel - self.covar_module =
    %     ## gpytorch.kernels.ScaleKernel(gpytorch.kernels.MaternKernel(nu=config["nu"], ard_num_dims=dims if config["a    rd"] else None))
 
+We used early stopping mechanism for this because we wanted to avoid
+\begin{itemize}
+\item Huge computation costs
+\item overfitting of the model during training.
+\end{itemize}
+We saved the best model in our implementation and if the validation loss went greater than
+lowest validation loss for some number of steps,  then we stop the meta training.
 
-\subsection{Save best model}
 
-\subsection{Early quict}
 
-\subsection{Implementation not in par with that of paper.}
+\subsection{Implementation issues}
+After completing the own implementation,  we found that the results obtained were not in par with the paper.
+For this reason, the results are used only for the first stage.
+The results already present in the benchmarking data of~\cite{pineda2021hpob} were used for comparing this result with our implementation.
 
 \subsection{Using cosine annehealing }
-during the implementation to get better fine tune loss curves.
+We obtined loss curves that were very bad during the training and were varying quite a bit
+The reason was that the learning rate during the fine tuning was too high
+Hence we used cosine annehealing for this to get the a better local minima.
+
+Show before and after curves.
 
 
-Issues faced during implementions of all models need to be written.
+The results of this are discussed in the results section.
 
 \chapter{Proposed Idea: Ranking Loss Surrogates}
-
-The search spaces that have less data need more uncertainty
-The search spaces having more data need less uncertainty
-
 We use list wise ranking losses because they have been found to be more efficient
 
 Main Idea:
@@ -863,6 +919,10 @@ Architectecture with deep sets.. Image
 \section{Uncertainty implementation}
 Mention about the requirement to use Module list.
 Show the new architecture.
+
+The search spaces that have less data need more uncertainty
+The search spaces having more data need less uncertainty
+
 
 \subsection{Independent training}
 
