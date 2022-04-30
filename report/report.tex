@@ -13,6 +13,12 @@
 \usepackage{caption}
 \usepackage{subcaption}
 
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage{booktabs}
+
 \hypersetup{
     colorlinks=true,
     linkcolor=blue,
@@ -67,7 +73,7 @@ The performance of any machine learning model is sensitive to the hyper-paramete
 Instead of using a new model type, it is more helpful to tune the hyper-parameters of an existing model to improve its performance.
 Learning the best hyper-parameter for an ML model is called, Hyperparameter optimization (HPO in short).
 This thesis studies various existing approaches to HPO and proposes a new idea for the same using the concept of ranking.
-The proposed idea in this thesis is called \textbf{HPO using Ranking Loss Surrogates}. 
+The proposed idea in this thesis is called \textbf{Hyperparamter Optimization using Ranking Loss Surrogates}. 
 The results obtained using this model are compared against the state-of-the-art results obtained using models like FSBO,  RGPE,  TAF, and others. 
 
 \section{Methodology}
@@ -356,6 +362,7 @@ One is by using Monte Carlo Dropout during evaluation. [citation of monte carlo 
 One way to do Hyper Parameter Optimization is by using 
 Uncertainty prediction is the key in the paper~\cite{DeepEnsemblePaper}.
 
+\iffalse
 % Research Paper: https://arxiv.org/pdf/1612.01474.pdf
   2 
   3 Problem: How can we use DNN to quantify uncertainty in a prediction?
@@ -409,7 +416,7 @@ Uncertainty prediction is the key in the paper~\cite{DeepEnsemblePaper}.
  51 Doubts:
  52     Could not understand section 3.5 last paragraph correctly.
  53 
-
+\fi
 
 \section{RGPE}
 Read the FSBO paper and write the summary like that or read  the RGPE paper
@@ -421,6 +428,7 @@ Some other model if also necessary and you mention this in your report.
 
 \section{Deep Kernel Learning}
 
+\iffalse
 Paper: https://arxiv.org/pdf/2101.07667.pdf
 
 Problem Domain: Hyperparameter searching.
@@ -486,6 +494,7 @@ Fine tune it on 1 dataset and evaluate using Expected Improvement
     i.e run loop like the training with the given data.
 
 Did not use strictGP --> Is it a problem?
+\fi
 
 \section{Ranking Loss functions}
 
@@ -526,11 +535,11 @@ On the contrary, if the rank is high it can bear more objects below it as Loss w
            
 Correspondingly,  the loss function that aids in learning this list-wise ranking function is called list wise ranking loss function.
 
+
+\iffalse
 Main Idea:
     Given a set of objects, we need to rank the objects. (E.g. Ranking documents based on relevance to a query)
-  
     
-   
 
 3 types of ranking functions:
 
@@ -655,6 +664,7 @@ Best Model for training and ft giving auful resuts - Reason can be that we are s
 Hence we are start only ft best model. Ih the hope that we will get better resutls.
 only fine tune best fit is not giving good results. Investigation in progress. 
 
+\fi
 
 \section{Deep Sets}
 
@@ -818,18 +828,19 @@ The results of this are discussed in the results section.
 
 \chapter{Proposed Idea: Ranking Loss Surrogates}
 
-In this chapter we chronologically build a surrogate model based on Ranking losses.
+In this chapter we chronologically build a Ranking loss surrogate model for HPO using SMBO.
 First we discuss the implementation of loss function used.
 Thereafter we discuss a case study of sorting.
 Then we add the following components one after another
 
 \begin{itemize}
+\item Deep Set
 \item Weight
-\item uncertainty
+\item Uncertainty
 \item Different training mechanisms.
 \end{itemize}
 
-Firstly,  we decided to model a scoring function using a deep neural network.
+We decided to model a scoring function using a deep neural network.
 This is because the representational capacity of the neural network is very high.
 
 
@@ -843,22 +854,10 @@ Our implementation is given by the following algorithm
 Write the algorithm of our implementation here
 
 Implementation given by the paper~\cite{Pobrotyn2020ContextAwareLT}.
+Here give the equations used by this algorithm
 
 Main Idea:
     We need to use ranking losses instead of other methods for the purpose of HPO algorithms.
-
-
-    Creating a toy example to build and run our ranking function
-        Can our scoring function learn to sort a list of numbers? 
-
-Advantages of the proposed Idea:
-    The amount of data instances for training is exponential in number. Which is very good for a deep learning model
-    For example if we have 100 observation set and we use a list size of 15 to train our model, we will have 100C15
-    unique instances to train.
-
-
-Observed disadvantages:
-    The learnt model is extremely sensitive to the learning rate and the number of epochs
 
 
 Applying this to HPOB... (With or without query)
@@ -866,29 +865,33 @@ Applying this to HPOB... (With or without query)
     Even with this the loss curves are very smooth if we use 2 * tanh(0.01 * x)
 
     
-\section{Case study: Sorting}
+\section{Case study}
+
+In this case study,  we study how the learnt ranking function behaves when we use different parameters to train.
+For this a toy example of sorting is considered.
 
 
+\subsection{Sorting Problem}
+    
+The main problem that we try to solve here is - Is it possible to train a ranking function using the Listwise maximum likelihood estimator. 
+such that it learns to sort a given list of numbers in the descending order?
 
-\subsection{IDEA}
 
-\subsection{Observations}
-            Obervations after completing the implementation of toy example with list wise ranking function.
-        1. We do not have any output range of values as a reference. Hence the model can learn score values arbitrarily large
-        2. We must control the output domain so that the training does not lead to underflow or overflow.
-            This is because we use the exp function for getting the strict positive increasing function.
-            Perhaps using other increasing positive function helps? (More reading/research required on this topic)
-        3. This may make the output domain restrictive. Works for now, however, we may need a better solution for this.
-        4. The learnt model is extremely sensitive to the learning rate and the number of epochs
-  
-Check the affet of list / batch size on the results
-Hence propose using a higher list size.
-tabulate the results
-        
-IDEA:
-Can our loss function train the model to sort numbers?
-List of numbers to train with = {1 to 100}
-List of numbers to validate with = {1 to 100}
+Consider a list $l = \{x_1, x_2, ...x_n\}$ where $x_i \in [1, 100]$.
+Let $s(x \mid \theta) \mapsto \mathbb{R}$ be our scoring function parameterised by $\theta$.
+One list contains $n$ data points sampled from $[1, 100]$.
+Let $\textrm{L}_{\textrm{mle}}$ represent the maximum log likelihood loss.
+Using this loss function we optimize for the following equation
+\begin{equation}
+\underset{\theta}{\arg\min} \;\;\; \textrm{L}_{\textrm{mle}}(s(l \mid \theta),  - k * l)
+\end{equation}
+where $k \in \mathbb{R}$.
+ 
+Note that second parameter of list wise loss function is scale invariance because it only uses the rank of the 
+objects in the list and not the objects directly.
+Hence scaling the list has no effect on the loss output.
+This can be seen from the algorithm of implementation.  (refer algorithm)
+
 %    #       Result -> Sorting possible provided the output range of the model not restricted
 %    #       For now we sample train/val data from the same distribution.
   %  #   List of numbers to test with = {-1 to -100}
@@ -896,7 +899,79 @@ List of numbers to validate with = {1 to 100}
  %   #                 is not distribution dependent.
  %   #   Check the percentage of the lists in the correct sorted order.
 
+The validation data taken from 3 different ranges
+\begin{itemize}
+\item Same range as the training data $[1, 100]$
+\item Completely different range as seen by the scorer during training i.e $[-100, -1]$
+\item Hybrid range i.e $[-50, 50]$
+\end{itemize} 
+
+To evaluate our scorer,  we first sample the validation data from the above ranges,
+We then check the percentage of the lists that are correctly sorted during our testing time.
+The training batch is 100 and the results are averaged over 5 runs.
+
+tabulate the results and Check the affect of list / batch size on the results
+
+\begin{table} [h!]
+\centering
+\resizebox{\linewidth}{!} {
+\begin{tabular}{ | c | c | c | c | c | c | }
+\hline
+\textbf{Training Epochs} & \textbf{List size} & \textbf{Learning Rate} & \textbf{In-range Acc.} & \textbf{Out-range Acc.} & \textbf{Hybrid Acc.} \\ [0.5 ex]
+\hline \hline
+1000 & 3 & 0.0001 & 0.99 & 0.99 & 0.99\\
+%100 & 3 & 0.001 & 0.99 & 0.99 & 0.99\\
+%100 & 3 & 0.01 & 0.0 & 0.0 & 0.0\\
+%457 & - & Linear & 0.458 & 0.419 & 0.328\\
+%457 & - & Linear Duplication & 0.460 & 0.428 & 0.327\\
+%\textbf{49} & \textbf{Genetic}\footnotemark[1] & \textbf{Hyperbolic} & \textbf{$\approx$0.377} & \textbf{$\approx$0.374}  & \textbf{$\approx$0.364}\\
+%40 & Pearson Correlation & Hyperbolic & 0.287 & 0.278  & 0.285 \\ 
+%40 & Spearman Correlation & Hyperbolic & 0.289 & 0.294  & 0.290 \\ 
+%176 & Manual & Hyperbolic & 0.362  & 0.346  & 0.331\\ [1ex]
+\hline
+\end{tabular}
+}
+\caption{Sorting Accuracies at test time}
+\label {table:1}
+\end{table}
+
+\iffalse
+\begin{table}[ht]
+\centering
+% spacing in table
+% \ra{1.3}  % Commenting this could not get this function right
+\begin{tabular}{@{}lr@{}}
+  \toprule
+  Epochs listsize & Accuracy(within range) Accuracy outside range \\ \midrule
+  A    & 82.47 $\pm$ 3.21 \\
+  B    & 78.47 $\pm$ 2.43 \\
+  C    & 84.30 $\pm$ 2.35 \\
+  D    & 86.81 $\pm$ 3.01 \\
+  \bottomrule
+\end{tabular}
+
+    \caption[Table caption]{\textbf{Sorting accuracy.} Obtained after sorting the numbers based on the scorer's results\\}
+    \label{tab:accuracy}
+\end{table}
+\fi
+
 show the architecture of with only scorer
+
+
+\subsection{Observations}
+As we know that the second parameter of the loss function is not bound to any range, 
+the score function itself can learn scores of arbitrary range.
+Hence the model can learn score values arbitrarily large.
+We must control the output domain so that the training does not lead to underflow or overflow.
+This is because we use the exp function for getting the strict positive increasing function.
+
+The restriction of output was done using $\tanh()$ so that the range of values of the scorer remains within a managable value.
+One drawback we found was that the learnt model wsa extremely sensitive to the learning rate and the number of epochs.
+% The following observations were made in the case study of sorting example
+% Perhaps using other increasing positive function helps? (More reading/research required on this topic)
+
+  
+Propose using a higher list size.
 
 \section{Scoring function analysis}
 
@@ -984,7 +1059,14 @@ Implementation yet to be done
 
 \section{Advantages and Limitations}
 Compare this loss function and method with other base lines..
+Advantages of the proposed Idea:
+    The amount of data instances for training is exponential in number. Which is very good for a deep learning model
+    For example if we have 100 observation set and we use a list size of 15 to train our model, we will have 100C15
+    unique instances to train.
 
+Observed disadvantages:
+    The learnt model is extremely sensitive to the learning rate and the number of epochs
+    
 
 \chapter{Experiments and Results}
 
@@ -1036,6 +1118,7 @@ as explained by sebastian.
 \section{Further work}
 Further study required with other baselines that deal with ranking loss.
 
+\iffalse
 Paper: https://arxiv.org/pdf/2012.06731.pdf
        (Impt Ref) https://arxiv.org/pdf/1903.08850.pdf
 
@@ -1054,7 +1137,8 @@ The idea of Permutation Matrices is taken from Neural sort - Neural sort (Impt r
 
 PLACKETT-LUCE DISTRIBUTIONS -> Very important to explain the rationale about using score as a probability
     measure for our scoring function (Check section 2.1 of paper 2 (Neural Sort))
-    
+\fi 
+ 
 \section{Conclusion}
 
 \bibliographystyle{plain}
