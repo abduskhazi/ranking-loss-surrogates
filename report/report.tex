@@ -813,31 +813,43 @@ Show before and after curves.
 
 The results of this are discussed in the results section.
 
+
+
+
 \chapter{Proposed Idea: Ranking Loss Surrogates}
-We use list wise ranking losses because they have been found to be more efficient
+
+In this chapter we chronologically build a surrogate model based on Ranking losses.
+First we discuss the implementation of loss function used.
+Thereafter we discuss a case study of sorting.
+Then we add the following components one after another
+
+\begin{itemize}
+\item Weight
+\item uncertainty
+\item Different training mechanisms.
+\end{itemize}
+
+Firstly,  we decided to model a scoring function using a deep neural network.
+This is because the representational capacity of the neural network is very high.
+
+
+\section{Loss function implementation}
+The loss function used is listMLE
+As discussed in the literature review,  we use list wise ranking losses because they have been found to be more efficient in most general case.
+the implementation is done by removing to element check comments
+The latest implementation is used due to its efficiency otherwise it is the same. (note)
+
+Our implementation is given by the following algorithm
+Write the algorithm of our implementation here
+
+Implementation given by the paper~\cite{Pobrotyn2020ContextAwareLT}.
 
 Main Idea:
     We need to use ranking losses instead of other methods for the purpose of HPO algorithms.
 
 
-Documentation (Agenda):
-    First we need to Implement/create the infrastructure to learn ranking loss functions.
-    So we need to read and understand / revise the ranking losses concept.
-
-    We decided to model a ranking function using a deep neural network.
-        Reason: reprentation capacity.
-%        For now defined a [input_dim, (32, RELU) , (32, RELU), 1]
-%
     Creating a toy example to build and run our ranking function
         Can our scoring function learn to sort a list of numbers? 
-
-    Obervations after completing the implementation of toy example with list wise ranking function.
-        1. We do not have any output range of values as a reference. Hence the model can learn score values arbitrarily large
-        2. We must control the output domain so that the training does not lead to underflow or overflow.
-            This is because we use the exp function for getting the strict positive increasing function.
-            Perhaps using other increasing positive function helps? (More reading/research required on this topic)
-        3. This may make the output domain restrictive. Works for now, however, we may need a better solution for this.
-        4. The learnt model is extremely sensitive to the learning rate and the number of epochs
 
 Advantages of the proposed Idea:
     The amount of data instances for training is exponential in number. Which is very good for a deep learning model
@@ -853,29 +865,46 @@ Applying this to HPOB... (With or without query)
     First learning from first search space.
     Even with this the loss curves are very smooth if we use 2 * tanh(0.01 * x)
 
-
-Possible extensions:
-    Top ranked enhanced loss can be used as it is simple to understand and implement
-    Section 4 in https://arxiv.org/pdf/1707.05438.pdf
-    This is because it is more important to get the correct top rankings than later rankings
-    In fact the top1 rank is what is most important to us in any optimization step of an HPO algorithm.
     
-\section{case study: Sorting}
+\section{Case study: Sorting}
 
+
+
+\subsection{IDEA}
+
+\subsection{Observations}
+            Obervations after completing the implementation of toy example with list wise ranking function.
+        1. We do not have any output range of values as a reference. Hence the model can learn score values arbitrarily large
+        2. We must control the output domain so that the training does not lead to underflow or overflow.
+            This is because we use the exp function for getting the strict positive increasing function.
+            Perhaps using other increasing positive function helps? (More reading/research required on this topic)
+        3. This may make the output domain restrictive. Works for now, however, we may need a better solution for this.
+        4. The learnt model is extremely sensitive to the learning rate and the number of epochs
+  
 Check the affet of list / batch size on the results
 Hence propose using a higher list size.
-
-%    # IDEA:
-%    #   Can our loss function train the model to sort numbers?
-%    #   List of numbers to train with = {1 to 100}
-%    #   List of numbers to validate with = {1 to 100}
+tabulate the results
+        
+IDEA:
+Can our loss function train the model to sort numbers?
+List of numbers to train with = {1 to 100}
+List of numbers to validate with = {1 to 100}
 %    #       Result -> Sorting possible provided the output range of the model not restricted
 %    #       For now we sample train/val data from the same distribution.
   %  #   List of numbers to test with = {-1 to -100}
 %    #       Result -> This is not possible because the model will map this to extreme values as it
  %   #                 is not distribution dependent.
  %   #   Check the percentage of the lists in the correct sorted order.
-    
+
+
+
+\section{Scoring function analysis}
+
+\subsection{Scoring function range}
+
+\section{Optimization cycle}
+Explain the training loop with an algorithm.
+
 explain get\_batch\_HPBO implementation how it is important to have all the data sets
 How it is organised into a higher order tensor
 TO compute 2 things can be done
@@ -884,22 +913,19 @@ TO compute 2 things can be done
 
 replace=False thing in the above function and why it is important.
 
-
-
-\section{Scoring function analysis}
-\subsection{Scoring function range}
-
-\section{Optimization cycle}
-Explain the training loop with an algorithm.
 \subsection{Meta training}
-\subsection{Fine tuning}
+Give the meta training algorithm
 
-\section{Loss function implementation}
-The loss function used is listMLE
-the implementation is done by removing to element check comments
-The latest implementation is used due to its efficiency otherwise it is the same. (note)
+\subsection{Fine tuning}
+Given the Fine tuning algorithm.
 
 \subsection{Weighted Loss}
+Possible extensions:
+    Top ranked enhanced loss can be used as it is simple to understand and implement
+    Section 4 in https://arxiv.org/pdf/1707.05438.pdf
+    This is because it is more important to get the correct top rankings than later rankings
+    In fact the top1 rank is what is most important to us in any optimization step of an HPO algorithm.
+    
 Paper = Top-Rank Enhanced Listwise Optimization for Statistical Machine Translation
 
 Weighting becomes important because we are doing fine tuning at every step.
@@ -911,6 +937,7 @@ Can be used to select best n configs and then evaluated at random based on the r
 Parallelisation of elements is possible.
 
 show the architecture of with only scorer
+
 \section{Use of Deep Sets}
 why are deep sets important. 
 
@@ -925,9 +952,11 @@ The search spaces having more data need less uncertainty
 
 
 \subsection{Independent training}
+Implementation yet to be done
+
 
 \subsection{Training with mean and restricted output}
-
+Implementation yet to be done
 
 
 \section{Advantages and Limitations}
