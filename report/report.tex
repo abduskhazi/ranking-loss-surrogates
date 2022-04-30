@@ -715,7 +715,7 @@ Some of the important implementation details are
 \item We do not use adverserial examples because it was giving bad results.
 \end{itemize}
     
-\subsection{Requirement of restarting training}
+\subsection{Requirement of restarting training}\label{sec:restart}
 We find in our experiments that the deep ensemble performs much better in our HPO cycle when we train it from scratch at every acquisition step.
 This is counter intuitive because an already trained model will converge to a local optima quickly.
 The reason for this performance however is that the model gets biased towards the points that are observed at the beginning of the optimisation cycle.
@@ -896,7 +896,7 @@ List of numbers to validate with = {1 to 100}
  %   #                 is not distribution dependent.
  %   #   Check the percentage of the lists in the correct sorted order.
 
-
+show the architecture of with only scorer
 
 \section{Scoring function analysis}
 
@@ -916,32 +916,55 @@ replace=False thing in the above function and why it is important.
 \subsection{Meta training}
 Give the meta training algorithm
 
-\subsection{Fine tuning}
+\subsection{Fine tuning}\label{sec:rlfinetune}
 Given the Fine tuning algorithm.
-
-\subsection{Weighted Loss}
-Possible extensions:
-    Top ranked enhanced loss can be used as it is simple to understand and implement
-    Section 4 in https://arxiv.org/pdf/1707.05438.pdf
-    This is because it is more important to get the correct top rankings than later rankings
-    In fact the top1 rank is what is most important to us in any optimization step of an HPO algorithm.
-    
-Paper = Top-Rank Enhanced Listwise Optimization for Statistical Machine Translation
-
-Weighting becomes important because we are doing fine tuning at every step.
-Show the equation for weighting
-Used log weighting because 
-Advantages:
-Can be used to select best n configs and then evaluated at random based on the ranks. This is not as trivial to get in otherplaces. So there is an amount of parallelism that can be built it.
-
-Parallelisation of elements is possible.
-
-show the architecture of with only scorer
+For reasons described in the~\ref{sec:restart},  we restart before finetuning at every optimization cycle step.
 
 \section{Use of Deep Sets}
 why are deep sets important. 
 
 Architectecture with deep sets.. Image
+
+
+\section{Weighted Loss}
+General list wise loss functions are only required in the problem domains where it is essential to get the ranks of all the objects correctly.
+In our case where ranking functions are used as surrogates for the black box hyper-parameter optimization,
+this constraint can be relaxed significantly.
+As discussed in section~\ref{sec:rlfinetune},  we always restart our ranking function model before
+fine-tuning it.
+Hence,  after fine-tuning we are only bothered about getting the best hyper parameter configuration from the pending configurations.
+This means that it is more important for our ranking function to order the the top part of the list than the bottom part.
+In this section we describe and propose the concept of weighted ranking loss functions.
+
+The concept of biased ranking loss is discussed in the paper, "Top-Rank Enhanced Listwise Optimization for Statistical Machine Translation" by  Chen et. al~\cite{TRLWO}.
+Here Chen et. al proposes a position based weighting of the ranking function such that:
+\begin{equation}
+w_j = \frac{k - j + 1}{\Sigma_{t=1}^k t}
+\end{equation}
+where $w_j$ represents weight of the object at position $j$ in the ordered list.
+
+However, there are also some simple weightings that a person can use.  For instance inverse linear weighting given by
+\begin{equation}
+w_j = \frac{1}{j}
+\end{equation}
+and inverse logrithmic weighting given by
+\begin{equation}
+w_j = \frac{1}{\log (j+1)}
+\end{equation}
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.75]{images/weightingfunctions}
+    \caption{Different Weighting Functions}
+    \label{fig:weightingfunctions}
+\end{figure}
+
+Figure~\ref{fig:weightingfunctions} shows all 3 weighting strategies.
+Of the 3 weighting strategies,  the inverse log weighting was found to be most suitable.
+This is because the this weighting is by far the least sharp.
+As the weighting does not decrease very rapidly,  there is a possibility of parallelizing during the optimization cycle.
+For example,  at every step the top $n$ configurations can be selected,  and all of them can be tried for optimization.
+The parallelism is less effective when using inverse linear weighting or weighting proposed by Chen et al.
 
 \section{Uncertainty implementation}
 Mention about the requirement to use Module list.
