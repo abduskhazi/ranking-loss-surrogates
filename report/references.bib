@@ -5,19 +5,40 @@
 }
 
 @misc{DeepEnsemblePaper,
-      title={Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles},
-      author={Balaji Lakshminarayanan and Alexander Pritzel and Charles Blundell},
-      year={2017},
-      eprint={1612.01474},
-      archivePrefix={arXiv},
-      primaryClass={stat.ML}
+  doi = {10.48550/ARXIV.1612.01474},
+  
+  url = {https://arxiv.org/abs/1612.01474},
+  
+  author = {Lakshminarayanan, Balaji and Pritzel, Alexander and Blundell, Charles},
+  
+  keywords = {Machine Learning (stat.ML), Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
+  
+  title = {Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles},
+  
+  publisher = {arXiv},
+  
+  year = {2016},
+  
+  copyright = {arXiv.org perpetual, non-exclusive license}
 }
 
-@misc{SMBOPaper,
-      title={Sequential Model-Based Optimization for
-General Algorithm Configuration},
-      author={Frank Hutter, Holger H. Hoos and Kevin Leyton-Brown},
-      howpublished = "\href{https://ml.informatik.uni-freiburg.de/wp-content/uploads/papers/11-LION5-SMAC.pdf}{Paper}"
+
+
+@inproceedings{SMBOPaper,
+author = {Hutter, Frank and Hoos, Holger H. and Leyton-Brown, Kevin},
+title = {Sequential Model-Based Optimization for General Algorithm Configuration},
+year = {2011},
+isbn = {9783642255656},
+publisher = {Springer-Verlag},
+address = {Berlin, Heidelberg},
+url = {https://doi.org/10.1007/978-3-642-25566-3_40},
+doi = {10.1007/978-3-642-25566-3_40},
+abstract = {State-of-the-art algorithms for hard computational problems often expose many parameters that can be modified to improve empirical performance. However, manually exploring the resulting combinatorial space of parameter settings is tedious and tends to lead to unsatisfactory outcomes. Recently, automated approaches for solving this algorithm configuration problem have led to substantial improvements in the state of the art for solving various problems. One promising approach constructs explicit regression models to describe the dependence of target algorithm performance on parameter settings; however, this approach has so far been limited to the optimization of few numerical algorithm parameters on single instances. In this paper, we extend this paradigm for the first time to general algorithm configuration problems, allowing many categorical parameters and optimization for sets of instances. We experimentally validate our new algorithm configuration procedure by optimizing a local search and a tree search solver for the propositional satisfiability problem (SAT), as well as the commercial mixed integer programming (MIP) solver CPLEX. In these experiments, our procedure yielded state-of-the-art performance, and in many cases outperformed the previous best configuration approach.},
+booktitle = {Proceedings of the 5th International Conference on Learning and Intelligent Optimization},
+pages = {507–523},
+numpages = {17},
+location = {Rome, Italy},
+series = {LION'05}
 }
 
 @misc{GPTutorial,
@@ -31,11 +52,14 @@ General Algorithm Configuration},
   copyright = {arXiv.org perpetual, non-exclusive license}
 }
 
-@misc{MITMLBook,
-      title={Machine Learning: A Probabilistic Perspective},
-      author={K. P. Murphy},
-      archivePrefix={The MIT Press},
-      year = {2012}
+
+@book{MITMLBook,
+author = {Murphy, Kevin P.},
+title = {Machine Learning: A Probabilistic Perspective},
+year = {2012},
+isbn = {0262018020},
+publisher = {The MIT Press},
+abstract = {Today's Web-enabled deluge of electronic data calls for automated methods of data analysis. Machine learning provides these, developing methods that can automatically detect patterns in data and then use the uncovered patterns to predict future data. This textbook offers a comprehensive and self-contained introduction to the field of machine learning, based on a unified, probabilistic approach. The coverage combines breadth and depth, offering necessary background material on such topics as probability, optimization, and linear algebra as well as discussion of recent developments in the field, including conditional random fields, L1 regularization, and deep learning. The book is written in an informal, accessible style, complete with pseudo-code for the most important algorithms. All topics are copiously illustrated with color images and worked examples drawn from such application domains as biology, text processing, computer vision, and robotics. Rather than providing a cookbook of different heuristic methods, the book stresses a principled model-based approach, often using the language of graphical models to specify models in a concise and intuitive way. Almost all the models described have been implemented in a MATLAB software package--PMTK (probabilistic modeling toolkit)--that is freely available online. The book is suitable for upper-level undergraduates with an introductory-level college math background and beginning graduate students. }
 }
 
 
@@ -104,15 +128,40 @@ doi = {10.1038/nature14539}
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
-@article{expectedImprovementReference,
-  author    = {Jones, Donald R. and
-               Schonlau, Matthias and
-               Welch, William J.},
-  title     = {Efficient Global Optimization of Expensive Black-Box Functions},
-  journal   = {Journal of Global Optimization},
-  year      = {1998},
-  url       = {https://doi.org/10.1023/A:1008306431147},
-  eprinttype = {arXiv}
+@Article{Jones1998,
+author={Jones, Donald R.
+and Schonlau, Matthias
+and Welch, William J.},
+title={Efficient Global Optimization of Expensive Black-Box Functions},
+journal={Journal of Global Optimization},
+year={1998},
+month={Dec},
+day={01},
+volume={13},
+number={4},
+pages={455-492},
+abstract={In many engineering optimization problems, the number of function evaluations is severely limited by time or cost. These problems pose a special challenge to the field of global optimization, since existing methods often require more function evaluations than can be comfortably afforded. One way to address this challenge is to fit response surfaces to data collected by evaluating the objective and constraint functions at a few points. These surfaces can then be used for visualization, tradeoff analysis, and optimization. In this paper, we introduce the reader to a response surface methodology that is especially good at modeling the nonlinear, multimodal functions that often occur in engineering. We then show how these approximating functions can be used to construct an efficient global optimization algorithm with a credible stopping rule. The key to using response surfaces for global optimization lies in balancing the need to exploit the approximating surface (by sampling where it is minimized) with the need to improve the approximation (by sampling where prediction error may be high). Striking this balance requires solving certain auxiliary problems which have previously been considered intractable, but we show how these computational obstacles can be overcome.},
+issn={1573-2916},
+doi={10.1023/A:1008306431147},
+url={https://doi.org/10.1023/A:1008306431147}
+}
+
+@Article{Weiss2016,
+author={Weiss, Karl
+and Khoshgoftaar, Taghi M.
+and Wang, DingDing},
+title={A survey of transfer learning},
+journal={Journal of Big Data},
+year={2016},
+month={May},
+day={28},
+volume={3},
+number={1},
+pages={9},
+abstract={Machine learning and data mining techniques have been used in numerous real-world applications. An assumption of traditional machine learning methodologies is the training data and testing data are taken from the same domain, such that the input feature space and data distribution characteristics are the same. However, in some real-world machine learning scenarios, this assumption does not hold. There are cases where training data is expensive or difficult to collect. Therefore, there is a need to create high-performance learners trained with more easily obtained data from different domains. This methodology is referred to as transfer learning. This survey paper formally defines transfer learning, presents information on current solutions, and reviews applications applied to transfer learning. Lastly, there is information listed on software downloads for various transfer learning solutions and a discussion of possible future research work. The transfer learning solutions surveyed are independent of data size and can be applied to big data environments.},
+issn={2196-1115},
+doi={10.1186/s40537-016-0043-6},
+url={https://doi.org/10.1186/s40537-016-0043-6}
 }
 
 
@@ -128,13 +177,25 @@ doi = {10.1038/nature14539}
 }
 
 
-@article{Pobrotyn2020ContextAwareLT,
-  title={Context-Aware Learning to Rank with Self-Attention},
-  author={Przemyslaw Pobrotyn and Tomasz Bartczak and Mikolaj Synowiec and Radoslaw Bialobrzeski and Jaroslaw Bojar},
-  journal={ArXiv},
-  year={2020},
-  volume={abs/2005.10084}
+@misc{Pobrotyn2020ContextAwareLT,
+  doi = {10.48550/ARXIV.2005.10084},
+  
+  url = {https://arxiv.org/abs/2005.10084},
+  
+  author = {Pobrotyn, Przemysław and Bartczak, Tomasz and Synowiec, Mikołaj and Białobrzeski, Radosław and Bojar, Jarosław},
+  
+  keywords = {Information Retrieval (cs.IR), FOS: Computer and information sciences, FOS: Computer and information sciences},
+  
+  title = {Context-Aware Learning to Rank with Self-Attention},
+  
+  publisher = {arXiv},
+  
+  year = {2020},
+  
+  copyright = {arXiv.org perpetual, non-exclusive license}
 }
+
+
 
 @misc{TRLWO,
   doi = {10.48550/ARXIV.1707.05438},

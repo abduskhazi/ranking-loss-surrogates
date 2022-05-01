@@ -775,7 +775,7 @@ Both these FSBO and DE have built in capability for uncertainty estimation.
 Hence we have to use an acquisition function during the fine tuning step.
 We use expected improvement in all models that deal with uncertainty.
 This is to maintain constant results across all the models.
-We also use this in the proposed idea due to the advantages of this acquisition function~\cite{expectedImprovementReference}.
+We also use this in the proposed idea due to the advantages of this acquisition function~\cite{Jones1998}.
 
 Few Shot Bayesian Optimization deals has to be run in 2 chronological steps
 \begin{itemize}
@@ -1109,7 +1109,7 @@ w_j = \frac{1}{\log (j+1)}
 
 \begin{figure}[htb]
   \centering
-    \includegraphics[scale=0.75]{images/weightingfunctions}
+    \includegraphics[scale=0.65]{images/weightingfunctions}
     \caption{Different Weighting Functions}
     \label{fig:weightingfunctions}
 \end{figure}
@@ -1138,6 +1138,19 @@ Implementation yet to be done
 
 
 \section{Advantages and Limitations}
+For some search spaces,  during the course of training our ranking loss model,  the validation errors did not reduce at all.
+Figure~\ref{fig:NegativeLearning} shows an illustration of this using the training loss curves of search space id 5527.
+This is a classic example of negative transfer learning~\cite{Weiss2016}.
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.5]{images/NegativeLearning}
+    \caption{Training loss curve of ranking losses}
+    \label{fig:NegativeLearning}
+\end{figure}
+
+
+
 Compare this loss function and method with other base lines..
 Advantages of the proposed Idea:
     The amount of data instances for training is exponential in number. Which is very good for a deep learning model
@@ -1147,6 +1160,8 @@ Advantages of the proposed Idea:
 Observed disadvantages:
     The learnt model is extremely sensitive to the learning rate and the number of epochs
     
+\section{Limitations}
+Negative transfer?
 
 \chapter{Experiments and Results}
 
@@ -1193,8 +1208,6 @@ as explained by sebastian.
 
 \chapter{Conclusion}
 
-\section{Limitations}
-Negative transfer?
 
 \section{Further work}
 Further study required with other baselines that deal with ranking loss.
