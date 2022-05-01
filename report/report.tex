@@ -729,17 +729,15 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \caption{Structure of the meta data in the HPO-B benchmark}
 \label{fig:metadataorganization}
 \end{figure}
-Where \textbf{X} represents the set of configurations for a evaluated for a model in a particular data set.
+Where \textbf{X} represents the set of configurations for a evaluated for a model in a particular data set and
 \textbf{y} represents the evaluation results.
-
+The bayesian optimization used in our thesis can be started with different initial known HP configurations.
+One initial configuration, called a seed in the meta data, is provided by a set of values (or indices) in $\textbf{X}$ and $\textbf{y}$.
+There are a total of 5 seeds provided for a search space and dataset combination.
 
 The meta data in HPO-B comes in 3 versions namely \textbf{HPO-B-v1},  \textbf{HPO-B-v2}, and \textbf{HPO-B-v3}.
-Of this \textbf{HPO-B-v2} contains distlilled the search spaces that have the most data and 
-\begin{itemize}
-\item Organisation of HPO-B (Diagram using tzk...)
-\item Seed used for randomness
-\item Comparing only HPO-B-v3 for consitency in compare as recommended in the paper.
-\end{itemize}
+Of this \textbf{HPO-B-v3} contains distlilled the search spaces that have the most datasets and can be split is split into train,  validation and test sets. 
+
 
 The meta data set in HPOB is divided into test and train data.
 Using meta dataset,  one can learn meta learn a model using the training split.
@@ -747,14 +745,16 @@ Then the model is evaluated in the testing split.
 This data approach is used both in the baselines and proposed idea models.
 
 \subsection{HPO-B Dataset}
-How HPOB datasets is organised.
-The meta data in HPOB is formatted in a json format.
-
-\subsection{HPO-B evaluation}
 To use the HPO-B code,  one must write function observe\_and\_suggest and observe\_and\_suggest\_continous to deal with discrete and continous optimisation case respectively.
 Due to out of scope nature of the continous case,  in our implementation we assume that we are dealing only with the discrete case only.
 
 The implementation of observe\_and\_suggest functions differs based on the surrogate model used by our problem.
+
+\subsection{HPO-B evaluation}
+There are 2 types of HP optimization surrogates that are studied in this thesis - transfer learning surrogates
+and non-transfer learning surrogates.
+This benchmark can be used for analysing both types of models.
+However,  in order cross compare transfer and non-transfer techniques,  we only compare against HPO-B-v3 test split as recommended in the paper.
 
 \section{Baselines}
 
