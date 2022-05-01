@@ -1138,9 +1138,13 @@ Implementation yet to be done
 
 
 \section{Advantages and Limitations}
-For some search spaces,  during the course of training our ranking loss model,  the validation errors did not reduce at all.
-Figure~\ref{fig:NegativeLearning} shows an illustration of this using the training loss curves of search space id 5527.
+
+\subsection{Negative transfer learning}
+For some search spaces,  the validation errors of the ranking loss model did not reduce at all.
+In fact the validation loss became worse.
+Figure~\ref{fig:NegativeLearning} shows an illustration of this for the search space id 5527.
 This is a classic example of negative transfer learning~\cite{Weiss2016}.
+Negative transfer learning occurs when the set of source tasks (here,  training datasets) is very different from the target tasks (here, validation datasets).
 
 \begin{figure}[htb]
   \centering
@@ -1149,6 +1153,11 @@ This is a classic example of negative transfer learning~\cite{Weiss2016}.
     \label{fig:NegativeLearning}
 \end{figure}
 
+This problem should occur only in the cases where the model is context free.
+In our case,  the ranking loss model with deep set is context aware and this results was unexpected.
+Hence the issues with negative transfer learning remain unsolved when using our model.
+One remedy for getting around this problem is to fine tune the model with a larger number of epochs.
+Nevertheless,  we cannot guarantee that the finetuning will re-learn from the small amount observed data  during the optimisation cycle.
 
 
 Compare this loss function and method with other base lines..
