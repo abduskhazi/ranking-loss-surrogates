@@ -554,7 +554,9 @@ $$
 This creates an issue when creating an ordered list of objects.
 On the other hand,  List wise loss functions are the most general ranking functions and also the most useful one for our thesis.
 It has been shown in~\cite{listwisebetter} that list wise approaches are superior in performance to point wise and pair wise losses.
-Hence,  our thesis uses the list wise approach to ranking.
+We hence use the list wise approach to ranking.
+We discuss and analyse the loss functions ListNet and ListMLE in detail in chapter~\ref{chap:ProposedIdea}.
+
 
 \iffalse
 This concept is heavily used in domains like document ranking,  web search results  (i.e information retrieval)(and other areas) to rank documents that were retrieved for a given query.
@@ -916,7 +918,7 @@ The results of this are discussed in the results section.
 
 
 
-\chapter{Proposed Idea: Ranking Loss Surrogates}
+\chapter{Proposed Idea: Ranking Loss Surrogates}\label{chap:ProposedIdea}
 
 The true evaluation of a hyperparameter optimisation objective function is computationally very expensive. 
 Researchers have tried to get around this problem by proposing model based HPO algorithms.
@@ -939,7 +941,7 @@ There are 2 components of our proposed idea
 \end{itemize}
 
 This chapter discusses in detail both these components.
-In this chapter,  we first assume that a good surrogate model of suffient representational capacity already exists.
+In this chapter,  we first assume that a good surrogate model of sufficient representational capacity already exists.
 We use a simple Deep Neural network for this purpose.
 We then understand,  analyse and implement the proposed learning algorithm that uses the concept of.
 We then do a simple case study of inverse mapping using the learnt model.
