@@ -1,2 +1,19 @@
-Papers:
+Paper 1:
+    What we are doing is transfer learning:
+        https://www.semanticscholar.org/paper/A-Survey-on-Transfer-Learning-Pan-Yang/a25fbcbbae1e8f79c4360d26aa11a3abf1a11972?p2df
+        https://cubs.buffalo.edu/govind/CSE705-SeminarPapers/12.pdf
+        @article{Pan2010ASO,
+  title={A Survey on Transfer Learning},
+  author={Sinno Jialin Pan and Qiang Yang},
+  journal={IEEE Transactions on Knowledge and Data Engineering},
+  year={2010},
+  volume={22},
+  pages={1345-1359}
+}
 
+Paper 2:
+
+
+
+Resource for converting rs to bib used:
+https://www.bruot.org/ris2bib/

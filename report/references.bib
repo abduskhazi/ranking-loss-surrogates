@@ -195,7 +195,12 @@ url={https://doi.org/10.1186/s40537-016-0043-6}
   copyright = {arXiv.org perpetual, non-exclusive license}
 }
 
-
+@inproceedings{listmlepaper,
+  title={Listwise approach to learning to rank: theory and algorithm},
+  author={Fen Xia and Tie-Yan Liu and Jue Wang and Wensheng Zhang and Hang Li},
+  booktitle={ICML '08},
+  year={2008}
+}
 
 @misc{TRLWO,
   doi = {10.48550/ARXIV.1707.05438},
@@ -232,3 +237,73 @@ pages = {281–305},
 numpages = {25},
 keywords = {global optimization, deep learning, response surface modeling, neural networks, model selection}
 }
+
+
+@inproceedings{NIPS2011_86e8f7ab,
+ author = {Bergstra, James and Bardenet, R\'{e}mi and Bengio, Yoshua and K\'{e}gl, Bal\'{a}zs},
+ booktitle = {Advances in Neural Information Processing Systems},
+ editor = {J. Shawe-Taylor and R. Zemel and P. Bartlett and F. Pereira and K.Q. Weinberger},
+ pages = {},
+ publisher = {Curran Associates, Inc.},
+ title = {Algorithms for Hyper-Parameter Optimization},
+ url = {https://proceedings.neurips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf},
+ volume = {24},
+ year = {2011}
+}
+
+@inproceedings{listwisebetter,
+author = {Cao, Zhe and Qin, Tao and Liu, Tie-Yan and Tsai, Ming-Feng and Li, Hang},
+title = {Learning to Rank: From Pairwise Approach to Listwise Approach},
+year = {2007},
+isbn = {9781595937933},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/1273496.1273513},
+doi = {10.1145/1273496.1273513},
+abstract = {The paper is concerned with learning to rank, which is to construct a model or a function for ranking objects. Learning to rank is useful for document retrieval, collaborative filtering, and many other applications. Several methods for learning to rank have been proposed, which take object pairs as 'instances' in learning. We refer to them as the pairwise approach in this paper. Although the pairwise approach offers advantages, it ignores the fact that ranking is a prediction task on list of objects. The paper postulates that learning to rank should adopt the listwise approach in which lists of objects are used as 'instances' in learning. The paper proposes a new probabilistic method for the approach. Specifically it introduces two probability models, respectively referred to as permutation probability and top k probability, to define a listwise loss function for learning. Neural Network and Gradient Descent are then employed as model and algorithm in the learning method. Experimental results on information retrieval show that the proposed listwise approach performs better than the pairwise approach.},
+booktitle = {Proceedings of the 24th International Conference on Machine Learning},
+pages = {129–136},
+numpages = {8},
+location = {Corvalis, Oregon, USA},
+series = {ICML '07}
+}
+
+
+@inproceedings{McRank,
+ author = {Li, Ping and Wu, Qiang and Burges, Christopher},
+ booktitle = {Advances in Neural Information Processing Systems},
+ editor = {J. Platt and D. Koller and Y. Singer and S. Roweis},
+ pages = {},
+ publisher = {Curran Associates, Inc.},
+ title = {McRank: Learning to Rank Using Multiple Classification and Gradient Boosting},
+ url = {https://proceedings.neurips.cc/paper/2007/file/b86e8d03fe992d1b0e19656875ee557c-Paper.pdf},
+ volume = {20},
+ year = {2007}
+}
+
+@article{procedureforrankinginintro,
+author = {Qin, Tao and Liu, Tie-Yan and Xu, Jun and Li, Hang},
+year = {2010},
+month = {08},
+pages = {346-374},
+title = {LETOR: A benchmark collection for research on learning to rank for information retrieval},
+volume = {13},
+journal = {Inf. Retr.},
+doi = {10.1007/s10791-009-9123-y}
+}
+
+@ARTICLE{pairwisepreferencespaper,  author={Cossock, David and Zhang, Tong},  journal={IEEE Transactions on Information Theory},   title={Statistical Analysis of Bayes Optimal Subset Ranking},   year={2008},  volume={54},  number={11},  pages={5140-5154},  abstract={ The ranking problem has become increasingly important in modern applications of statistical methods in automated decision making systems. In particular, we consider a formulation of the statistical ranking problem which we call subset ranking, and focus on the discounted cumulated gain (DCG) criterion that measures the quality of items near the top of the rank-list. Similar to error minimization for binary classification, direct optimization of natural ranking criteria such as DCG leads to a nonconvex optimization problems that can be NP-hard. Therefore, a computationally more tractable approach is needed. We present bounds that relate the approximate optimization of DCG to the approximate minimization of certain regression errors. These bounds justify the use of convex learning formulations for solving the subset ranking problem. The resulting estimation methods are not conventional, in that we focus on the estimation quality in the top-portion of the rank-list. We further investigate the asymptotic statistical behavior of these formulations. Under appropriate conditions, the consistency of the estimation schemes with respect to the DCG metric can be derived. },  keywords={},  doi={10.1109/TIT.2008.929939},  ISSN={1557-9654},  month={Nov},}
+
+@inproceedings{RankingLossFirstPaperRead,
+ author = {Chen, Wei and Liu, Tie-yan and Lan, Yanyan and Ma, Zhi-ming and Li, Hang},
+ booktitle = {Advances in Neural Information Processing Systems},
+ editor = {Y. Bengio and D. Schuurmans and J. Lafferty and C. Williams and A. Culotta},
+ pages = {},
+ publisher = {Curran Associates, Inc.},
+ title = {Ranking Measures and Loss Functions in Learning to Rank},
+ url = {https://proceedings.neurips.cc/paper/2009/file/2f55707d4193dc27118a0f19a1985716-Paper.pdf},
+ volume = {22},
+ year = {2009}
+}
+
+

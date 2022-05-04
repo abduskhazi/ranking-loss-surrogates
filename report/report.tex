@@ -330,22 +330,20 @@ The following functions are some of the most prominent acquisition functions fou
 \section{Deep Ensembles}
 
 Deep Neural Networks (DNNs) are machine learning models with very high representational capacity~\cite{Goodfellow-et-al-2016}.
-Due to this property,  one can use them as surrogates for the HPO objective function $f$.
+Due to this property,  one can use them as surrogates for HPO objective functions.
 But the issue is that DNNs do not quantify uncertainity trivially.
-In the following section we discuss briefly the methods used to do uncertainty quantification using neural networks.
 
-\subsection{Uncertainty Quantification in ANN}
 
 In the current literature,  uncertainty quantification methods using deep neural networks can be broadly classified into the following methods:
 \begin{itemize}
-\item Bayesian Nueral networks~\cite{Goan-2020}.
-\item Ensemble Approach using monte carlo~\cite{JMLR:v15:srivastava14a}.
+\item Bayesian Neural networks~\cite{Goan-2020}.
+\item Ensemble Approach using monte carlo drop out~\cite{JMLR:v15:srivastava14a}.
 \item Ensemble approach using multiple neural networks.
 \end{itemize}
 
-In Bayesian neural network(BNN),  a prior over weights and biases is specified prior to training the BNN.
+In Bayesian neural network(BNN),  a prior over weights and biases is specified during the intialization of the BNN.
 Given the data,  a posterior predictive distribution is calculated for all the parameters of the network (Weights and Biases).
-One issue with this approach is that BNNs are very complex and difficult to train.  [citation]
+One issue with this approach is that BNNs are very complex and difficult to train. 
 
 Monte carlo drop out is a regularization technique used during the training of neural networks.
 With a certain probability,  connections between neurons are dropped.
@@ -357,10 +355,8 @@ It is normally only used during training to obtain regularization.
 However,  if one uses monte carlo dropout during the evaluation,  we can get multiple results from the same input using this approach.
 Given input $x$ and output $y = \textrm{NN}(x)$.  If we have $m$ neural networks obtained using monte carlo dropout,  we get $\{y_1, y_2... y_m\}$ outputs,  we can obtain the mean and variance of 
 $$
-y_\textrm{mean} = \frac{\Sigma_i y_i}{m}  \;\;\;\;\;  y_\textrm{variance} = 
+y_\textrm{mean} = \frac{\Sigma y}{m}  \;\;\;\;\;  y_\textrm{variance} =\frac{\Sigma(y - y_{mean})^2}{m-1}
 $$
-There are 2 ways of using an Ensemble of Deep Nueral networks to get uncertainty prediction.
-One is by using Monte Carlo Dropout during evaluation. [citation of monte carlo dropout]
 
 
 One way to do Hyper Parameter Optimization is by using 
@@ -502,45 +498,67 @@ Fine tune it on 1 dataset and evaluate using Expected Improvement
 Did not use strictGP --> Is it a problem?
 \fi
 
-\section{Ranking Loss functions}
+\section{Rank Learning}
 
-Ranking as a concept used in information retrieval to rank documents based on relevance to a query.
-
-Consider a problem of ranking a set of objects $\{d_1, d_2, d_3 ... d_n\}$.
-For this a ranking function (rf) needs to be learnt.
-One can learn the ranking function by modelling this learning process as an optimization problem.
-This optimization needs a criteria (or a loss function in the jargon of machine learning) to do its optimization.
-This criteria is called a ranking loss function.
-This function (rf) is hence learnt by optimizing a ranking loss function.
-
- After the learning rf,  one can use this function to rank newly given objects.
-
-Ranking functions can be broadly classified into 3 types
+Consider a set of objects $\mathbb{A} = \{\textbf{x}_1, \textbf{x}_2, \textbf{x}_3, ... \textbf{x}_n\}$ where each $\textbf{x}$ belongs to a domain $\mathbb{D}$.
+The problem of ranking is defined as finding an ordered list of objects in $\mathbb{A}$ such that an object $\textbf{x}_i$ is ranked before $\textbf{x}_j$ if $\textbf{x}_i$  is more relevant/important than $\textbf{x}_j$.
+To accomplish this objective,  a ranking model needs to be learnt.
+In the most general case the cardinality of $\mathbb{A}$ is not fixed.
+For this reason, the ranking model, say $f_r$, can be thought of as a process that is divided in the following steps~\cite{procedureforrankinginintro}
 \begin{itemize}
-\item  Point-wise ranking
-\item  Pair-wise ranking
-\item  List-wise ranking
+\item Obtaining a relevance score of each object in set $\mathbb{A}$.
+\item Sorting the objects based on their relevance score. 
 \end{itemize}
 
-In Point-wise ranking function,  the input to the function is a single data point vector.
-The output of this function is a label or a score for that data point.
-Correspondingly,  the ranking function is called point wise ranking function
+We can learn the ranking model $f_r$ by optimizing a criteria on the output of the model i.e the sorted list of object.
+This criteria in the jargon of machine learning is called a loss function.
+Hence,  it can be referred to as a \textit{Ranking Loss}.
 
-In pair-wise ranking functions the input to the function are pairs of input objects.
-This ranking function can be understood as a classification problem. The function tries to separate the input data points as much as possible in the output space.
-Correspondingly,  the loss function that optimizes/learns a pair wise ranking function is called pair-wise ranking loss.
+Since the step of sorting is non differentiable,  it cannot generally be learnt during the optimization of our Ranking Loss.
+Hence the ranking model,  $f_r$,  boils down to a relevance scoring function.
+After learning $f_r$,  one can use it to rank newly given sets of objects by first finding their relevant scores and then sorting them accordingly.
 
-In list-wise ranking functions,  the input to the function is a list of objects to rank. 
-This is the most general ranking function and also the most useful one.
-To understand this,  consider 2 opposite objectives.
-One objective to rank the object.
-The second objective is to put other objects below this one in the list.
-Loss is approximately (by the equation) given by $-$ rank $+$ number of objects below it.
-If the rank is low and more number of objects are below it,  then loss tends to be positive which is not desirable
-On the contrary, if the rank is high it can bear more objects below it as Loss would not be so high.
-           
-Correspondingly,  the loss function that aids in learning this list-wise ranking function is called list wise ranking loss function.
+Various types of ranking losses can be used in our optimization to learn the scoring function.
+These can be broadly classified into the following types~\cite{RankingLossFirstPaperRead}:
+\begin{itemize}
+\item  Point-wise ranking losses
+\item  Pair-wise ranking losses
+\item  List-wise ranking losses
+\end{itemize}
 
+In point-wise ranking loss,  the loss function views the problem of ranking as that of assigning a label to each of the input data points.
+Hence,  for learning,  each instance is a single object $x_i$ within the set $\mathbb{A}$.
+For example,  in the McRank paper~\cite{McRank},  the authors reformulate the ranking problem as a multilevel classification problem where each data point is classified independently.
+They then calculate the score as the expected rank of the object based on its soft classification.
+Therefore, the complete scoring function comprises of a multi-level classifier and an external expectation calculation.
+
+In pair-wise ranking loss,  the loss function's input is a pair of objects.
+This loss function learns to model pair-wise preferences.
+The function tries to separate the input data points as much as possible in the output space by minimising the pair-wise classification error~\cite{pairwisepreferencespaper}.
+
+In list-wise ranking losses,  the loss is defined on the complete set of objects.
+The 2 most important list-wise loss functions are
+\begin{itemize}
+\item ListNet~\cite{listwisebetter}.
+\item ListMLE~\cite{listmlepaper}.
+\end{itemize}
+
+The point wise and pair wise ranking models do not view the ranking problem as a problem to rank a set of 
+objects.
+This is their fundamental disadvantage.
+Moreover,  the pairwise ranking loss may learn a scoring function that creates the issue of circular ranking.
+The scoring function may learn a preferences given by
+$$
+\textbf{x}_1 \succ  \textbf{x}_2 \;\;\; \textrm{and} \;\;\;  \textbf{x}_2 \succ  \textbf{x}_3 \;\;\; \textrm{and} \;\;\;  \textbf{x}_3 \succ  \textbf{x}_1
+$$
+This creates an issue when creating an ordered list of objects.
+On the other hand,  List wise loss functions are the most general ranking functions and also the most useful one for our thesis.
+It has been shown in~\cite{listwisebetter} that list wise approaches are superior in performance to point wise and pair wise losses.
+Hence,  our thesis uses the list wise approach to ranking.
+
+\iffalse
+This concept is heavily used in domains like document ranking,  web search results  (i.e information retrieval)(and other areas) to rank documents that were retrieved for a given query.
+\fi
 
 \iffalse
 Main Idea:
@@ -883,10 +901,10 @@ After completing the own implementation,  we found that the results obtained wer
 For this reason, the results are used only for the first stage.
 The results already present in the benchmarking data of~\cite{pineda2021hpob} were used for comparing this result with our implementation.
 
-\subsubsection{Using cosine annehealing }
-We obtiained loss curves that were very bad during the training and were varying quite a bit
+\subsubsection{Using cosine annealing }
+We obtained loss curves that were very bad during the training and were varying quite a bit
 The reason was that the learning rate during the fine tuning was too high
-Hence we used cosine annehealing for this to get the a better local minima.
+Hence we used cosine annealing for this to get the a better local minima.
 
 Show before and after curves.
 
@@ -900,28 +918,49 @@ The results of this are discussed in the results section.
 
 \chapter{Proposed Idea: Ranking Loss Surrogates}
 
-This is the transfer HPO-B
+The true evaluation of a hyperparameter optimisation objective function is computationally very expensive. 
+Researchers have tried to get around this problem by proposing model based HPO algorithms.
+In these methods,  the true objective function is modelled by a cheap surrogate function of high representational capacity.
+For example,  the Sequential Model Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab} algorithm is a very important algorithm that iterates between learning a model given a few HP configuration evaluations and using the model to propose the next candidate to evaluate.
 
-In this chapter we chronologically build a Ranking loss surrogate model for HPO using SMBO.
-First we discuss the implementation of loss function used.
-Thereafter we discuss a case study of sorting.
-Then we add the following components one after another
+The choice of surrogate to use in model based optimization is very crutial.
+Does the surrogate have enough representational capacity?
+Does it have the capability of representing uncertainty?
+How is the surrogate learnt?
+These are some of the questions that need to be answered before selecting a sorrogate model.
+The selection of a sorrogate model has a direct impact on the performance of the model based optimization algorithm.
+
+In the quest to improve HPO surrogates,  we propose and analyse a new type of surrogate model that is based on the concept of ranking.
+There are 2 components of our proposed idea
 
 \begin{itemize}
-\item Deep Set
-\item Weight
-\item Uncertainty
-\item Different training mechanisms.
+\item The learning mechanism of the surrogate model.
+\item The surrogate model itself.
 \end{itemize}
 
-We decided to model a scoring function using a deep neural network.
-This is because the representational capacity of the neural network is very high.
+This chapter discusses in detail both these components.
+In this chapter,  we first assume that a good surrogate model of suffient representational capacity already exists.
+We use a simple Deep Neural network for this purpose.
+We then understand,  analyse and implement the proposed learning algorithm that uses the concept of.
+We then do a simple case study of inverse mapping using the learnt model.
+Finally we build a ranking model to improve the performance of any model based HPO algorithm.
+We use SMBO as a reference for our study.
 
 
-\section{Loss function implementation}
+\section{Learning mechanism}
+
+In this section we analyse the loss functions.
+Then, we discuss the implementation details of the function used in our model.
+
+Consider a problem of ranking a set of objects $\{d_1, d_2, d_3 ... d_n\}$.
+Hyperparameter optimization using Sequential Model Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab}
+
+\subsection{Loss functions: Analysis and implementation}
+
 The loss function used is listMLE
 As discussed in the literature review,  we use list wise ranking losses because they have been found to be more efficient in most general case.
-the implementation is done by removing to element check comments
+
+The implementation is done by removing top element check comments
 The latest implementation is used due to its efficiency otherwise it is the same. (note)
 
 Our implementation is given by the following algorithm
@@ -942,17 +981,18 @@ Applying this to HPOB... (With or without query)
 \section{Case study}
 
 In this case study,  we study how the learnt ranking function behaves when we use different parameters to train.
-For this a toy example of sorting is considered.
+For this a toy example of sorting in reverse order is considered.
 
 
-\subsection{Sorting Problem}
+\subsection{Sorting with inverse mapping}
     
 The main problem that we try to solve here is - Is it possible to train a ranking function using the Listwise maximum likelihood estimator. 
-such that it learns to sort a given list of numbers in the descending order?
+such that it learns inverse mapping of points on a number line.
+Consequently we could sort the results obtained by the scorer to obtain a descending order.
 
 
 Consider a list $l = \{x_1, x_2, ...x_n\}$ where $x_i \in [1, 100]$.
-Let $s(x \mid \theta) \mapsto \mathbb{R}$ be our scoring function parameterised by $\theta$.
+Let $s(x \mid \theta) \mapsto \mathbb{R}$ be our scoring function parametrised by $\theta$.
 One list contains $n$ data points sampled from $[1, 100]$.
 Let $\textrm{L}_{\textrm{mle}}$ represent the maximum log likelihood loss.
 Using this loss function we optimize for the following equation
@@ -1045,9 +1085,18 @@ One drawback we found was that the learnt model wsa extremely sensitive to the l
 % Perhaps using other increasing positive function helps? (More reading/research required on this topic)
 
   
+  Then we add the following components one after another
+
+\begin{itemize}
+\item Deep Set
+\item Weight
+\item Uncertainty
+\item Different training mechanisms.
+\end{itemize}
+
 Propose using a higher list size.
 
-\section{Scoring function analysis}
+\subsection{Scoring function analysis}
 
 \subsection{Scoring function range}
 
@@ -1072,13 +1121,31 @@ The idea is to meta learn commonality in the search space.
 Given the Fine tuning algorithm.
 For reasons described in the~\ref{sec:restart},  we restart before finetuning at every optimization cycle step.
 
-\section{Use of Deep Sets}
+\section{Ranking Surrogate Model}
+
+\subsection{Transfer Learning}
+This is the transfer HPO-B
+
+\subsection{Use of Deep Sets}
 why are deep sets important. 
 For domain conditionality 
 meta train in source doamin (HPOB training SS)
 meta test in target domain (HPOB test/val SS)
 
 Architectecture with deep sets.. Image
+
+\subsection{Uncertainty implementation}
+Mention about the requirement to use Module list.
+Show the new architecture.
+
+The search spaces that have less data need more uncertainty
+The search spaces having more data need less uncertainty
+
+\subsubsection{Independent training}
+Implementation yet to be done
+
+\subsubsection{Training with mean and restricted output}
+Implementation yet to be done
 
 
 \section{Weighted Loss}
@@ -1121,26 +1188,28 @@ As the weighting does not decrease very rapidly,  there is a possibility of para
 For example,  at every step the top $n$ configurations can be selected,  and all of them can be tried for optimization.
 The parallelism is less effective when using inverse linear weighting or weighting proposed by Chen et al.
 
-\section{Uncertainty implementation}
-Mention about the requirement to use Module list.
-Show the new architecture.
-
-The search spaces that have less data need more uncertainty
-The search spaces having more data need less uncertainty
-
-
-\subsection{Independent training}
-Implementation yet to be done
-
-
-\subsection{Training with mean and restricted output}
-Implementation yet to be done
 
 
 \section{Advantages and Limitations}
 
+Compare this loss function and method with other base lines..
+Advantages of the proposed Idea:
+    The amount of data instances for training is exponential in number. Which is very good for a deep learning model
+    For example if we have 100 observation set and we use a list size of 15 to train our model, we will have 100C15
+    unique instances to train.
+
+Observed disadvantages:
+\begin{itemize}
+\item In our model,  a scorer is first learnt and then using the scorer,  we rank the set of objects in question.
+When optimising the scorer,  we ignore the sorting functionality necessary to complete the process of ranking.
+This is because sorting is non differentiable. 
+This means that the true evaluation of the ranked list is not optimized.
+This needs to be improved which is done in Pi-Rank paper.
+\item The learnt model is extremely sensitive to the learning rate and the number of epochs.
+\end{itemize}
+    
 \subsection{Negative transfer learning}
-For some search spaces,  the validation errors of the ranking loss model did not reduce at all.
+For some search spaces,  the validation errors of the ranking loss model did not reduce at all during its training.
 In fact the validation loss became worse.
 Figure~\ref{fig:NegativeLearning} shows an illustration of this for the search space id 5527.
 This is a classic example of negative transfer learning~\cite{Weiss2016}.
@@ -1154,23 +1223,10 @@ Negative transfer learning occurs when the set of source tasks (here,  training 
 \end{figure}
 
 This problem should occur only in the cases where the model is context free.
-In our case,  the ranking loss model with deep set is context aware and this results was unexpected.
-Hence the issues with negative transfer learning remain unsolved when using our model.
+In our case,  the ranking loss model with deep set is context aware and results like these were unexpected.
+Hence the issues with negative transfer learning remains unsolved when using our model.
 One remedy for getting around this problem is to fine tune the model with a larger number of epochs.
-Nevertheless,  we cannot guarantee that the finetuning will re-learn from the small amount observed data  during the optimisation cycle.
-
-
-Compare this loss function and method with other base lines..
-Advantages of the proposed Idea:
-    The amount of data instances for training is exponential in number. Which is very good for a deep learning model
-    For example if we have 100 observation set and we use a list size of 15 to train our model, we will have 100C15
-    unique instances to train.
-
-Observed disadvantages:
-    The learnt model is extremely sensitive to the learning rate and the number of epochs
-    
-\section{Limitations}
-Negative transfer?
+Nevertheless,  we cannot guarantee that the finetuning will re-learn from the small amount observed data points during the optimization cycle.
 
 \chapter{Experiments and Results}
 
