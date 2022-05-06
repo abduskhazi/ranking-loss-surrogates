@@ -92,6 +92,10 @@ This sections contains the overview of the paper and how the thesis report is or
 
 \chapter{Related Work}\label{chap:relatedWork}
 
+In this chapter, I first define hyper-parameter optimization concretely.
+Then I discuss the various approaches already used to do the HP optimization.
+Subsequently, I also mention some important concepts that the thesis uses to build the proposed model.
+
 \section{Hyper Parameter Optimization}
 To find out the best hyper-parameter for any machine learning model $m$, we must first quantify a given hyper-parameter configuration $\textbf{x}$ by a real-valued number $v \in \mathbb{R}$.
 If we define that
@@ -125,7 +129,7 @@ $$
 
 \subsubsection{HPO Constraints}
 
-Hyperparameter optimization is different from other optimization methods because it has different constraints.
+Hyperparameter optimization is different from other optimization methods because it has different constraints~\cite{bayesianOptimizationTutorial}.
 It is because of the peculiar properties of the hyper-parameter search spaces.
 Finding out the correct hyper-parameter setting is generally not feasible using a brute-force approach (trying out all possible combinations of hyper-parameters) because the search space itself has many dimensions, and the search space may be continuous.
 More specifically,  some of the important constraints of this optimization problem are:
@@ -140,36 +144,6 @@ Using a gradient method is hence not trivial.
 \end{enumerate}
 
 \subsection{Black-box HPO}
-\subsubsection{Bayesian Optimization}
-\subsection{Multi-fidelity HPO,}
-\subsection{Online HPO}
-
-
-\section{Transfer-learning for HPO}
-\subsection{Meta-learning of surrogates}
-\subsection{Warm starting of initial configurations}
-
-\section{Types of Surrogates for BO in HPO}
-\subsection{GP}
-\subsection{RF}
-\subsection{Bayesian Neural Networks}
-\subsection{Neural Networks}
-they don't work great, because they cant model uncertainty). Uncertainty can be modeled directly, or through ensembles.
-
-\section{Types of Losses}
-\subsection{BO with GP uses negative log likelihood}
-It is not clear whether pointwise losses (regression as in GP) are the correct way to model HPO responses, because we only care for the minima regions (best performing configurations), and not for estimating all observations accurately.
-
-\subsection{Ranking loss could be the answer in modeling hp optima better}
-\subsubsection{Pointwise}
-\subsubsection{Pairwise}
-\subsubsection{Listwise}
-
-\section{Set-modeling with Neural Networks}
-In HPO we make predictions based on a set of observations, therefore, in this thesis, I explore the benefit of contextualizing surrogate models on the observations so far.
-\subsection{Set-transformers}
-\subsection{Deep Sets}
-
 To deal with the constraints of HPO problems, researchers have used different strategies for developing HPO algorithms and models.
 Some of the straightforward methods include
 \begin{itemize}
@@ -208,10 +182,8 @@ On the other hand, these methods are non-probabilistic.
 Hence they cannot deal with noisy evaluations of the HPO configuration well.
 Moreover, these methods are computationally expensive. The reason is that they do not use surrogate evaluators and hence train and evaluate the whole model.
 Also, these search methods give us optimal HPO configurations only by chance.
+\subsubsection{Bayesian Optimization}
 
-In the remainder of this section, we discuss some sophisticated probabilistic models for doing HPO that use surrogates to reduce computational costs.
-
-\section{Bayesian Optimization}
 Bayesian optimization tries to solve both computational costs and noisy evaluations of our objective function (section 1).
 It does this by building a model of the HPO objective function. This model is called a surrogate function.
 Bayesian optimization uses known evaluations as its data to build the surrogate model. The data is of the form {x, f(x)} pairs.
@@ -236,25 +208,25 @@ Hence, there are two essential components of Bayesian optimization:
 \item The acquisition function
 \end{itemize}
 
-There are many probabilistic models such as Random Forests, Gaussian Processes, Tree parson Estimators, etc.
-But for the purpose of this thesis, we briefly mention Random forests and discuss in-depth the Gaussian processes.
+\subsubsection{Acquisition functions}
+The acquisition functions need to do balance exploitation of information from the known data points and exploration of unknown data points in their domain.
+The following functions are some of the most prominent acquisition functions found in the literature~\cite{GPTutorial}
+\begin{itemize}
+\item \textbf{Upper Confidence Bound (UCB)}: It returns the best possible hyperparameter configuration using a linear combination of the mean and the standard deviation.
+\item \textbf{Probability of Improvement}: It gives the probability with which we can get a better hyperparameter configuration than the incumbent best configuration.
+\item \textbf{Expected Improvement}: Given a gaussian distribution at a new input point, it finds the expectation of improvement i.e ($f(x) - f_{max}$) over the part of normal that is greater than $f_{max}$.
+\end{itemize}
 
-\subsection{Probabilistic models}
-\subsubsection{Random Regression Forest}
-     The core idea of this model is to train a Random Regression Forest, using the known data as in any SMBO procedure~\cite{SMBOPaper}.
-Random regression forests are an ensemble of regression trees. 
-This property is used to our advantage to predict the mean and the variance. 
-The mean of the prediction of all the trees is the mean of the surrogate model.
-The variance in the prediction of all trees is the variance of the surrogate model.
+\subsection{Multi-fidelity HPO,}
+\subsection{Online HPO}
 
-   The advantages of this model are
-   \begin{itemize}
-   \item It can handle both continuous and discrete variables trivially without any modifications to the model.
-The data splitting during training is done using any variable be it discrete or continuous.
-	\item It can handle conditional variables, unlike Gaussian processes, by making sure that data is not split based on a variable till it is guaranteed that no conditionality is broken by the split.
-   \end{itemize}
 
-\subsubsection{Gaussian Process Regression}
+\section{Transfer-learning for HPO}
+\subsection{Meta-learning of surrogates}
+\subsection{Warm starting of initial configurations}
+
+\section{Types of Surrogates for BO in HPO}
+\subsection{Gaussian Processes}
 
 Gaussian processes~\cite{GPTutorial} are predictive machine learning models that work well with few data points (or data pairs). 
 They are inherently capable of modeling uncertainty.
@@ -351,49 +323,47 @@ $$
   Where $\textbf{K} = k(\textbf{X}, \textbf{X})$,  $\textbf{K}_*  =  k(\textbf{X}, \textbf{x}_*)$ and $\textbf{K}_{**} = k(\textbf{x}_*,  \textbf{x}_*)$ for any given kernel $k$~\cite{GPTutorial}.
   Due to the robustness of the GP process, we use this as one of the baselines in our thesis.
 
-\subsection{Acquisition functions}
-The acquisition functions need to do balance exploitation of information from the known data points and exploration of unknown data points in their domain.
-The following functions are some of the most prominent acquisition functions found in the literature~\cite{GPTutorial}
-\begin{itemize}
-\item \textbf{Upper Confidence Bound (UCB)}: It returns the best possible hyperparameter configuration using a linear combination of the mean and the standard deviation.
-\item \textbf{Probability of Improvement}: It gives the probability with which we can get a better hyperparameter configuration than the incumbent best configuration.
-\item \textbf{Expected Improvement}: Given a gaussian distribution at a new input point, it finds the expectation of improvement i.e ($f(x) - f_{max}$) over the part of normal that is greater than $f_{max}$.
-\end{itemize}
+\subsection{Random Regression Forest}
+     The core idea of this model is to train a Random Regression Forest, using the known data as in any SMBO procedure~\cite{SMBOPaper}.
+Random regression forests are an ensemble of regression trees. 
+This property is used to our advantage to predict the mean and the variance. 
+The mean of the prediction of all the trees is the mean of the surrogate model.
+The variance in the prediction of all trees is the variance of the surrogate model.
 
-\section{Deep Ensembles}
+   The advantages of this model are
+   \begin{itemize}
+   \item It can handle both continuous and discrete variables trivially without any modifications to the model.
+The data splitting during training is done using any variable be it discrete or continuous.
+	\item It can handle conditional variables, unlike Gaussian processes, by making sure that data is not split based on a variable till it is guaranteed that no conditionality is broken by the split.
+   \end{itemize}
 
-Deep Neural Networks (DNNs) are machine learning models with very high representational capacity~\cite{Goodfellow-et-al-2016}.
-Due to this property,  one can use them as surrogates for HPO objective functions.
-But the issue is that DNNs do not quantify uncertainity trivially.
+\subsection{Bayesian Neural Networks}
+\subsection{Neural Networks}
+they don't work great, because they cant model uncertainty). Uncertainty can be modeled directly, or through ensembles.
 
+\section{Types of Losses}
+\subsection{BO with GP uses negative log likelihood}
+It is not clear whether pointwise losses (regression as in GP) are the correct way to model HPO responses, because we only care for the minima regions (best performing configurations), and not for estimating all observations accurately.
 
-In the current literature,  uncertainty quantification methods using deep neural networks can be broadly classified into the following methods:
-\begin{itemize}
-\item Bayesian Neural networks~\cite{Goan-2020}.
-\item Ensemble Approach using monte carlo drop out~\cite{JMLR:v15:srivastava14a}.
-\item Ensemble approach using multiple neural networks.
-\end{itemize}
+\subsection{Ranking loss could be the answer in modeling hp optima better}
+\subsubsection{Pointwise}
+\subsubsection{Pairwise}
+\subsubsection{Listwise}
 
-In Bayesian neural network(BNN),  a prior over weights and biases is specified during the intialization of the BNN.
-Given the data,  a posterior predictive distribution is calculated for all the parameters of the network (Weights and Biases).
-One issue with this approach is that BNNs are very complex and difficult to train. 
-
-Monte carlo drop out is a regularization technique used during the training of neural networks.
-With a certain probability,  connections between neurons are dropped.
-Using this technique one obtains possibly $2^N$ neural networks where $N$ is the number of connections
-in the artifical neural network.
-We can get an ensemble of high capacity models for free.
-It is normally only used during training to obtain regularization.
-
-However,  if one uses monte carlo dropout during the evaluation,  we can get multiple results from the same input using this approach.
-Given input $x$ and output $y = \textrm{NN}(x)$.  If we have $m$ neural networks obtained using monte carlo dropout,  we get $\{y_1, y_2... y_m\}$ outputs,  we can obtain the mean and variance of 
-$$
-y_\textrm{mean} = \frac{\Sigma y}{m}  \;\;\;\;\;  y_\textrm{variance} =\frac{\Sigma(y - y_{mean})^2}{m-1}
-$$
+\section{Set-modeling with Neural Networks}
+In HPO we make predictions based on a set of observations, therefore, in this thesis, I explore the benefit of contextualizing surrogate models on the observations so far.
+\subsection{Set-transformers}
+\subsection{Deep Sets}
 
 
-One way to do Hyper Parameter Optimization is by using 
-Uncertainty prediction is the key in the paper~\cite{DeepEnsemblePaper}.
+
+In the remainder of this section, we discuss some sophisticated probabilistic models for doing HPO that use surrogates to reduce computational costs.
+
+
+
+There are many probabilistic models such as Random Forests, Gaussian Processes, Tree parson Estimators, etc.
+But for the purpose of this thesis, we briefly mention Random forests and discuss in-depth the Gaussian processes.
+
 
 \iffalse
 % Research Paper: https://arxiv.org/pdf/1612.01474.pdf
@@ -729,6 +699,41 @@ only fine tune best fit is not giving good results. Investigation in progress.
 
 
 \chapter{Background}
+
+\section{Uncertainty modelling using Deep Ensembles}
+
+Deep Neural Networks (DNNs) are machine learning models with very high representational capacity~\cite{Goodfellow-et-al-2016}.
+Due to this property,  one can use them as surrogates for HPO objective functions.
+But the issue is that DNNs do not quantify uncertainty trivially.
+
+
+In the current literature,  uncertainty quantification methods using deep neural networks can be broadly classified into the following methods:
+\begin{itemize}
+\item Bayesian Neural networks~\cite{Goan-2020}.
+\item Ensemble Approach using monte carlo drop out~\cite{JMLR:v15:srivastava14a}.
+\item Ensemble approach using multiple neural networks.
+\end{itemize}
+
+In Bayesian neural network(BNN),  a prior over weights and biases is specified during the intialization of the BNN.
+Given the data,  a posterior predictive distribution is calculated for all the parameters of the network (Weights and Biases).
+One issue with this approach is that BNNs are very complex and difficult to train. 
+
+Monte carlo drop out is a regularization technique used during the training of neural networks.
+With a certain probability,  connections between neurons are dropped.
+Using this technique one obtains possibly $2^N$ neural networks where $N$ is the number of connections
+in the artifical neural network.
+We can get an ensemble of high capacity models for free.
+It is normally only used during training to obtain regularization.
+
+However,  if one uses monte carlo dropout during the evaluation,  we can get multiple results from the same input using this approach.
+Given input $x$ and output $y = \textrm{NN}(x)$.  If we have $m$ neural networks obtained using monte carlo dropout,  we get $\{y_1, y_2... y_m\}$ outputs,  we can obtain the mean and variance of 
+$$
+y_\textrm{mean} = \frac{\Sigma y}{m}  \;\;\;\;\;  y_\textrm{variance} =\frac{\Sigma(y - y_{mean})^2}{m-1}
+$$
+
+
+One way to do Hyper Parameter Optimization is by using 
+Uncertainty prediction is the key in the paper~\cite{DeepEnsemblePaper}.
 
 Evaluating a novel hyper parameter surrogate is extremely expensive.
 For this,  we would have to run the HPO technique (Bayesian optimization in our case) with our surrogate on a set of different machine learning models.
