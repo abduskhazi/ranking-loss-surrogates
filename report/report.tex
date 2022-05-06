@@ -92,9 +92,9 @@ This sections contains the overview of the paper and how the thesis report is or
 
 \chapter{Related Work}\label{chap:relatedWork}
 
-In this chapter, I first define hyper-parameter optimization concretely.
-Then I discuss the various approaches already used to do the HP optimization.
-Subsequently, I also mention some important concepts that the thesis uses to build the proposed model.
+In this chapter,  the hyper-parameter optimization problem is first defined concretely.
+Then, the various approaches already used to do the HP optimization are discussed.
+Subsequently,  some important concepts that the thesis uses to build the proposed model are also discussed.
 
 \section{Hyper Parameter Optimization}
 To find out the best hyper-parameter for any machine learning model $m$, we must first quantify a given hyper-parameter configuration $\textbf{x}$ by a real-valued number $v \in \mathbb{R}$.
@@ -119,13 +119,13 @@ The result of this evaluation is a real-value that gives a score for the configu
 
 Hence the function $f(\textbf{x}) \mapsto \mathbb{R}$ can be written as 
 $$
-\textrm{eval}(m^{trained}_\textbf{x} (\textrm{Data}_\textrm{val})) \mapsto \mathbb{R}
+f(m^{trained}_\textbf{x} (\textrm{Data}_\textrm{val})) \mapsto \mathbb{R}
 $$
 
 Finally, the HPO problem can be defined using the following equation:
-$$
-\underset{\rm \textbf{x}}{\rm argmin} \;\; \textrm{eval}(m^{trained}_\textbf{x} (\textrm{Data}_\textrm{val})) \mapsto \mathbb{R}   \;\;\;  \forall \textbf{x} \in \mathbb{S}
-$$
+\begin{equation}\label{eq:hpoobjectivefunc}
+\underset{\rm \textbf{x}}{\rm argmin} \;\; f(m^{trained}_\textbf{x} (\textrm{Data}_\textrm{val})) \mapsto \mathbb{R}   \;\;\;  \forall \textbf{x} \in \mathbb{S}
+\end{equation}
 
 \subsubsection{HPO Constraints}
 
@@ -143,15 +143,16 @@ More specifically,  some of the important constraints of this optimization probl
 Using a gradient method is hence not trivial.
 \end{enumerate}
 
-\subsection{Black-box HPO}
 To deal with the constraints of HPO problems, researchers have used different strategies for developing HPO algorithms and models.
-Some of the straightforward methods include
-\begin{itemize}
-\item Manual Search
-\item Grid Search
-\item Random Search
-\end{itemize}
+Some of the more prominent approaches are Black-Box HPO, 
+Multi-fidelity HPO and Online HPO.
 
+\subsection{Black-box HPO}
+In this approach the HPO objective function $f$ in equation~\ref{eq:hpoobjectivefunc}
+is treated as a blackbox.
+The problem is thus generalised to finding a global optima of $f$.
+Some of the straightforward black-box HPO methods include Manual Search,  Grid Search and Random Search.
+The optimization technique called Bayesian optimization gives us a more sophisticated mechanism to deal with this problem. 
 
 Manual Search in the HPO search space is feasible when we have expert knowledge of the problem and the given model. 
 The idea is to select configurations step by step by observing the results obtained
@@ -184,9 +185,9 @@ Moreover, these methods are computationally expensive. The reason is that they d
 Also, these search methods give us optimal HPO configurations only by chance.
 \subsubsection{Bayesian Optimization}
 
-Bayesian optimization tries to solve both computational costs and noisy evaluations of our objective function (section 1).
+Bayesian optimization tries to solve both computational costs and noisy evaluations of our objective function $f$.
 It does this by building a model of the HPO objective function. This model is called a surrogate function.
-Bayesian optimization uses known evaluations as its data to build the surrogate model. The data is of the form {x, f(x)} pairs.
+Bayesian optimization uses known evaluations as its data to build the surrogate model. The data is of the form \{x, f(x)\} pairs.
 The surrogate model is a probabilistic model. Hence, it also learns about the noise in the evaluations of the objective function.
 
 The core procedure of the optimization process is the following:
@@ -204,18 +205,20 @@ collected data~\cite{SMBOPaper}.
 Hence, there are two essential components of Bayesian optimization:
 
 \begin{itemize}
-\item Probabilistic model of the objective function
+\item Probabilistic surrogate model of the objective function.  Some surrogates are discussed in detail in the subsequent sections in this chapter.
 \item The acquisition function
 \end{itemize}
 
 \subsubsection{Acquisition functions}
-The acquisition functions need to do balance exploitation of information from the known data points and exploration of unknown data points in their domain.
+The acquisition functions used in the bayesian optimization need to do balance exploitation of information from the known/observed data points and exploration of unknown data points in the domain.
 The following functions are some of the most prominent acquisition functions found in the literature~\cite{GPTutorial}
 \begin{itemize}
 \item \textbf{Upper Confidence Bound (UCB)}: It returns the best possible hyperparameter configuration using a linear combination of the mean and the standard deviation.
 \item \textbf{Probability of Improvement}: It gives the probability with which we can get a better hyperparameter configuration than the incumbent best configuration.
 \item \textbf{Expected Improvement}: Given a gaussian distribution at a new input point, it finds the expectation of improvement i.e ($f(x) - f_{max}$) over the part of normal that is greater than $f_{max}$.
 \end{itemize}
+
+ \textbf{Expected Improvement} acquisition function is used all around the thesis in order to do a fair comparison of the models and algorithms.
 
 \subsection{Multi-fidelity HPO,}
 \subsection{Online HPO}
