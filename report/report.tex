@@ -136,7 +136,40 @@ The aim is to study ranking loss surrogates in the context of Hyperparameter opt
 This sections contains the overview of the paper and how the thesis report is organised.
 
 
-\chapter{Literature Review}
+\chapter{Related Work}\label{chap:relatedWork}
+
+\section{Hyper Parameter Optimization}
+\subsection{Black-box HPO}
+\subsubsection{Bayesian Optimization}
+\subsection{Multi-fidelity HPO,}
+\subsection{Online HPO}
+
+
+\section{Transfer-learning for HPO}
+\subsection{Meta-learning of surrogates}
+\subsection{Warm starting of initial configurations}
+
+\section{Types of Surrogates for BO in HPO}
+\subsection{GP}
+\subsection{RF}
+\subsection{Bayesian Neural Networks}
+\subsection{Neural Networks}
+they don't work great, because they cant model uncertainty). Uncertainty can be modeled directly, or through ensembles.
+
+\section{Types of Losses}
+\subsection{BO with GP uses negative log likelihood}
+It is not clear whether pointwise losses (regression as in GP) are the correct way to model HPO responses, because we only care for the minima regions (best performing configurations), and not for estimating all observations accurately.
+
+\subsection{Ranking loss could be the answer in modeling hp optima better}
+\subsubsection{Pointwise}
+\subsubsection{Pairwise}
+\subsubsection{Listwise}
+
+\section{Set-modeling with Neural Networks}
+In HPO we make predictions based on a set of observations, therefore, in this thesis, I explore the benefit of contextualizing surrogate models on the observations so far.
+\subsection{Set-transformers}
+\subsection{Deep Sets}
+
 To deal with the constraints of HPO problems, researchers have used different strategies for developing HPO algorithms and models.
 Some of the straightforward methods include
 \begin{itemize}
@@ -498,7 +531,7 @@ Fine tune it on 1 dataset and evaluate using Expected Improvement
 Did not use strictGP --> Is it a problem?
 \fi
 
-\section{Rank Learning}
+\section{Rank Learning}\label{sec:ranklearning}
 
 Consider a set of objects $\mathbb{A} = \{\textbf{x}_1, \textbf{x}_2, \textbf{x}_3, ... \textbf{x}_n\}$ where each $\textbf{x}$ belongs to a domain $\mathbb{D}$.
 The problem of ranking is defined as finding an ordered list of objects in $\mathbb{A}$ such that an object $\textbf{x}_i$ is ranked before $\textbf{x}_j$ if $\textbf{x}_i$  is more relevant/important than $\textbf{x}_j$.
@@ -896,8 +929,6 @@ We used early stopping mechanism for this because we wanted to avoid
 We saved the best model in our implementation and if the validation loss went greater than
 lowest validation loss for some number of steps,  then we stop the meta training.
 
-
-
 \subsubsection{Implementation issues}
 After completing the own implementation,  we found that the results obtained were not in par with the paper.
 For this reason, the results are used only for the first stage.
@@ -918,7 +949,9 @@ The results of this are discussed in the results section.
 
 
 
-\chapter{Proposed Idea: Ranking Loss Surrogates}\label{chap:ProposedIdea}
+\chapter{Method}\label{chap:ProposedIdea}
+
+\section{Proposed Idea: : Ranking Loss Surrogates}
 
 The true evaluation of a hyperparameter optimisation objective function is computationally very expensive. 
 Researchers have tried to get around this problem by proposing model based HPO algorithms.
@@ -951,13 +984,138 @@ We use SMBO as a reference for our study.
 
 \section{Learning mechanism}
 
-In this section we analyse the loss functions.
-Then, we discuss the implementation details of the function used in our model.
-
-Consider a problem of ranking a set of objects $\{d_1, d_2, d_3 ... d_n\}$.
-Hyperparameter optimization using Sequential Model Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab}
+In section~\ref{sec:ranklearning},  we discussed that list wise ranking losses were superior to the point wise and pair wise losses.
+In this section we analyse the prominent list loss functions - ListNet and ListMLE.
+Then, we discuss the implementation details of the loss function used in our model.
 
 \subsection{Loss functions: Analysis and implementation}
+
+\iffalse
+\begin{table}[ht]
+\centering
+% spacing in table
+% \ra{1.3}  % Commenting this could not get this function right
+\begin{tabular}{@{}lr@{}}
+  \toprule
+  Epochs listsize & Accuracy(within range) Accuracy outside range \\ \midrule
+  A    & 82.47 $\pm$ 3.21 \\
+  B    & 78.47 $\pm$ 2.43 \\
+  C    & 84.30 $\pm$ 2.35 \\
+  D    & 86.81 $\pm$ 3.01 \\
+  \bottomrule
+\end{tabular}
+
+    \caption[Table caption]{\textbf{Sorting accuracy.} Obtained after sorting the numbers based on the scorer's results\\}
+    \label{tab:accuracy}
+\end{table}
+\fi
+
+Consider data in the format shown in table~\ref{tab:dataformat} is given to us.
+
+\begin{table} [ht]
+\centering
+\begin{tabular}{ | c | c | c | }
+  \toprule
+  Instance & Object Set & Ground Truth \\ \midrule
+% \hline \hline
+  1 & $\{a_1, a_2, a_3, ... , a_{10}\}$  & $\{y_1, y_2, y_3, ... , y_{10}\}$  \\
+  2 & $\{a'_1, a'_2, a'_3, ... , a'_{15}\}$ & $\{y'_1, y'_2, y'_3, ... , y'_{15}\}$  \\
+  3 & $\{a''_1, a''_2, a''_3, ... , a''_{7}\}$ & $\{y''_1, y''_2, y''_3, ... , y''_{7}\}$  \\
+  ... & $\{...\}$ & $\{...\}$ \\
+  \bottomrule
+\end{tabular}
+\caption{Data format used to train the scoring function using list wise ranking loss}
+\label {tab:dataformat}
+\end{table}
+Here let each data point $a$ be a sample/element from the set $\mathbb{A}$.
+Each $y$ represents the ground truth preference score of objects belonging to a set $\mathbb{Y}$.
+These preference scores of objects are relative to the objects within the input set.
+Let $s$ be the scoring function to be learnt.
+Hence, the declaration of $s$ is given by
+$$
+s : \mathbb{A} \mapsto \mathbb{R}
+$$
+
+As we can see from the table,  one instance in our data consists of a set of objects as input and a set of corresponding ground truths to train from.
+To learn the function $s$ we optimize our list wise loss function.
+This loss function takes as input the whole set of objects and their ground truth as one instance.
+If we take any set $\mathbb{P}$ such that $\mathbb{P} \subseteq \mathbb{A}$,  the declaration of the list wise loss $L$ is hence given by
+\begin{equation}
+L : s(\mathbb{P}) \times \mathbb{Y}^{|\mathbb{P}|} \mapsto \mathbb{R}
+\end{equation}
+
+Where the scoring function $s$ applied to the $\mathbb{P}$ gives us the set of corresponding scores of all objects in $\mathbb{P}$.
+We will consider the ground truth values to be $\mathbb{R}$ for our analysis as this is type of value
+we have in our data sets.
+
+In the next 2 sections we analyse ListNet and ListMLE,  the prominent listwise loss functions in the literature.
+
+\subsection{ListNet}
+
+In this section we try to intuitively explain the ListNet idea proposed in~\cite{listwisebetter}.
+Our objective is to learn the scoring function $s$ such that it returns scores that are similar in relevance/order when compared to the ground truth scores.
+That is to say
+$$
+y_3 < y_{12} < y_1 \implies s(a_3) < s(a_{12}) < s(a_1)
+$$
+This would make the ranking of the objects equal to the ranking obtained by using the ground truth values.
+Note that we do not need to get the exact ground truth scores.
+This increases the number of acceptable functions that can be learnt by increasing the target function space.
+This makes it easier to learn the scoring function.
+
+Ranking is obtained by sorting the objects based on their respective scores.
+Note that the sort functionality is non differentiable hence it is not a 
+part of the ranking loss function.
+Our loss function needs to be constructed using the following 2 lists:
+\begin{itemize}
+\item List of scores given by scoring function $s$.
+\item List of scores given to us by ground truth.
+\end{itemize}
+
+The loss function must find some sort of a distance between the 2 given lists.
+It then can reduce the distance by changing the parameters of the scoring function.
+
+In ListNet,  a probabilistic approach is taken so as to account for any uncertainties in the ground truth values.
+Consider selecting an object from the input set with a probability
+$$
+P = \frac{s(a)}{\Sigma_i s(a_i)} \;\;\; \forall i \in \{1, 2, 3, ...,  |\mathbb{P}|\}
+$$
+This make intuitive sense because the probability of selecting an object should be higher if it more relenvant and vise-versa.
+Note that the score of any object by the scoring function can negative as well.
+Therefore the score is passed through a strictly positive and increasing function $\phi$.
+This changes the probability to
+\begin{equation}\label{eq:objselection}
+P = \frac{\phi(s(a))}{\Sigma_i \phi(s(a_i))} \;\;\; \forall i \in \{1, 2, 3, ...,  |\mathbb{P}|\}
+\end{equation}
+
+Equation~\ref{eq:objselection} is also referred to as top 1 probability of an object in~\cite{listwisebetter}.
+This is because this gives the probability of ranking the object first when we are calculating the permutation probability of given list.
+
+The proposed way to find the distance between 2 lists in ListNet is
+\begin{itemize}
+\item Find the top 1 probabilities of each object using the scores given by the scoring function.
+\item Using the ground truth values,  find similar top 1 probabilities.
+\item The cross entropy between the 2 entities gives us the "distance" between the 2 lists.
+\end{itemize}
+
+Let $P_{s(a)}$ represent the top 1 probability of an object using the scores given by the scoring function.
+Similarly,   let $P_y$ represent the top 1 probability using its ground truth value.
+The cross entropy used as a loss in ListNet is given by
+\begin{equation}
+L(\textbf{y},  {s(\textbf{a})}) = - \Sigma_i P_{s(a_i)} \log P_{y_i}
+\end{equation}
+Where $\textbf{y}$ and $s(\textbf{a})$ represent the ground truth values and the scores given by the scoring function.
+
+\iffalse
+Let $\pi$ define any permutation of a list.
+The probability of a permutation is nothing but the probability of selecting one document after another without replacement.
+In our case the permutation probability of selecting 1 permutation using the selection probabilities given by equation~\ref{eq:objselection}  is~\cite{listwisebetter}
+$$
+P_{\pi} = \Pi^n_{j=1} \frac{\phi(s_{\pi(j)})}{ \Sigma^n_{k=j} \phi(s_{\pi(k)})}
+$$
+\fi
+
+Hyperparameter optimization using Sequential Model Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab}
 
 The loss function used is listMLE
 As discussed in the literature review,  we use list wise ranking losses because they have been found to be more efficient in most general case.
@@ -1082,7 +1240,7 @@ We must control the output domain so that the training does not lead to underflo
 This is because we use the exp function for getting the strict positive increasing function.
 
 The restriction of output was done using $\tanh()$ so that the range of values of the scorer remains within a managable value.
-One drawback we found was that the learnt model wsa extremely sensitive to the learning rate and the number of epochs.
+One drawback we found was that the learnt model was extremely sensitive to the learning rate and the number of epochs.
 % The following observations were made in the case study of sorting example
 % Perhaps using other increasing positive function helps? (More reading/research required on this topic)
 
@@ -1116,12 +1274,12 @@ replace=False thing in the above function and why it is important.
 \subsection{Meta training}
 Give the meta training algorithm
 Why all tasks are taken - 
-Because we do not want bias to crop up during the trainig
+Because we do not want bias to crop up during the training
 The idea is to meta learn commonality in the search space.
 
 \subsection{Fine tuning}\label{sec:rlfinetune}
 Given the Fine tuning algorithm.
-For reasons described in the~\ref{sec:restart},  we restart before finetuning at every optimization cycle step.
+For reasons described in the~\ref{sec:restart},  we restart before fine tuning at every optimization cycle step.
 
 \section{Ranking Surrogate Model}
 
@@ -1131,10 +1289,10 @@ This is the transfer HPO-B
 \subsection{Use of Deep Sets}
 why are deep sets important. 
 For domain conditionality 
-meta train in source doamin (HPOB training SS)
+meta train in source domain (HPOB training SS)
 meta test in target domain (HPOB test/val SS)
 
-Architectecture with deep sets.. Image
+Architecture with deep sets.. Image
 
 \subsection{Uncertainty implementation}
 Mention about the requirement to use Module list.
@@ -1230,7 +1388,16 @@ Hence the issues with negative transfer learning remains unsolved when using our
 One remedy for getting around this problem is to fine tune the model with a larger number of epochs.
 Nevertheless,  we cannot guarantee that the finetuning will re-learn from the small amount observed data points during the optimization cycle.
 
+\chapter{Research Question}
+The format of this is the same as that of experiments and Results.
+Also known as Hypothesis
+
 \chapter{Experiments and Results}
+
+Data used in the experiment
+Infrastructure used
+(That is the protocol)
+Results should be structured like hypothesis.
 
 experiment and results
 protocol
