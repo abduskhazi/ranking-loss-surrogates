@@ -220,7 +220,25 @@ The following functions are some of the most prominent acquisition functions fou
 
  \textbf{Expected Improvement} acquisition function is used all around the thesis in order to do a fair comparison of the models and algorithms.
 
-\subsection{Multi-fidelity HPO,}
+\subsection{Multi-fidelity HPO}
+If we treat our HPO objective function $f$ as a black box function,  we would need to evaluate equation~\ref{eq:hpoobjectivefunc} fully.
+This is prohibitively expensive as evaluating a single HP configuration may take days~\cite{hutter2019automated}.
+Multi-fidelity hyper parameter optimization tries to solve this problem by evaluating the HP candidates on cheap functions $f_{approx}$ that approximate the objective function $f$.
+
+Here, $f_{approx}$  is called a fidelity as it copies or reproduces the true objective function upto some degree.
+For example,  a fidelity could be evaluation of the HP configuration on only a subset of data,  the evaluation of the HP on downscaled image data or learning only for a few epochs etc.
+The idea is to trade off between the performance of the approximate function and its optimization accuracy such that we get best selection of HP using the least compute power.
+Since the true evaluation of HP configuration using $f$ is not done,  it is an approximate optimization technique.
+
+The technique does not belong to the black box HPO domain.
+This can be understood very clearly if we take the example of the "few epochs" fidelity.
+Clearly,  the optimization algorithm looks into the training process the learns the objective function to prematurely exit it if need be.
+
+The reason this technique is called multi-fidelity is because it may use different fidelities within the optimization process to get the best HP configuration.
+For example,  while using successive having technique~\cite{successivehalving} for HPO one can start with a given "budget fidelity" for example - defined number of epochs or defined amount of training time.
+At each step of the optimization process,  the budget is doubled and the worst performing HP configurations are eliminated for the next step.
+Hence it uses "multiple" fidelities during the optimization process.
+
 \subsection{Online HPO}
 
 
