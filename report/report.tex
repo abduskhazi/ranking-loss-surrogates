@@ -81,7 +81,18 @@ This thesis studies various existing approaches to HPO and proposes a new idea f
 The proposed idea in this thesis is called \textbf{Hyperparamter Optimization using Ranking Loss Surrogates}. 
 The results obtained using this model are compared against the state-of-the-art results obtained using models like FSBO,  RGPE,  TAF, and others. 
 
-\section{Hyperparameter Optimization}
+\label{ProblemOverviewlabel}
+
+\section{Objective}
+The aim is to study ranking loss surrogates in the context of Hyperparameter optimization.
+
+\section{Overview}
+This sections contains the overview of the paper and how the thesis report is organised.
+
+
+\chapter{Related Work}\label{chap:relatedWork}
+
+\section{Hyper Parameter Optimization}
 To find out the best hyper-parameter for any machine learning model $m$, we must first quantify a given hyper-parameter configuration $\textbf{x}$ by a real-valued number $v \in \mathbb{R}$.
 If we define that
 $$
@@ -112,8 +123,7 @@ $$
 \underset{\rm \textbf{x}}{\rm argmin} \;\; \textrm{eval}(m^{trained}_\textbf{x} (\textrm{Data}_\textrm{val})) \mapsto \mathbb{R}   \;\;\;  \forall \textbf{x} \in \mathbb{S}
 $$
 
-\label{ProblemOverviewlabel}
-\section{HPO Constraints}
+\subsubsection{HPO Constraints}
 
 Hyperparameter optimization is different from other optimization methods because it has different constraints.
 It is because of the peculiar properties of the hyper-parameter search spaces.
@@ -129,16 +139,6 @@ More specifically,  some of the important constraints of this optimization probl
 Using a gradient method is hence not trivial.
 \end{enumerate}
 
-\section{Objective}
-The aim is to study ranking loss surrogates in the context of Hyperparameter optimization.
-
-\section{Overview}
-This sections contains the overview of the paper and how the thesis report is organised.
-
-
-\chapter{Related Work}\label{chap:relatedWork}
-
-\section{Hyper Parameter Optimization}
 \subsection{Black-box HPO}
 \subsubsection{Bayesian Optimization}
 \subsection{Multi-fidelity HPO,}
@@ -1445,6 +1445,13 @@ as explained by sebastian.
 
 \section{Further work}
 Further study required with other baselines that deal with ranking loss.
+
+In our methods we used the ensemble of DNNs which output a list of results.
+We use this results to calculate the mean and the variance of our  prediction.
+However,  the deep ensemble paper proposes a method to directly calculate the mean
+and variance.
+However,  the integration of this idea with ranking losses is non-trivial.
+Hence the usage of this type of loss with the ranking loss function can be taken up in further research in order to check wether their is improvement in the results or not.
 
 \iffalse
 Paper: https://arxiv.org/pdf/2012.06731.pdf
