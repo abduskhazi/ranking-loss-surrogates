@@ -215,10 +215,27 @@ The following functions are some of the most prominent acquisition functions fou
 \begin{itemize}
 \item \textbf{Upper Confidence Bound (UCB)}: It returns the best possible hyperparameter configuration using a linear combination of the mean and the standard deviation.
 \item \textbf{Probability of Improvement}: It gives the probability with which we can get a better hyperparameter configuration than the incumbent best configuration.
-\item \textbf{Expected Improvement}: Given a gaussian distribution at a new input point, it finds the expectation of improvement i.e ($f(x) - f_{max}$) over the part of normal that is greater than $f_{max}$.
+\item \textbf{Expected Improvement}: Given a Gaussian distribution at a new input point, it finds the expectation of improvement i.e ($f(x) - f_{max}$) over the part of normal that is greater than $f_{max}$.
 \end{itemize}
 
  \textbf{Expected Improvement} acquisition function is used all around the thesis in order to do a fair comparison of the models and algorithms.
+
+\subsection{Online HPO}
+Traditionally to evaluate and select a new HP configuration,  the objective function $f$ is fully evaluated.
+In the most general sense this can be applied to both discrete and continuous HP search spaces.
+Some advanced methods have proposed even gradient based HP optimization.
+
+For example,  Maclaurin et al.~\cite{hypergradient} proposed a relatively cheap method to obtain hyper gradients i.e gradients of hyper parameters with respect to the whole objective function $f$.
+Further,  Franceschi et al.~\cite{HPOAsBilevelOptimization} formulated the whole HPO problem as a bi level optimization problem~\cite{hutterneuripstutorial}.
+
+In all these methods as the hyper parameters and the parameters of the model are being learnt disjointly,  they can be referred to as offline HPO.
+The idea of online HPO is that it tries to evaluate and update the HP configuration during the training of the model itself.
+
+Sometimes only a single hyper parameter is learnt online.
+For example,  Baydin et al.~\cite{onlineLearningRateUpdate},  proposes the online learning of the learning rate.  They target this hyper parameter because it is the single most important hyper parameter.
+In other times all parameters may be learnt.
+For example,  Luketina el at. ~\cite{gradientbasedHPOtuning} proposes to interleave the updating of training parameters and hyper parameters.
+
 
 \subsection{Multi-fidelity HPO}
 If we treat our HPO objective function $f$ as a black box function,  we would need to evaluate equation~\ref{eq:hpoobjectivefunc} fully.
@@ -233,13 +250,12 @@ Since the true evaluation of HP configuration using $f$ is not done,  it is an a
 The technique does not belong to the black box HPO domain.
 This can be understood very clearly if we take the example of the "few epochs" fidelity.
 Clearly,  the optimization algorithm looks into the training process the learns the objective function to prematurely exit it if need be.
+Thus getting a feedback from within the "blackbox" of the HPO objective function.
 
 The reason this technique is called multi-fidelity is because it may use different fidelities within the optimization process to get the best HP configuration.
 For example,  while using successive having technique~\cite{successivehalving} for HPO one can start with a given "budget fidelity" for example - defined number of epochs or defined amount of training time.
 At each step of the optimization process,  the budget is doubled and the worst performing HP configurations are eliminated for the next step.
 Hence it uses "multiple" fidelities during the optimization process.
-
-\subsection{Online HPO}
 
 
 \section{Transfer-learning for HPO}
@@ -1392,6 +1408,8 @@ This is because sorting is non differentiable.
 This means that the true evaluation of the ranked list is not optimized.
 This needs to be improved which is done in Pi-Rank paper.
 \item The learnt model is extremely sensitive to the learning rate and the number of epochs.
+\item It is assumed that the target task and the training task have the same output range. 
+They must be normalized in order to get the correct results if they are not in the same range.
 \end{itemize}
     
 \subsection{Negative transfer learning}
@@ -1477,7 +1495,14 @@ We use this results to calculate the mean and the variance of our  prediction.
 However,  the deep ensemble paper proposes a method to directly calculate the mean
 and variance.
 However,  the integration of this idea with ranking losses is non-trivial.
-Hence the usage of this type of loss with the ranking loss function can be taken up in further research in order to check wether their is improvement in the results or not.
+Hence the usage of this type of loss with the ranking loss function can be taken up in further research in order to check whether their is improvement in the results or not.
+
+Working with continuous HP spaces.
+How about dividing the space into areas and use 1 HP configuration as a representative
+of the space (in the euclidean sense)
+Then select the best region and subdivide the space and continue the process.
+There are limitation,  cannot really guarantee the optima will be found like the gradient methods.
+Hence this method is suboptimal to the gradient based HP methods for continuous search spaces.
 
 \iffalse
 Paper: https://arxiv.org/pdf/2012.06731.pdf
