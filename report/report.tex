@@ -259,8 +259,43 @@ Hence it uses "multiple" fidelities during the optimization process.
 
 
 \section{Transfer-learning for HPO}
+
+The HPO methods discussed so far,  evaluate each HP configuration from scratch.
+In addition to being computationally inefficient,  it is contrary to how humans learn.
+Humans use prior experience that they have accumulated and condition their actions on this knowledge.
+Any machine learning mechanism that uses this concept is called a transfer learning method~\cite{Weiss2016}.
+
+This concept of transfer learning can be utilized to accelerate HPO.
+For example,  Gomes et al. ~\cite{svmhpmetalearnt} propose to meta learn a set of good HP configurations for the SVM.
+They propose that if we learn HP configurations that worked well previously,  then there is high chance of finding that a new SVM model also works with these parameters well.
+This concept of warm starting the HP optimization is also proposed by Reif et al.~\cite{metalearningwarmstartpaper} albeit for genetic algorithms.
+
+There are 2 broad ways to transfer knowledge for doing HP optimization - By learning surrogates or by doing warm starting of initial configurations.
+
+\subsection{Warm starting}
+
+Before running any HPO method,  normally experts study the data being used to train the given model.
+Based on their study they suggest a few initial HP configurations that have worked well for similar datasets according to their experience.
+These initial configurations are evaluated for the given model and the evaluated values act as a starting point (or hinge) for the HPO method.
+This is essentially automated by the warm starting method~\cite{Feurer2014UsingMT}.
+
+In the above mentioned papers ~\cite{svmhpmetalearnt},  ~\cite{metalearningwarmstartpaper} the authors use the meta learnt HP configurations as starting points for finding the optima in the HP response surface.
+Additionally this idea was also proposed for the SMBO optimization algorithm by Feurer et al. ~\cite{Feurer2014UsingMT}.
+
+
 \subsection{Meta-learning of surrogates}
-\subsection{Warm starting of initial configurations}
+
+HPO models that use surrogates like SMBO,  have an additional gateway through which previous knowledge can be injected.
+The idea is to meta-learn the surrogate using previously stored meta-data from similar tasks.
+This is used by Schilling et al.~\cite{Schilling2016ScalableHO} in which they learn a collection of Gaussian models for each previously similar dataset due to computational constraints.
+They then use the collection of GPs as a surrogate for the SMBO procedure.
+Another flavour of this approach was proposed  by Feurer et al.~\cite{Feurer2018ScalableMF} proposed the use of rank weighted GP Ensembles (RGPE) surrogates meta-learnt from previous meta data.
+
+This meta learnt surrogate can be used in 2 different ways during the HPO optimization procedure.
+For example in SMBO,  one could use it without any modification (aka fine tuning) to suggest the next best candidate to evaluate from a given HP configuration list.
+On the other hand the surrogate can be further meta trained (aka fine tuned) using the available target task meta data. 
+
+Using meta learning of surrogates,  this thesis proposes a new surrogate model.
 
 \section{Types of Surrogates for BO in HPO}
 \subsection{Gaussian Processes}
