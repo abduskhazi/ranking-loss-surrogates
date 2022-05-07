@@ -298,6 +298,10 @@ On the other hand the surrogate can be further meta trained (aka fine tuned) usi
 Using meta learning of surrogates,  this thesis proposes a new surrogate model.
 
 \section{Types of Surrogates for BO in HPO}
+Hyperparameter optimization using Sequential Model Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab} is a convenient method proposed in the literature.
+However,  the performance of this method is heavily reliant on how well the surrogate (model in S\textbf{M}BO) models the true HPO objective.
+In this section,  we discuss in details some of the powerful surrogates that may be used with SMBO.
+
 \subsection{Gaussian Processes}
 
 Gaussian processes~\cite{GPTutorial} are predictive machine learning models that work well with few data points (or data pairs). 
@@ -712,6 +716,10 @@ only fine tune best fit is not giving good results. Investigation in progress.
 
 \chapter{Background}
 
+In this chapter we discuss in detail the fundamental concepts one must grasp in order to understand the thesis work.
+First we talk about the problem of ranking and ranking losses.
+Thereafter, we discuss the modelling of uncertainty done using Deep Neural Network ensembles.
+
 \section{Rank Learning}\label{sec:ranklearning}
 
 Consider a set of objects $\mathbb{A} = \{\textbf{x}_1, \textbf{x}_2, \textbf{x}_3, ... \textbf{x}_n\}$ where each $\textbf{x}$ belongs to a domain $\mathbb{D}$.
@@ -759,18 +767,187 @@ The 2 most important list-wise loss functions are
 
 The point wise and pair wise ranking models do not view the ranking problem as a problem to rank a set of 
 objects.
-This is their fundamental disadvantage.
-Moreover,  the pairwise ranking loss may learn a scoring function that creates the issue of circular ranking.
-The scoring function may learn a preferences given by
-$$
-\textbf{x}_1 \succ  \textbf{x}_2 \;\;\; \textrm{and} \;\;\;  \textbf{x}_2 \succ  \textbf{x}_3 \;\;\; \textrm{and} \;\;\;  \textbf{x}_3 \succ  \textbf{x}_1
-$$
-This creates an issue when creating an ordered list of objects.
-On the other hand,  List wise loss functions are the most general ranking functions and also the most useful one for our thesis.
+This is quite intuitive and is a fundamental advantage as compared with other methods.
 It has been shown in~\cite{listwisebetter} that list wise approaches are superior in performance to point wise and pair wise losses.
 We hence use the list wise approach to ranking.
-We discuss and analyse the loss functions ListNet and ListMLE in detail in chapter~\ref{chap:ProposedIdea}.
+We discuss and analyse the loss functions ListNet and ListMLE in detail in
+the next sections
 
+\section{Loss functions: Definition}
+
+\iffalse
+\begin{table}[ht]
+\centering
+% spacing in table
+% \ra{1.3}  % Commenting this could not get this function right
+\begin{tabular}{@{}lr@{}}
+  \toprule
+  Epochs listsize & Accuracy(within range) Accuracy outside range \\ \midrule
+  A    & 82.47 $\pm$ 3.21 \\
+  B    & 78.47 $\pm$ 2.43 \\
+  C    & 84.30 $\pm$ 2.35 \\
+  D    & 86.81 $\pm$ 3.01 \\
+  \bottomrule
+\end{tabular}
+
+    \caption[Table caption]{\textbf{Sorting accuracy.} Obtained after sorting the numbers based on the scorer's results\\}
+    \label{tab:accuracy}
+\end{table}
+\fi
+
+Consider data in the format shown in table~\ref{tab:dataformat} is given to us.
+
+\begin{table} [ht]
+\centering
+\begin{tabular}{ | c | c | c | }
+  \toprule
+  Instance & Object Set & Ground Truth \\ \midrule
+% \hline \hline
+  1 & $\{a_1, a_2, a_3, ... , a_{10}\}$  & $\{y_1, y_2, y_3, ... , y_{10}\}$  \\
+  2 & $\{a'_1, a'_2, a'_3, ... , a'_{15}\}$ & $\{y'_1, y'_2, y'_3, ... , y'_{15}\}$  \\
+  3 & $\{a''_1, a''_2, a''_3, ... , a''_{7}\}$ & $\{y''_1, y''_2, y''_3, ... , y''_{7}\}$  \\
+  ... & $\{...\}$ & $\{...\}$ \\
+  \bottomrule
+\end{tabular}
+\caption{Data format used to train the scoring function using list wise ranking loss}
+\label {tab:dataformat}
+\end{table}
+Here let each data point $a$ be a sample/element from the set $\mathbb{A}$.
+Each $y$ represents the ground truth preference score of objects belonging to a set $\mathbb{Y}$.
+These preference scores of objects are relative to the objects within the input set.
+Let $s$ be the scoring function to be learnt.
+Hence, the declaration of $s$ is given by
+$$
+s : \mathbb{A} \mapsto \mathbb{R}
+$$
+
+As we can see from the table,  one instance in our data consists of a set of objects as input and a set of corresponding ground truths to train from.
+To learn the function $s$ we optimize our list wise loss function.
+This loss function takes as input the whole set of objects and their ground truth as one instance.
+If we take any set $\mathbb{P}$ such that $\mathbb{P} \subseteq \mathbb{A}$,  the declaration of the list wise loss $L$ is hence given by
+\begin{equation}
+L : s(\mathbb{P}) \times \mathbb{Y}^{|\mathbb{P}|} \mapsto \mathbb{R}
+\end{equation}
+
+Where the scoring function $s$ applied to the $\mathbb{P}$ gives us the set of corresponding scores of all objects in $\mathbb{P}$.
+We will consider the ground truth values to be $\mathbb{R}$ for our analysis as this is type of value
+we have in our data sets.
+
+In the next 2 sections we analyse ListNet and ListMLE,  the prominent listwise loss functions in the literature.
+
+\section{Loss function: ListNet}
+
+In this section we try to intuitively explain the ListNet idea proposed in~\cite{listwisebetter}.
+Our objective is to learn the scoring function $s$ such that it returns scores that are similar in relevance/order when compared to the ground truth scores.
+That is to say
+$$
+y_3 < y_{12} < y_1 \implies s(a_3) < s(a_{12}) < s(a_1)
+$$
+This would make the ranking of the objects equal to the ranking obtained by using the ground truth values.
+Note that we do not need to get the exact ground truth scores.
+This increases the number of acceptable functions that can be learnt by increasing the target function space.
+This makes it easier to learn the scoring function.
+
+Ranking is obtained by sorting the objects based on their respective scores.
+Note that the sort functionality is non differentiable hence it is not a 
+part of the ranking loss function.
+Our loss function needs to be constructed using the following 2 lists:
+\begin{itemize}
+\item List of scores given by scoring function $s$.
+\item List of scores given to us by ground truth.
+\end{itemize}
+
+The loss function must find some sort of a distance between the 2 given lists.
+It then can reduce the distance by changing the parameters of the scoring function.
+
+In ListNet,  a probabilistic approach is taken so as to account for any uncertainties in the ground truth values.
+Consider selecting an object from the input set with a probability
+$$
+P = \frac{s(a)}{\Sigma_i s(a_i)} \;\;\; \forall i \in \{1, 2, 3, ...,  |\mathbb{P}|\}
+$$
+This make intuitive sense because the probability of selecting an object should be higher if it more relenvant and vise-versa.
+Note that the score of any object by the scoring function can negative as well.
+Therefore the score is passed through a strictly positive and increasing function $\phi$.
+This changes the probability to
+\begin{equation}\label{eq:objselection}
+P = \frac{\phi(s(a))}{\Sigma_i \phi(s(a_i))} \;\;\; \forall i \in \{1, 2, 3, ...,  |\mathbb{P}|\}
+\end{equation}
+
+Equation~\ref{eq:objselection} is also referred to as top 1 probability of an object in~\cite{listwisebetter}.
+This is because this gives the probability of ranking the object first when we are calculating the permutation probability of given list.
+
+The proposed way to find the distance between 2 lists in ListNet is
+\begin{itemize}
+\item Find the top 1 probabilities of each object using the scores given by the scoring function.
+\item Using the ground truth values,  find similar top 1 probabilities.
+\item The cross entropy between the 2 entities gives us the "distance" between the 2 lists.
+\end{itemize}
+
+Let $P_{s(a)}$ represent the top 1 probability of an object using the scores given by the scoring function.
+Similarly,   let $P_y$ represent the top 1 probability using its ground truth value.
+The cross entropy used as a loss in ListNet is given by
+\begin{equation}
+L(\textbf{y},  {s(\textbf{a})}) = - \Sigma_i P_{s(a_i)} \log P_{y_i}
+\end{equation}
+Where $\textbf{y}$ and $s(\textbf{a})$ represent the ground truth values and the scores given by the scoring function.
+
+\iffalse
+
+\fi
+
+\section{Loss function: ListMLE}
+
+ListMLE loss stands for, "List Maximum Likelihood Estimation" loss.
+It is another type of list loss function that is similar to listNet.
+As in ListNet,  the probability of selecting an object from the list is taken the same as given in equation~\ref{eq:objselection}.
+However,  the final loss used in MLE is not cross entropy.
+Rather it maximizes a likelihood estimation as the name suggests.
+
+Let $\pi$ define any permutation of a list.
+The probability of a permutation is nothing but the probability of selecting one document after another without replacement.
+In our case the permutation probability of selecting 1 permutation using the selection probabilities given by equation~\ref{eq:objselection}  is~\cite{listwisebetter}
+\begin{equation}\label{eq:firstMLEequation}
+P_{\pi} = \prod\limits_{j=1}^{k} \frac{\phi(s(\pi_j))}{ \sum\limits_{t=j}^k \phi(s(\pi_k))}
+\end{equation}
+where $\pi_i$ is the object at position $i$ in the permutation $\pi$.
+
+Applying log to the above equation gives us
+\begin{equation}
+\log P_{\pi} = \sum\limits_{j=1}^{k} \log \frac{\phi(s(\pi_j))}{ \sum\limits_{t=j}^k \phi(s(\pi_k))}
+\end{equation}
+
+However,  the question remains which permutation to use?
+The best permutation for the given set of objects would be according to the true scores of the objects.
+More precisely,  it would be the objects ordered in the descending order of their relevance scores.
+Let this permutation be represented by $\pi^*$.
+Hence our probability equation becomes
+\begin{equation}
+\log P_{\pi^*} = \sum\limits_{j=1}^{k} \log \frac{\phi(s(\pi^*_j))}{ \sum\limits_{t=j}^k \phi(s(\pi^*_k))}
+\end{equation}
+
+ListMLE maximizes this probability.
+Since most we generally minimize the objective function,  the loss function of ListMLE is given by
+\begin{equation}
+L_{mle} = - \log P_{\pi^*}
+\end{equation}
+Expanding the right hand side of the equation gives us the final loss function that has to be minimised by any algorithm that uses ListMLE
+
+\begin{equation}
+L_{mle} = -  \sum\limits_{j=1}^{k} \log \frac{\phi(s(\pi^*_j))}{ \sum\limits_{t=j}^k \phi(s(\pi^*_k))}
+\end{equation}
+
+
+Notice that in the calculation of the loss, the true score values of the objects are unused.
+Which means that the actual scores of the objects do not matter.
+The only constraint is that the scores must have the values that give the same permutation.
+Even uneven scaling of the actual scores does not affect the output as long as the constraint is maintained.
+
+In the case of ListNet,  however,  the true scores do matter.
+The probability of selecting objects according to their true scores is used.
+Hence the result is invariant only to linear scaling.
+
+This advantage makes listMLE loss function superior to the ListNet as it makes the target space of functions bigger and hence the convergence can be quicker.
+Because of this advantage we use ListMLE as a list loss function in our thesis.
 
 \section{Uncertainty modelling using Deep Ensembles}
 
@@ -1059,144 +1236,7 @@ Finally we build a ranking model to improve the performance of any model based H
 We use SMBO as a reference for our study.
 
 
-\section{Learning mechanism}
-
-In section~\ref{sec:ranklearning},  we discussed that list wise ranking losses were superior to the point wise and pair wise losses.
-In this section we analyse the prominent list loss functions - ListNet and ListMLE.
-Then, we discuss the implementation details of the loss function used in our model.
-
-\subsection{Loss functions: Analysis and implementation}
-
-\iffalse
-\begin{table}[ht]
-\centering
-% spacing in table
-% \ra{1.3}  % Commenting this could not get this function right
-\begin{tabular}{@{}lr@{}}
-  \toprule
-  Epochs listsize & Accuracy(within range) Accuracy outside range \\ \midrule
-  A    & 82.47 $\pm$ 3.21 \\
-  B    & 78.47 $\pm$ 2.43 \\
-  C    & 84.30 $\pm$ 2.35 \\
-  D    & 86.81 $\pm$ 3.01 \\
-  \bottomrule
-\end{tabular}
-
-    \caption[Table caption]{\textbf{Sorting accuracy.} Obtained after sorting the numbers based on the scorer's results\\}
-    \label{tab:accuracy}
-\end{table}
-\fi
-
-Consider data in the format shown in table~\ref{tab:dataformat} is given to us.
-
-\begin{table} [ht]
-\centering
-\begin{tabular}{ | c | c | c | }
-  \toprule
-  Instance & Object Set & Ground Truth \\ \midrule
-% \hline \hline
-  1 & $\{a_1, a_2, a_3, ... , a_{10}\}$  & $\{y_1, y_2, y_3, ... , y_{10}\}$  \\
-  2 & $\{a'_1, a'_2, a'_3, ... , a'_{15}\}$ & $\{y'_1, y'_2, y'_3, ... , y'_{15}\}$  \\
-  3 & $\{a''_1, a''_2, a''_3, ... , a''_{7}\}$ & $\{y''_1, y''_2, y''_3, ... , y''_{7}\}$  \\
-  ... & $\{...\}$ & $\{...\}$ \\
-  \bottomrule
-\end{tabular}
-\caption{Data format used to train the scoring function using list wise ranking loss}
-\label {tab:dataformat}
-\end{table}
-Here let each data point $a$ be a sample/element from the set $\mathbb{A}$.
-Each $y$ represents the ground truth preference score of objects belonging to a set $\mathbb{Y}$.
-These preference scores of objects are relative to the objects within the input set.
-Let $s$ be the scoring function to be learnt.
-Hence, the declaration of $s$ is given by
-$$
-s : \mathbb{A} \mapsto \mathbb{R}
-$$
-
-As we can see from the table,  one instance in our data consists of a set of objects as input and a set of corresponding ground truths to train from.
-To learn the function $s$ we optimize our list wise loss function.
-This loss function takes as input the whole set of objects and their ground truth as one instance.
-If we take any set $\mathbb{P}$ such that $\mathbb{P} \subseteq \mathbb{A}$,  the declaration of the list wise loss $L$ is hence given by
-\begin{equation}
-L : s(\mathbb{P}) \times \mathbb{Y}^{|\mathbb{P}|} \mapsto \mathbb{R}
-\end{equation}
-
-Where the scoring function $s$ applied to the $\mathbb{P}$ gives us the set of corresponding scores of all objects in $\mathbb{P}$.
-We will consider the ground truth values to be $\mathbb{R}$ for our analysis as this is type of value
-we have in our data sets.
-
-In the next 2 sections we analyse ListNet and ListMLE,  the prominent listwise loss functions in the literature.
-
-\subsection{ListNet}
-
-In this section we try to intuitively explain the ListNet idea proposed in~\cite{listwisebetter}.
-Our objective is to learn the scoring function $s$ such that it returns scores that are similar in relevance/order when compared to the ground truth scores.
-That is to say
-$$
-y_3 < y_{12} < y_1 \implies s(a_3) < s(a_{12}) < s(a_1)
-$$
-This would make the ranking of the objects equal to the ranking obtained by using the ground truth values.
-Note that we do not need to get the exact ground truth scores.
-This increases the number of acceptable functions that can be learnt by increasing the target function space.
-This makes it easier to learn the scoring function.
-
-Ranking is obtained by sorting the objects based on their respective scores.
-Note that the sort functionality is non differentiable hence it is not a 
-part of the ranking loss function.
-Our loss function needs to be constructed using the following 2 lists:
-\begin{itemize}
-\item List of scores given by scoring function $s$.
-\item List of scores given to us by ground truth.
-\end{itemize}
-
-The loss function must find some sort of a distance between the 2 given lists.
-It then can reduce the distance by changing the parameters of the scoring function.
-
-In ListNet,  a probabilistic approach is taken so as to account for any uncertainties in the ground truth values.
-Consider selecting an object from the input set with a probability
-$$
-P = \frac{s(a)}{\Sigma_i s(a_i)} \;\;\; \forall i \in \{1, 2, 3, ...,  |\mathbb{P}|\}
-$$
-This make intuitive sense because the probability of selecting an object should be higher if it more relenvant and vise-versa.
-Note that the score of any object by the scoring function can negative as well.
-Therefore the score is passed through a strictly positive and increasing function $\phi$.
-This changes the probability to
-\begin{equation}\label{eq:objselection}
-P = \frac{\phi(s(a))}{\Sigma_i \phi(s(a_i))} \;\;\; \forall i \in \{1, 2, 3, ...,  |\mathbb{P}|\}
-\end{equation}
-
-Equation~\ref{eq:objselection} is also referred to as top 1 probability of an object in~\cite{listwisebetter}.
-This is because this gives the probability of ranking the object first when we are calculating the permutation probability of given list.
-
-The proposed way to find the distance between 2 lists in ListNet is
-\begin{itemize}
-\item Find the top 1 probabilities of each object using the scores given by the scoring function.
-\item Using the ground truth values,  find similar top 1 probabilities.
-\item The cross entropy between the 2 entities gives us the "distance" between the 2 lists.
-\end{itemize}
-
-Let $P_{s(a)}$ represent the top 1 probability of an object using the scores given by the scoring function.
-Similarly,   let $P_y$ represent the top 1 probability using its ground truth value.
-The cross entropy used as a loss in ListNet is given by
-\begin{equation}
-L(\textbf{y},  {s(\textbf{a})}) = - \Sigma_i P_{s(a_i)} \log P_{y_i}
-\end{equation}
-Where $\textbf{y}$ and $s(\textbf{a})$ represent the ground truth values and the scores given by the scoring function.
-
-\iffalse
-Let $\pi$ define any permutation of a list.
-The probability of a permutation is nothing but the probability of selecting one document after another without replacement.
-In our case the permutation probability of selecting 1 permutation using the selection probabilities given by equation~\ref{eq:objselection}  is~\cite{listwisebetter}
-$$
-P_{\pi} = \Pi^n_{j=1} \frac{\phi(s_{\pi(j)})}{ \Sigma^n_{k=j} \phi(s_{\pi(k)})}
-$$
-\fi
-
-Hyperparameter optimization using Sequential Model Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab}
-
-The loss function used is listMLE
-As discussed in the literature review,  we use list wise ranking losses because they have been found to be more efficient in most general case.
-
+\subsubsection{Implemenation notes}
 The implementation is done by removing top element check comments
 The latest implementation is used due to its efficiency otherwise it is the same. (note)
 
@@ -1213,7 +1253,7 @@ Main Idea:
 Applying this to HPOB... (With or without query)
     First learning from first search space.
     Even with this the loss curves are very smooth if we use 2 * tanh(0.01 * x)
-
+    
     
 \section{Case study}
 
