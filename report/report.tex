@@ -50,7 +50,15 @@
        }
 \fi
 
+
 \begin{document}
+
+\newgeometry{
+    top=1.5in,
+    bottom=1.5in,
+    outer=1.75in,
+    inner=1.25in,
+    }
 
 \title{
 {\LARGE Master's Thesis}
@@ -70,17 +78,10 @@
 \large{Albert-Ludwigs-University Freiburg
 \\Representation Learning Department}
 }
-
+    
 \pagenumbering{gobble}
 
 \maketitle
-
-\newgeometry{
-    top=1.5in,
-    bottom=1.5in,
-    outer=1.75in,
-    inner=1.25in,
-    }
     
 
 % \date{}
@@ -1002,7 +1003,12 @@ Because of this advantage we use ListMLE as a list loss function in our thesis.
 Deep Neural Networks (DNNs) are machine learning models with very high representational capacity~\cite{Goodfellow-et-al-2016}.
 Due to this property,  one can use them as surrogates for HPO objective functions.
 But the issue is that DNNs do not quantify uncertainty trivially.
+In fact the results can be seen as overconfident.
+If used in any HPO optimization algorithm as surrogate,  such overconfident wrong predictions cause a lot of computational overhead by predicting inefficient HP configurations.
 
+We are discussing in detail this concept because we use deep neural networks as a scoring function in our proposed ranking loss surrogate model.
+Uncertainty estimation qualities of a surrogate have high importances especially if they are used in techniques like SBMO.
+As the proposed model is studied as a surrogate in the SMBO technique,  we need to study how to model uncertainty efficiently using the underlying DNN architecture.
 
 In the current literature,  uncertainty quantification methods using deep neural networks can be broadly classified into the following methods:
 \begin{itemize}
@@ -1011,30 +1017,63 @@ In the current literature,  uncertainty quantification methods using deep neural
 \item Ensemble approach using multiple neural networks.
 \end{itemize}
 
-In Bayesian neural network(BNN),  a prior over weights and biases is specified during the intialization of the BNN.
+In Bayesian neural network(BNN),  a prior over weights and biases is specified during the initialization of the BNN.
 Given the data,  a posterior predictive distribution is calculated for all the parameters of the network (Weights and Biases).
 One issue with this approach is that BNNs are very complex and difficult to train. 
 
-Monte carlo drop out is a regularization technique used during the training of neural networks.
+Monte Carlo drop out is a regularization technique used during the training of neural networks.
 With a certain probability,  connections between neurons are dropped.
 Using this technique one obtains possibly $2^N$ neural networks where $N$ is the number of connections
-in the artifical neural network.
+in the artificial neural network.
 We can get an ensemble of high capacity models for free.
 It is normally only used during training to obtain regularization.
 
-However,  if one uses monte carlo dropout during the evaluation,  we can get multiple results from the same input using this approach.
-Given input $x$ and output $y = \textrm{NN}(x)$.  If we have $m$ neural networks obtained using monte carlo dropout,  we get $\{y_1, y_2... y_m\}$ outputs,  we can obtain the mean and variance of 
-$$
+However,  if one uses Monte Carlo dropout during the evaluation,  we can get multiple results from the same input using this approach.
+Given input $x$ and output $y = \textrm{NN}(x)$.  If we have $m$ neural networks obtained using Monte Carlo dropout,  we get $\{y_1, y_2... y_m\}$ outputs,  we can obtain the mean and variance of 
+\begin{equation}\label{eq:simpleDNNensemble}
 y_\textrm{mean} = \frac{\Sigma y}{m}  \;\;\;\;\;  y_\textrm{variance} =\frac{\Sigma(y - y_{mean})^2}{m-1}
+\end{equation}
+Please note that the $m-1$ in the denominator is due to Bessel’s Correction~\cite{besselcorrection} to reduce the bias in estimation.
+
+
+Lakshminarayana et al.~\cite{DeepEnsemblePaper} propose another method to predict uncertainty using deep neural networks.
+They propose that the uncertainty prediction can be done directly using a single neural network.
+This is possible if we assume that the underlying uncertainty is a Gaussian distribution.
+With this assumption, the neural network would have 2 outputs instead of one.
+One for the mean of the prediction, say $\mu$, and the other for the variance,  say $\sigma^2$
+ of the prediction.
+One important point to note is that the variance cannot really be negative.
+This is made sure by the authors to pass the output of the neural network through a strictly positive "softplus" function.
+ 
+The authors propose to optimize the following loss function
+$$
+L_{de} = \frac{\log \sigma^2 }{2} + \frac{(y - \mu)^2}{2\sigma^2} + k
+$$
+Where both the outputs are some functions of the DNN parameters ($\theta$) and the input ($\textbf{x}$) i.e $\sigma^2 = f(\theta,  \textbf{x})$ and $\mu = g(\theta, \textbf{x})$.
+Here, the back propagation finds and updates the parameters $\theta$ using the partial derivative:
+$$
+\frac{\partial L}{\partial \theta}
 $$
 
 
-Another way to predict uncertainty is proposed in the paper~\cite{DeepEnsemblePaper}.
+We use this loss function to build deep ensemble surrogates for the HPO.
+The prediction of uncertainty using ranking losses is however done using the simple ensemble approach given in equation~\ref{eq:simpleDNNensemble}.
+This is because the integration of the loss function which learns both the mean and variance with the ranking loss functions is non trivial.
 
+One simple approach is to simply use a combination of losses like
+$$
+L_{\textrm{total}} = L_{mse} + L_{de}
+$$
+However such loss functions would need a thorough theoretical analysis which is out of the scope of this thesis.
+Hence we do not use this approach on our proposed model.
 
-
-
-
+As there are are multiple neural networks, each predicting its own Gaussian distribution,
+there needs to be a mechanism to integrate the results.
+This is done using a mixture of Gaussian Distributions.
+If there are $m$ neural networks in the ensemble,  the mean and variance are given by
+$$
+\mu_{final} =  \frac{\sum\limits_{i=1}^{m} \mu_i}{m} \quad \textrm{and} \quad \sigma_{final}^2 = \frac{\sum\limits_{i=1}^{m} (\sigma_i^2 + \mu_i^2) - \mu_{final}^2}{m}
+$$
 
 \section{Baselines}
 
@@ -1063,7 +1102,7 @@ Few Shot Bayesian Optimization deals has to be run in 2 chronological steps
 The following 2 sections discuss the implementation details of the baselines methods used in our thesis.
 
 \subsection{Deep Ensemble}
-As discussed in the literature review section,  deep ensemble uses a list of artificial neural networks to find out uncertainties given data points D.
+As discussed in detail in previous sections,  deep ensemble uses a list of artificial neural networks to find out uncertainties given data points D.
 
 Some of the important implementation details are
 \begin{itemize}
