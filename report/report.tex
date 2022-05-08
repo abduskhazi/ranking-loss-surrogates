@@ -1,4 +1,5 @@
-\documentclass[11pt]{report}
+%\documentclass[11pt]{report}
+\documentclass[12pt, twoside, ngerman]{report} 
 %\documentclass[12pt,twoside]{report}
 % \documentclass{article}
 \usepackage{amssymb}
@@ -12,7 +13,7 @@
 \usepackage{amsmath}
 \usepackage{caption}
 \usepackage{subcaption}
-
+\usepackage{geometry}
 \usepackage[english]{babel}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
@@ -34,7 +35,7 @@
 \title {Ranking Loss Surrogates \\[1ex] \large MSc Thesis}
 % Commenting out another way to write the title.
 % \title{MSc Thesis - Ranking Loss Surrogates}
-
+    
 \author{
         Abdus Salam Khazi [
         \href{mailto:abdus.khazi@students.uni-freiburg.de}
@@ -48,6 +49,13 @@
 		\end{tabular}
        }
 
+\newgeometry{
+    top=1.5in,
+    bottom=1.5in,
+    outer=1.75in,
+    inner=1.25in,
+    }
+    
 \begin{document}
 
 \pagenumbering{gobble}
