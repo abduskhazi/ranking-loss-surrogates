@@ -998,6 +998,28 @@ Hence the result is invariant only to linear scaling.
 This advantage makes listMLE loss function superior to the ListNet as it makes the target space of functions bigger and hence the convergence can be quicker.
 Because of this advantage we use ListMLE as a list loss function in our thesis.
 
+\section{Position Enhanced Ranking}
+
+In many problem domains that use the ranking concept,  it may not be important that each object be placed at exact location as induced by its relevance.
+For example,  when a search engine ranks its search results, it is more important to find the most important results and rank them correctly than to order the least important results correctly.
+
+This is also the case in the problem of ranking HP configurations when the ranking model is used as a surrogate in an SMBO process.
+In this process,  the ranking surrogate is only needed to obtain the most important HP configuration at each step in the optimization cycle.
+
+Lan et al.  discuss this problem in detail in their paper,  "Position-Aware ListMLE: A Sequential Learning Process for Ranking"~\cite{positionawarerankinglistmle}.
+However,  they reformulate the problem as a sequential learning process.
+A more accessible approach is to weight each object component in our ListMLE by any decrease function $c$~\cite{TRLWO}.
+This is possible because the listMLE loss function is in the form of a summation.
+Hence the weighted ListMLE function is given by:
+
+\begin{equation}
+L_{mle} = -  \sum\limits_{j=1}^{k} c(j) \log \frac{\phi(s(\pi^*_j))}{ \sum\limits_{t=j}^k \phi(s(\pi^*_k))}
+\end{equation}
+Where $c(j)$ gives the weight of the rank j in the ordered list.
+This is approach used in our model to improve our ranking loss function.
+The type of decreasing function to use is discussed in more detail in chapter 4.
+Note that it is also possible for using the weighting in the ListNet case as ListNET and ListMLE have similar forms.
+
 \section{Uncertainty modelling using Deep Ensembles}
 
 Deep Neural Networks (DNNs) are machine learning models with very high representational capacity~\cite{Goodfellow-et-al-2016}.
@@ -1359,8 +1381,9 @@ For reasons described in the~\ref{sec:restart},  we restart before fine tuning a
 \subsection{Transfer Learning}
 This is the transfer HPO-B
 
-\subsection{Use of Deep Sets}
-why are deep sets important. 
+\subsection{Using Deep Sets to build context aware models}
+
+As discussed in the literature review,  model a whole set into a latent embedding.
 For domain conditionality 
 meta train in source domain (HPOB training SS)
 meta test in target domain (HPOB test/val SS)
