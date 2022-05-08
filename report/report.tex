@@ -1075,16 +1075,6 @@ After completing the own implementation,  we found that the results obtained wer
 For this reason, the results are used only for the first stage.
 The results already present in the benchmarking data of~\cite{pineda2021hpob} were used for comparing this result with our implementation.
 
-\subsubsection{Using cosine annealing }
-We obtained loss curves that were very bad during the training and were varying quite a bit
-The reason was that the learning rate during the fine tuning was too high
-Hence we used cosine annealing for this to get the a better local minima.
-
-Show before and after curves.
-
-
-The results of this are discussed in the results section.
-
 
 \section{Evaluation Strategy}
 
@@ -1397,6 +1387,18 @@ As the weighting does not decrease very rapidly,  there is a possibility of para
 For example,  at every step the top $n$ configurations can be selected,  and all of them can be tried for optimization.
 The parallelism is less effective when using inverse linear weighting or weighting proposed by Chen et al.
 
+\section{Using cosine annealing}
+During the fine tuning of our models both in the baselines as well as the ranking loss model,  it was found that the fine tuning loss curve was varying a lot.
+
+
+We obtained loss curves that were very bad during the training and were varying quite a bit
+The reason was that the learning rate during the fine tuning was too high
+Hence we used cosine annealing for this to get the a better local minima.
+
+Show before and after curves.
+
+
+The results of this are discussed in the results section.
 
 
 \section{Advantages and Limitations}
