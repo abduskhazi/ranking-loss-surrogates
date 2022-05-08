@@ -981,91 +981,12 @@ y_\textrm{mean} = \frac{\Sigma y}{m}  \;\;\;\;\;  y_\textrm{variance} =\frac{\Si
 $$
 
 
-One way to do Hyper Parameter Optimization is by using 
-Uncertainty prediction is the key in the paper~\cite{DeepEnsemblePaper}.
-
-Evaluating a novel hyper parameter surrogate is extremely expensive.
-For this,  we would have to run the HPO technique (Bayesian optimization in our case) with our surrogate on a set of different machine learning models.
-This is because each ML model has a different search space.
-Moreover,  the optimum within the HP search space may be different when the ML model is trained on different data sets.
-Hence we further need to do multiple HP optimizations of a model each time using a different dataset.
-In addition to this due to the stochastic nature of ML models as well as the surrogate models, 
-we would have to run the HPO multiple times for each dataset.
-
-For comparing our proposed model with other HPO models we have to do the above evaluation for each of the HPO model.
-As one can see,  this evaluation if done right from the training of the ML model is not feasible.
-We use the HPO-B~\cite{DBLP:journals/corr/abs-2106-06257} benchmarking in this thesis.
-Using this benchmark,  we do not need to train our ML models from scratch as the meta data also contains evaluations of multiple hyper parameters for different ML models and datasets.
+Another way to predict uncertainty is proposed in the paper~\cite{DeepEnsemblePaper}.
 
 
-In this section we first discuss about the organisation of the benchmarking meta data.
-Subsequently, we discuss the baselines used in our thesis.
 
 
-\section{Benchmarking Meta-Data}
 
-HPO-B is a benchmark that can be used for doing black box HPO.
-It can be used for both transfer models and non transfer models.
-The meta data consists of a list of (hyper-parameter) search spaces.
-These are hyper parameter search spaces of single models.
-The is organised in a json format with the structure illustrated in Figure~\ref{fig:metadataorganization}.
-
-\begin{figure}[htb]
-\centering
-\begin{tikzpicture}[scale=0.75, transform shape,
-% roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=7mm},
-squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
-]
-%Nodes
-\node[squarednode]      (ss2)                             {Search Space 2};
-\node[squarednode]      (main)                   [left=of ss2]           {MetaData};
-\node[squarednode]      (ss1)                    [above=of ss2]          {Search Space 1};
-\node[squarednode]      (ss_)                       [below=of ss2]        {...};
-\node[squarednode]      (ds2)                       [right=of ss1]        {Data Set 2};
-\node[squarednode]      (ds1)                       [above=of ds2]        {Data Set 1};
-\node[squarednode]      (ds_)                       [below=of ds2]        {...};
-\node[squarednode]      (Xy)                       [right=of ds2]        {\{\textbf{X},  \textbf{y}\},  \textrm{Seeds}};
-
-%Lines
-\draw[->] (main.east) -- (ss2.west);
-\draw[->] (main.east) -- (ss1.west);
-\draw[->] (main.east) -- (ss_.west);
-\draw[->] (ss1.east) -- (ds2.west);
-\draw[->] (ss1.east) -- (ds1.west);
-\draw[->] (ss1.east) -- (ds_.west);
-\draw[->] (ds2.east) -- (Xy.west);
-\end{tikzpicture}
-\caption{Structure of the meta data in the HPO-B benchmark}
-\label{fig:metadataorganization}
-\end{figure}
-Where \textbf{X} represents the set of configurations for a evaluated for a model in a particular data set and
-\textbf{y} represents the evaluation results.
-The bayesian optimization used in our thesis can be started with different initial known HP configurations.
-One initial configuration, called a seed in the meta data, is provided by a set of values (or indices) in $\textbf{X}$ and $\textbf{y}$.
-There are a total of 5 seeds provided for a search space and dataset combination.
-
-The meta data in HPO-B comes in 3 versions namely \textbf{HPO-B-v1},  \textbf{HPO-B-v2}, and \textbf{HPO-B-v3}.
-Of this \textbf{HPO-B-v3} contains distlilled the search spaces that have the most datasets and can be split is split into train,  validation and test sets. 
-
-
-The meta data set in HPOB is divided into test and train data.
-Using meta dataset,  one can learn meta learn a model using the training split.
-Then the model is evaluated in the testing split.
-This data approach is used both in the baselines and proposed idea models.
-
-\iffalse
-\subsection{HPO-B Dataset}
-To use the HPO-B code,  one must write function observe\_and\_suggest and observe\_and\_suggest\_continous to deal with discrete and continous optimisation case respectively.
-Due to out of scope nature of the continous case,  in our implementation we assume that we are dealing only with the discrete case only.
-
-The implementation of observe\_and\_suggest functions differs based on the surrogate model used by our problem.
-\fi
-
-\subsection{Benchmark evaluation}
-There are 2 types of HP optimization surrogates that are studied in this thesis - transfer learning surrogates
-and non-transfer learning surrogates.
-This benchmark can be used for analysing both types of models.
-However,  in order cross compare transfer and non-transfer techniques,  we only compare against HPO-B-v3 test split as recommended in the HPO-B paper.
 
 \section{Baselines}
 
@@ -1102,49 +1023,7 @@ Some of the important implementation details are
 \item We do not use adversarial examples because it was giving bad results.
 \end{itemize}
     
-\subsubsection{Requirement of restarting training}\label{sec:restart}
-We find in our experiments that the deep ensemble performs much better in our HPO cycle when we train it from scratch at every acquisition step.
-This is counter intuitive because an already trained model will converge to a local optima quickly.
-The reason for this performance however is that the model gets biased towards the points that are observed at the beginning of the optimisation cycle.
-Lets say we have 2 models 
-\begin{itemize}
-\item $\textrm{DE}_{\textrm{restart}}$ which always restarts training at every acquisition step.
-\item $\textrm{DE}_{\textrm{reuse}}$ which uses the previously trained model for subsequent training of the optimization cycle.
-\end{itemize}
 
-\begin{figure}[htp]% [H] is so declass\'e!
-\centering
-\begin{minipage}{0.45\textwidth}
-\includegraphics[width=\textwidth]{images/bias25}
-\caption{Bias at 25th optimization cycle}
-    \label{fig:bias25}
-\end{minipage}\hfill
-\begin{minipage}{0.45\textwidth}
-\includegraphics[width=\textwidth]{images/bias50}
-\caption{Bias at 50th optimization cycle}
-    \label{fig:bias50}
-\end{minipage}\par
-\vskip\floatsep% normal separation between figures
-\includegraphics[width=0.45\textwidth]{images/bias100}
-\caption{Bias at 100th optimization cycle}
-    \label{fig:bias100}
-\end{figure}
-
-
-Let $\textrm{DE}_{\textrm{reuse}}$ be fine tuned for 100 epochs during the optimization cycle.
-Let there be just 1 data point to start with.
-The figures~\ref{fig:bias25},~\ref{fig:bias50},  and ~\ref{fig:bias100} show the number of times each observed data points is used for the fine tuning at the 25th, 50th and 100th optimization cycle by $\textrm{DE}_{\textrm{reuse}}$  respectively.
-Generally all the data is used during fine tuning due to its scarcity at this step.
-Hence, the biases are scaled with the number of epochs.
-$\textrm{DE}_{\textrm{restart}}$ does not face this issue as the fine tuning step restarts everytime.
-
-The heavy bias that is present in the figures is actually not intended.
-This is because all observations should be treated equally in any training/fine-tuning step.
-Hence it is better to restart the model before fine tuning step at each optimization step.
-
-The second reason is that the model may get stuck at a stubborn local minima at any fine tuning step n $1 <= n <= 100$.
-Coming out of this local minima may require vastly different data points than actually seen.
-This is not generally the case in our sequential optimization.
 
 \subsubsection{Optimization Procedure}
 Deep ensemble is not a meta transfer model.
@@ -1424,6 +1303,51 @@ Implementation yet to be done
 \subsubsection{Training with mean and restricted output}
 Implementation yet to be done
 
+\section{Requirement of restarting training}\label{sec:restart}
+We find in our experiments that the deep ensemble performs much better in our HPO cycle when we train it from scratch at every acquisition step.
+This is counter intuitive because an already trained model will converge to a local optima quickly.
+The reason for this performance however is that the model gets biased towards the points that are observed at the beginning of the optimisation cycle.
+Lets say we have 2 models 
+\begin{itemize}
+\item $\textrm{m}_{\textrm{restart}}$ which always restarts training at every acquisition step.
+\item $\textrm{m}_{\textrm{reuse}}$ which uses the previously trained model for subsequent training of the optimization cycle.
+\end{itemize}
+
+\begin{figure}[htp]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/bias25}
+\caption{Bias at 25th optimization cycle}
+    \label{fig:bias25}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/bias50}
+\caption{Bias at 50th optimization cycle}
+    \label{fig:bias50}
+\end{minipage}\par
+\vskip\floatsep% normal separation between figures
+\includegraphics[width=0.45\textwidth]{images/bias100}
+\caption{Bias at 100th optimization cycle}
+    \label{fig:bias100}
+\end{figure}
+
+
+Let $\textrm{m}_{\textrm{reuse}}$ be fine tuned for 100 epochs during the optimization cycle.
+Let there be just 1 data point to start with.
+The figures~\ref{fig:bias25},~\ref{fig:bias50},  and ~\ref{fig:bias100} show the number of times each observed data points is used for the fine tuning at the 25th, 50th and 100th optimization cycle by $\textrm{m}_{\textrm{reuse}}$  respectively.
+Generally all the data is used during fine tuning due to its scarcity at this step.
+Hence, the biases are scaled with the number of epochs.
+$\textrm{m}_{\textrm{restart}}$ does not face this issue as the fine tuning step restarts everytime.
+
+The heavy bias that is present in the figures is actually not intended.
+This is because all observations should be treated equally in any training/fine-tuning step.
+Hence it is better to restart the model before fine tuning step at each optimization step.
+
+The second reason is that the model may get stuck at a stubborn local minima at any fine tuning step n $1 <= n <= 100$.
+Coming out of this local minima may require vastly different data points than actually seen.
+This is not generally the case in our sequential optimization.
+
+We use this restart mechanism in our ranking loss model in order to make it more robust against these issues.
 
 \section{Weighted Loss}
 General list wise loss functions are only required in the problem domains where it is essential to get the ranks of all the objects correctly.
@@ -1512,6 +1436,85 @@ The format of this is the same as that of experiments and Results.
 Also known as Hypothesis
 
 \chapter{Experiments and Results}
+Evaluating a novel hyper parameter surrogate is extremely expensive.
+For this,  we would have to run the HPO technique (Bayesian optimization in our case) with our surrogate on a set of different machine learning models.
+This is because each ML model has a different search space.
+Moreover,  the optimum within the HP search space may be different when the ML model is trained on different data sets.
+Hence we further need to do multiple HP optimizations of a model each time using a different dataset.
+In addition to this due to the stochastic nature of ML models as well as the surrogate models, 
+we would have to run the HPO multiple times for each dataset.
+
+\section{Benchmarking Meta-Data}
+
+For comparing our proposed model with other HPO models we have to do the above evaluation for each of the HPO model.
+As one can see,  this evaluation if done right from the training of the ML model is not feasible.
+We use the HPO-B~\cite{DBLP:journals/corr/abs-2106-06257} benchmarking in this thesis.
+Using this benchmark,  we do not need to train our ML models from scratch as the meta data also contains evaluations of multiple hyper parameters for different ML models and datasets.
+In this section we first discuss about the organisation of the benchmarking meta data.
+
+
+HPO-B is a benchmark that can be used for doing black box HPO.
+It can be used for both transfer models and non transfer models.
+The meta data consists of a list of (hyper-parameter) search spaces.
+These are hyper parameter search spaces of single models.
+The is organised in a json format with the structure illustrated in Figure~\ref{fig:metadataorganization}.
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[scale=0.75, transform shape,
+% roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=7mm},
+squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
+]
+%Nodes
+\node[squarednode]      (ss2)                             {Search Space 2};
+\node[squarednode]      (main)                   [left=of ss2]           {MetaData};
+\node[squarednode]      (ss1)                    [above=of ss2]          {Search Space 1};
+\node[squarednode]      (ss_)                       [below=of ss2]        {...};
+\node[squarednode]      (ds2)                       [right=of ss1]        {Data Set 2};
+\node[squarednode]      (ds1)                       [above=of ds2]        {Data Set 1};
+\node[squarednode]      (ds_)                       [below=of ds2]        {...};
+\node[squarednode]      (Xy)                       [right=of ds2]        {\{\textbf{X},  \textbf{y}\},  \textrm{Seeds}};
+
+%Lines
+\draw[->] (main.east) -- (ss2.west);
+\draw[->] (main.east) -- (ss1.west);
+\draw[->] (main.east) -- (ss_.west);
+\draw[->] (ss1.east) -- (ds2.west);
+\draw[->] (ss1.east) -- (ds1.west);
+\draw[->] (ss1.east) -- (ds_.west);
+\draw[->] (ds2.east) -- (Xy.west);
+\end{tikzpicture}
+\caption{Structure of the meta data in the HPO-B benchmark}
+\label{fig:metadataorganization}
+\end{figure}
+Where \textbf{X} represents the set of configurations for a evaluated for a model in a particular data set and
+\textbf{y} represents the evaluation results.
+The bayesian optimization used in our thesis can be started with different initial known HP configurations.
+One initial configuration, called a seed in the meta data, is provided by a set of values (or indices) in $\textbf{X}$ and $\textbf{y}$.
+There are a total of 5 seeds provided for a search space and dataset combination.
+
+The meta data in HPO-B comes in 3 versions namely \textbf{HPO-B-v1},  \textbf{HPO-B-v2}, and \textbf{HPO-B-v3}.
+Of this \textbf{HPO-B-v3} contains distlilled the search spaces that have the most datasets and can be split is split into train,  validation and test sets. 
+
+
+The meta data set in HPOB is divided into test and train data.
+Using meta dataset,  one can learn meta learn a model using the training split.
+Then the model is evaluated in the testing split.
+This data approach is used both in the baselines and proposed idea models.
+
+\iffalse
+\subsection{HPO-B Dataset}
+To use the HPO-B code,  one must write function observe\_and\_suggest and observe\_and\_suggest\_continous to deal with discrete and continous optimisation case respectively.
+Due to out of scope nature of the continous case,  in our implementation we assume that we are dealing only with the discrete case only.
+
+The implementation of observe\_and\_suggest functions differs based on the surrogate model used by our problem.
+\fi
+
+\subsection{Benchmark evaluation}
+There are 2 types of HP optimization surrogates that are studied in this thesis - transfer learning surrogates
+and non-transfer learning surrogates.
+This benchmark can be used for analysing both types of models.
+However,  in order cross compare transfer and non-transfer techniques,  we only compare against HPO-B-v3 test split as recommended in the HPO-B paper.
 
 Data used in the experiment
 Infrastructure used
