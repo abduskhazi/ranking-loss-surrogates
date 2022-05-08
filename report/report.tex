@@ -26,16 +26,16 @@
 \usepackage{booktabs}
 
 \hypersetup{
-    colorlinks=true,
+    colorlinks=false,
     linkcolor=blue,
     filecolor=magenta,
     urlcolor=cyan,
 }
 
-\title {Ranking Loss Surrogates \\[1ex] \large MSc Thesis}
 % Commenting out another way to write the title.
 % \title{MSc Thesis - Ranking Loss Surrogates}
-    
+
+\iffalse    
 \author{
         Abdus Salam Khazi [
         \href{mailto:abdus.khazi@students.uni-freiburg.de}
@@ -48,6 +48,32 @@
 			Sebastian Pineda
 		\end{tabular}
        }
+\fi
+
+\begin{document}
+
+\title{
+{\LARGE Master's Thesis}
+\vspace{20pt}
+\hrule
+\vspace{20pt}
+\textbf{Hyperparameter Optimization using Ranking Loss Surrogates}
+\vspace{20pt}
+\hrule
+\vspace{20pt}
+\author{{\LARGE Abdus Salam Khazi}}
+\date{\LARGE \today}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=50mm]{images/Logo.png}
+\end{figure}
+\large{Albert-Ludwigs-University Freiburg
+\\Representation Learning Department}
+}
+
+\pagenumbering{gobble}
+
+\maketitle
 
 \newgeometry{
     top=1.5in,
@@ -56,13 +82,8 @@
     inner=1.25in,
     }
     
-\begin{document}
 
-\pagenumbering{gobble}
-
-
-\maketitle
-\date{}
+% \date{}
 
 \chapter*{Declaration \thispagestyle{empty}}
 
