@@ -1385,11 +1385,20 @@ If the range is too small,  the values may underflow.
 In any case,  we are bound to get nan (Not A Number) exceptions in our implementations.
 
 For this reason we control the range of our scorer by passing the output of the deep neural network through a $\tanh$ function.
-If we would like to strictly limit the range of our function between $[-k,  k]$,  then we can pass the output of our scorer through the following
-$$
+If we would like to strictly limit the range of our function between $[-k,  k]$,  then we can pass the output of our scorer through the following function
+\begin{equation}\label{eq:tanhEquation}
 k * \tanh(\alpha * s(\textbf{X}))
-$$
+\end{equation}
+
 Where $\alpha$ is the smoothness factor which is inversely proportional to the smoothness of the $\tanh$ graph~\cite{tanhstackoverflowanswer}.
+Figure~\ref{fig:tanhGraph} shows how the to vary the smoothness and range of the output using $\alpha$ and $k$ respectively.
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.5]{images/tanhGraph}
+    \caption{Effect of varying $k$ and $\alpha$ in equation~\ref{eq:tanhEquation}}
+    \label{fig:tanhGraph}
+\end{figure}
 
 We used $k=2$ and $\alpha=0.01$ for our scorer.
 
