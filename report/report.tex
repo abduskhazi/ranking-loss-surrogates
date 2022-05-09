@@ -126,12 +126,17 @@ Abstract goes here
 The performance of any machine learning model is sensitive to the hyper-parameters used during the model training. 
 Instead of using a new model type, it is more helpful to tune the hyper-parameters of an existing model to improve its performance.
 Learning the best hyper-parameter for an ML model is called, Hyperparameter optimization (HPO in short).
+
+The true evaluation of a hyperparameter optimisation objective function is computationally very expensive. 
+Researchers have tried to get around this problem by proposing model based HPO algorithms.
+In these methods,  the true objective function is modelled by a cheap surrogate function of high representational capacity.
+For example,  the Sequential Model Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab} algorithm is a very important algorithm that iterates between learning a model given a few HP configuration evaluations and using the model to propose the next candidate to evaluate.
+
 This thesis studies various existing approaches to HPO and proposes a new idea for the same using the concept of ranking.
 The proposed idea in this thesis is called \textbf{Hyperparamter Optimization using Ranking Loss Surrogates}. 
 The results obtained using this model are compared against the state-of-the-art results obtained using models like FSBO,  RGPE,  TAF, and others. 
 
 \label{ProblemOverviewlabel}
-
 \section{Objective}
 The aim is to study ranking loss surrogates in the context of Hyperparameter optimization.
 
@@ -1099,55 +1104,150 @@ $$
 
 \section{Baselines}
 
-In this thesis,  we decided to implement 2 HPO techniques from the literature - One non transfer technique and one transfer technique.
-The non transfer technique we implemented was Deep Ensembles.
-The reason we selected this was to study how uncertainty can be is modelled using deep neural networks.
+In this thesis,  2 HPO techniques were implemented before studying the proposed model - Deep Ensembles and Few Shot Bayesian Optimization (FSBO).
+Deep Ensembles were used as surrogates in the SMBO optimization.
+They were studied with with 2 main objectives in mind.
+First to study how uncertainty is estimated using Deep Neural Networks using the approach proposed by~\cite{DeepEnsemblePaper}.
 This was a pre-requisite to implement the uncertainty in our proposed model as we use deep neural networks as a scorer in our model. 
+Second to understand how a non transfer technique like GP would work for our given problem.
+Note,  it is also possible to make the Deep Ensemble surrogate a transfer technique by meta training it before using it in the optimization cycle.
 
-The second baseline from the transfer learning domain was FSBO.
-We choose this because as this gave the state of the art results.
+The second technique implemented was FSBO.
+We choose this because as this gave the state of the art results on the HPO-B benchmark that we use.
+(The benchmark is discussed in the later chapters).
+Studying FSBO also gave us an idea on how to implement the transfer mechanism in our proposed model.
 In addition to this we used Random search and GP as standard baselines for result comparison.
 
 Both these FSBO and DE have built in capability for uncertainty estimation.
-Hence we have to use an acquisition function during the fine tuning step.
-We use expected improvement in all models that deal with uncertainty.
-This is to maintain constant results across all the models.
-We also use this in the proposed idea due to the advantages of this acquisition function~\cite{Jones1998}.
-
-Few Shot Bayesian Optimization deals has to be run in 2 chronological steps
-\begin{itemize}
-\item Meta training using the existing meta data
-\item Fine tuning during the optimization cycle.
-\end{itemize}
+Hence we have to use an acquisition function during the optimization cycle of SMBO.
+Expected improvement was used in all models that deal with uncertainty.
+This is to maintain consistency in results across all the models.
+Further more it also has advantages on other acquisition function~\cite{Jones1998}.
 
 
 The following 2 sections discuss the implementation details of the baselines methods used in our thesis.
 
 \subsection{Deep Ensemble}
-As discussed in detail in previous sections,  deep ensemble uses a list of artificial neural networks to find out uncertainties given data points D.
 
-Some of the important implementation details are
-\begin{itemize}
-\item We make sure that we enforce the positivity of the variance (as mentioned in the paper) by adding $exp(-6)$ to the values for numerical stability.
-\item We do not use adversarial examples because it was giving bad results.
-\end{itemize}
+As previously mentioned Deep Ensembles were implemented according~\cite{DeepEnsemblePaper} as a non transfer surrogate.
+Hence,  there was no meta-training done for the Deep Ensembles.
+Consequently the usage of DE as a surrogate was quite similar to that of Gaussian processes.
+SMBO with deep ensemble was implemented as shown in algorithm~\ref{alg:deepEnsembleFinetuning}~\cite{pineda2021hpob}.
+
+\begin{algorithm}[H]
+\caption{SMBO with Deep Ensemble surrogate}
+\label{alg:deepEnsembleFinetuning}
+\begin{algorithmic}
+    \State $X_{known},  Y_{known} \gets$ Initial HP configurations.
+    \State $X_{pending} \gets$ HP configurations to evaluate.
+    \State $k \gets$ Number of evaluation cycles
+    \For{$i < k$}
+        \State DE $\gets$ Randomly initialize Neural Networks. 
+        \For {$nn \in$ DE}  \Comment{Can be trained in parallel}
+            \State train($nn$) with $X_{known},  Y_{known}$
+        \EndFor
+        \State $EI_{scores} \gets$ EI( $X_{pending}$ ) \Comment{Expected Improvement scores}
+        \State $x^* \gets $ best $(EI_{scores})$
+        \State $y^* \gets f(x^*)$ \Comment{HP objective function evaluation}
+        \State $X_{known} \gets X_{known} \cup x^*$
+        \State $Y_{known} \gets Y_{known} \cup y^*$
+        \State $X_{pending} \gets X_{pending} \setminus x^*$ 
+        \State $i \gets i + 1$
+    \EndFor
     
+\end{algorithmic}
+\end{algorithm}
 
+We use similar procedures like Algorithm~\ref{alg:deepEnsembleFinetuning} for other models i.e FSOB implementation and the proposed Ranking Loss surrogate model.
+The only difference is that the surrogate and its training step differ with different methods.
 
-\subsubsection{Optimization Procedure}
-Deep ensemble is not a meta transfer model.
-So it does not use the train data of HPO-B meta dataset.
-It directly optimises during the optimisation loop.
+A few points are worth noting here.
+First,  we see that the algorithm evaluates a set of discrete HP configurations in the HP search space.
+This is the same approach we take when we apply our model because the ranking concept we use requires a set of defined objects.
+The advantage of using this approach is that there is no restriction on the type of search space we optimize.
+It may be discrete or continuous.
+If it is continuous,  we only have to discretize it upto a required granularity based on our computational resources.
 
-The optimization loop can seen in the following algorithm.
+Secondly,  we see that at each evaluation cycle,  a new set of neural networks are trained.
+Old trained neural networks are discarded.
+This rationale behind this is discussed in chapter 4.
+We also use this sort of initialization in other models.
+Finally,  as the neural networks are independent of each other,  they can be trained in parallel.
+This makes the usage of this model scalable.
 
-The following should be written in an algorithm.
-First fitting the model based on observations.
-Predicting then the pending configuration for evaluation.
-Returning the index that gives us the best results.
+One question that remains to be answered is what sort of architecture is used by our neural networks.
+For this 2 architectures were analysed - undivided neural network as shown in Figure~\ref{fig:undividedarchitecture} and a neural network divided at its tail as shown in Figure~\ref{fig:dividedarchitecture}
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[scale=0.75, transform shape,
+roundnode/.style={circle, draw=brown!60, fill=black!5, very thick, minimum size=7mm},
+roundnodey/.style={circle, draw=green!60, fill=black!5, very thick, minimum size=7mm},
+squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
+]
+%Nodes
+\node[roundnode]      (X)                             {$X$};
+\node[squarednode]      (FC1)                      [right=of X]        {$FC_1$};
+\node[squarednode]      (FCmiddle)             [right=of FC1]        {...};
+\node[squarednode]      (FCn)                      [right=of FCmiddle]        {$FC_n$};
+\node[roundnodey]      (mean)                             [right=of FCn] {$\mu$};
+\node[roundnodey]      (variance)                             [below=of mean] {$\sigma^2$};
+
+%Lines
+\draw[->] (X.east) -- (FC1.west);
+\draw[->] (FC1.east) -- (FCmiddle.west);
+\draw[->] (FCmiddle.east) -- (FCn.west);
+\draw[->] (FCn.east) -- (mean.west);
+\draw[->] (FCn.east) -- (variance.west);
+\end{tikzpicture}
+\caption{Example of an undivided Neural Network architecture}
+\label{fig:undividedarchitecture}
+\end{figure}
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[scale=0.75, transform shape,
+roundnode/.style={circle, draw=brown!60, fill=black!5, very thick, minimum size=7mm},
+roundnodey/.style={circle, draw=green!60, fill=black!5, very thick, minimum size=7mm},
+squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
+]
+%Nodes
+\node[roundnode]      (X)                             {$X$};
+\node[squarednode]      (FC1)                      [right=of X]        {$FC_1$};
+\node[squarednode]      (FCmiddle)             [right=of FC1]        {...};
+\node[squarednode]      (FCpenaltimate)             [right=of FCmiddle]        {$FC_{n-1}$};
+\node[squarednode]      (FCn1)                      [right=of FCpenaltimate]        {$FC_{n_1}$};
+\node[squarednode]      (FCn2)                      [below=of FCn1]        {$FC_{n_2}$};
+\node[roundnodey]      (mean)                             [right=of FCn1] {$\mu$};
+\node[roundnodey]      (variance)                             [right=of FCn2] {$\sigma^2$};
+
+%Lines
+\draw[->] (X.east) -- (FC1.west);
+\draw[->] (FC1.east) -- (FCmiddle.west);
+\draw[->] (FCmiddle.east) -- (FCpenaltimate.west);
+\draw[->] (FCpenaltimate.east) -- (FCn1.west);
+\draw[->] (FCpenaltimate.east) -- (FCn2.west);
+\draw[->] (FCn1.east) -- (mean.west);
+\draw[->] (FCn2.east) -- (variance.west);
+\end{tikzpicture}
+\caption{Example of a divided Neural Network architecture}
+\label{fig:dividedarchitecture}
+\end{figure}
+
+In both these figures,  FC stands for fully connected layers.
+As the undivided architecture is closer to the neural network used in the proposed ranking loss surrogate model,  we used it for the sake of consistent comparison.
+3 Fully connected layers of 32 neurons each were used for each neural network.
+All neural networks used the same architecture. 
+The training was done using the the Adam optimizer with full batch gradients.
+This is because the number of data points in the evaluation cycle are very few.
+Each neural network was trained for a 1000 epochs with a learning rate of 0.02.
+We do not use adversarial examples as proposed in the deep ensemble paper because it was giving bad results.
 
 \subsection{Few Shot BO: Deep Kernel Learning}
-
+Few Shot Bayesian Optimization has to be run in 2 chronological steps
+\begin{itemize}
+\item Meta training using the existing meta data
+\item Fine tuning during the optimization cycle.
+\end{itemize}
 Some of the important implementation details are
 \begin{itemize}
 \item Scaling is ignore because it gives very bad results.
@@ -1177,18 +1277,13 @@ For this reason, the results are used only for the first stage.
 The results already present in the benchmarking data of~\cite{pineda2021hpob} were used for comparing this result with our implementation.
 
 
-\section{Evaluation Strategy}
+% \section{Evaluation Strategy}
 
 
 
 \chapter{Method}\label{chap:ProposedIdea}
 
 \section{Proposed Idea: : Ranking Loss Surrogates}
-
-The true evaluation of a hyperparameter optimisation objective function is computationally very expensive. 
-Researchers have tried to get around this problem by proposing model based HPO algorithms.
-In these methods,  the true objective function is modelled by a cheap surrogate function of high representational capacity.
-For example,  the Sequential Model Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab} algorithm is a very important algorithm that iterates between learning a model given a few HP configuration evaluations and using the model to propose the next candidate to evaluate.
 
 The choice of surrogate to use in model based optimization is very crutial.
 Does the surrogate have enough representational capacity?
