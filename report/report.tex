@@ -181,6 +181,8 @@ Finally, the HPO problem can be defined using the following equation:
 \underset{\rm \textbf{x}}{\rm argmin} \;\; f(m^{trained}_\textbf{x} (\textrm{Data}_\textrm{val})) \mapsto \mathbb{R}   \;\;\;  \forall \textbf{x} \in \mathbb{S}
 \end{equation}
 
+One way to view this objective function non mathematically is that we are trying to select a hyper parameter setting of the given model to obtain the best (lowest) validation error~\cite{fsbopaper}.
+
 \subsubsection{HPO Constraints}
 
 Hyperparameter optimization is different from other optimization methods because it has different constraints~\cite{bayesianOptimizationTutorial}.
@@ -1242,40 +1244,62 @@ This is because the number of data points in the evaluation cycle are very few.
 Each neural network was trained for a 1000 epochs with a learning rate of 0.02.
 We do not use adversarial examples as proposed in the deep ensemble paper because it was giving bad results.
 
-\subsection{Few Shot BO: Deep Kernel Learning}
-Few Shot Bayesian Optimization has to be run in 2 chronological steps
+\subsection{FSBO}
+Few Shot Bayesian Optimization (FSBO) is a transfer learning HPO method that utilizes a meta learnt surrogate for knowledge transfer mechanism.
+It reformulates the problem into few shot learning task.
+In the context of our problem,  this means meta learning thoroughly from the existing meta data and then adapting to the new task at evaluation cycle by fine tuning a few training epochs.
+Therefore the following 2 steps are required to be done in a chronological order
 \begin{itemize}
-\item Meta training using the existing meta data
-\item Fine tuning during the optimization cycle.
-\end{itemize}
-Some of the important implementation details are
-\begin{itemize}
-\item Scaling is ignore because it gives very bad results.
-\item We first used RBF kernel,  then we used matern kernel for this.
+\item Meta training - For knowledge transfer.
+\item Fine tuning - For few shot learning.
 \end{itemize}
 
-Scaling should be ignored because it gives very bad results.
-if scaling:
-%# Scale the labels according to the l and u for scale invariance.
-%        #     batch_labels = (batch_labels - l) / (u - l)
+For the purpose of knowledge transfer, the authors make use of a deep kernel surrogate proposed in by wilson et al~\cite{pmlr-v51-wilson16}.
+Here,  a neural network is used to transform points in the HP search space to a latent space.
+Kernels are then applied to this latent space in a Guassinan process to obtain a probabilistic evaluation.
+The deep kernel kernel can be represented as~\cite{fsbopaper}
+$$
+k(\phi(\textbf{x}, \textbf{w})  ,   \phi(\textbf{x'}, \textbf{w}) |  \mathbf{\theta})
+$$
+Where $\textbf{x}$ and $\textbf{x'}$ are HP inputs in the original search space,
+$\mathbf{\theta}$ and $\textbf{w}$ are parameters of kernel $k$ and the neural network $\phi$.
+We used the implementation of deep kernels provided by Patacchiola et al.~\cite{patacchiola2020bayesian} in this thesis.
 
-%%         ## RBF kernel
- %## Another possibility of a kernel - self.covar_module =
-   %     ## gpytorch.kernels.ScaleKernel(gpytorch.kernels.MaternKernel(nu=config["nu"], ard_num_dims=dims if config["a    rd"] else None))
+During the meta training step, we train our surrogate by learning the parameters $\mathbf{\theta}$ and $\textbf{w}$.
+A New FSBO model and consequently new surrogate parameters have to be learnt for every new search space.
+This is the case even if the input dimensions are of the search space domain are the same.
+This is because every HP search space represents different machine learning model and hence has a different HP response surface.
+During training we first used an RBF kernel and then used a matern $\frac{5}{2}$ kernel.
+A fully connected neural network was used to obtain the latent space representation.
 
-We used early stopping mechanism for this because we wanted to avoid
-\begin{itemize}
-\item Huge computation costs
-\item overfitting of the model during training.
-\end{itemize}
-We saved the best model in our implementation and if the validation loss went greater than
-lowest validation loss for some number of steps,  then we stop the meta training.
+If an assumption is made that the knowledge from the meta data is enough to predict the best HP configuration across all future dataset,  the fine tuning step may be skipped.
+However,  this is rarely the case as there are always variations in new dataset (Even though the model being optimised is the same).
+Therefore,  the hyper parameter response surface would also be different.
 
+The optimization algorithm in the case of FSBO is similar to Algorithm~\ref{alg:deepEnsembleFinetuning} with a minor change.
+The acquisition function used in this model is also expected improvement.
+The concept of restarting the fine tuning each time is also proposed in the FSBO paper~\cite{fsbopaper}.
+The difference here is that at each evaluation step,  the stored model is loaded anew and fine tuned before using it for predicting the best model.
+The restart happens from the meta trained FSBO model and not from a randomly initialized model as in the case of Deep Ensembles.
+
+In our implementation,  Adam optimizer was used in both the training and fine tuning steps.
+Note,  however,  that the learning rate of the kernel parameters and the neural network parameters were identical.
+The learning rate used for meta-training was 0.0001 and that used for fine tuning was 0.03 different.
+We utilized cosine annealing during the fine tuning cycle.
+The rationale for using this is discussed in detailed in chapter 4.
+
+We used early stopping mechanism for meta training because we wanted to avoid huge computation costs and over fitting of the model during training.
+We took advantage of the split of meta-validation data to do the early stopping.
+We saved the best model in our implementation and if the validation loss went greater than lowest validation loss.
+The training was stopped if the training error was consistently higher than the validation error for a set number of epochs.
+In our case it was 10 epochs but this is easily configurable.
+
+\iffalse
 \subsubsection{Implementation issues}
 After completing the own implementation,  we found that the results obtained were not in par with the paper.
 For this reason, the results are used only for the first stage.
 The results already present in the benchmarking data of~\cite{pineda2021hpob} were used for comparing this result with our implementation.
-
+\fi
 
 % \section{Evaluation Strategy}
 
@@ -1285,12 +1309,12 @@ The results already present in the benchmarking data of~\cite{pineda2021hpob} we
 
 \section{Proposed Idea: : Ranking Loss Surrogates}
 
-The choice of surrogate to use in model based optimization is very crutial.
+The choice of surrogate to use in model based optimization is very crucial.
 Does the surrogate have enough representational capacity?
 Does it have the capability of representing uncertainty?
 How is the surrogate learnt?
-These are some of the questions that need to be answered before selecting a sorrogate model.
-The selection of a sorrogate model has a direct impact on the performance of the model based optimization algorithm.
+These are some of the questions that need to be answered before selecting a surrogate model.
+The selection of a surrogate model has a direct impact on the performance of the model based optimization algorithm.
 
 In the quest to improve HPO surrogates,  we propose and analyse a new type of surrogate model that is based on the concept of ranking.
 There are 2 components of our proposed idea
