@@ -1500,33 +1500,25 @@ Applying this to HPOB... (With or without query)
     Even with this the loss curves are very smooth if we use 2 * tanh(0.01 * x)
 \fi
     
-\section{Case study}
+\section{Case study with inverse mapping}
 
 In this case study,  we study how the learnt ranking function behaves when we use different parameters to train.
-For this a toy example of sorting in reverse order is considered.
-
-
-\subsection{Sorting with inverse mapping}
+For this a toy example of sorting in the descending order is considered.
     
-The main problem that we try to solve here is - Is it possible to train a ranking function using the Listwise maximum likelihood estimator. 
-such that it learns inverse mapping of points on a number line.
-Consequently we could sort the results obtained by the scorer to obtain a descending order.
-
+The main problem that we try to study here is - Is it possible to train a ranking function using the ListMLE loss function such that it learns inverse mapping of points on a number line.
+Consider numbers sampled from the range $[k,  p]$ where $k,p > 0$ and  $k,p \in \mathbb{R}$.
+If we take 2 numbers $x_1, x_2 \in [k,  p]$,  we need to learn a mapping $s: x \mapsto \mathbb{R}$ such that $s(x_1) \leq s(x_2)$ when $x_1 \geq x_2$.
+Consequently we could sort the numbers based on the output of the scorer to obtain a descending sorted order.
 
 Consider a list $l = \{x_1, x_2, ...x_n\}$ where $x_i \in [1, 100]$.
 Let $s(x \mid \theta) \mapsto \mathbb{R}$ be our scoring function parametrised by $\theta$.
-One list contains $n$ data points sampled from $[1, 100]$.
-Let $\textrm{L}_{\textrm{mle}}$ represent the maximum log likelihood loss.
-Using this loss function we optimize for the following equation
+Here, one list contains $n$ data points sampled from $[1, 100]$.
+Then the loss function we would use to learn our scorer is
 \begin{equation}
-\underset{\theta}{\arg\min} \;\;\; \textrm{L}_{\textrm{mle}}(s(l \mid \theta),  - k * l)
+\underset{\theta}{\rm argmin} \quad L_{mle}(s(l \mid \theta),  - k * l)
 \end{equation}
 where $k \in \mathbb{R}$.
- 
-Note that second parameter of list wise loss function is scale invariance because it only uses the rank of the 
-objects in the list and not the objects directly.
-Hence scaling the list has no effect on the loss output.
-This can be seen from the algorithm of implementation.  (refer algorithm)
+Note that second parameter of list wise loss function is scale invariant hence scaling the list has no effect on the loss output (Section~\ref{sec:listMLE}).
 
 %    #       Result -> Sorting possible provided the output range of the model not restricted
 %    #       For now we sample train/val data from the same distribution.
@@ -1544,9 +1536,11 @@ The validation data taken from 3 different ranges
 
 To evaluate our scorer,  we first sample the validation data from the above ranges,
 We then check the percentage of the lists that are correctly sorted during our testing time.
-The training batch is 100 and the results are averaged over 5 runs.
-
-tabulate the results and Check the affect of list / batch size on the results
+We used the same values of $k$ and $\alpha$ as used in the basic scoring model.
+During training a batch size of 100 lists was used.
+We try sort 1000 lists according to the learnt scorer's results.
+The accuracy gives the fraction of the lists that were sorted in 1000 lists.
+We report the average of 5 runs in the Table~\ref{table:caseStudyResults}.
 
 \begin{table} [h!]
 \centering
@@ -1555,57 +1549,32 @@ tabulate the results and Check the affect of list / batch size on the results
 \hline
 \textbf{Training Epochs} & \textbf{List size} & \textbf{Learning Rate} & \textbf{In-range Acc.} & \textbf{Out-range Acc.} & \textbf{Hybrid Acc.} \\ [0.5 ex]
 \hline \hline
-1000 & 3 & 0.0001 & 0.99 & 0.99 & 0.99\\
-%100 & 3 & 0.001 & 0.99 & 0.99 & 0.99\\
-%100 & 3 & 0.01 & 0.0 & 0.0 & 0.0\\
-%457 & - & Linear & 0.458 & 0.419 & 0.328\\
-%457 & - & Linear Duplication & 0.460 & 0.428 & 0.327\\
-%\textbf{49} & \textbf{Genetic}\footnotemark[1] & \textbf{Hyperbolic} & \textbf{$\approx$0.377} & \textbf{$\approx$0.374}  & \textbf{$\approx$0.364}\\
-%40 & Pearson Correlation & Hyperbolic & 0.287 & 0.278  & 0.285 \\ 
-%40 & Spearman Correlation & Hyperbolic & 0.289 & 0.294  & 0.290 \\ 
-%176 & Manual & Hyperbolic & 0.362  & 0.346  & 0.331\\ [1ex]
+1000 & 3 & 0.0001 & 0.99 & 0.27 & 0.40\\
+100 & 3 & 0.0001 & 0.77 & 0.29 & 0.11\\
+100 & 30 & 0.0001 & 0.80 & 0.79 & 0.46\\
+100 & 100 & 0.0001 & 0.99 & 0.0 & 0.39\\
+1000 & 100 & 0.0001 & 1.0 & 0.71 & 0.48\\
 \hline
 \end{tabular}
 }
 \caption{Sorting Accuracies at test time}
-\label {table:1}
+\label {table:caseStudyResults}
 \end{table}
 
-\iffalse
-\begin{table}[ht]
-\centering
-% spacing in table
-% \ra{1.3}  % Commenting this could not get this function right
-\begin{tabular}{@{}lr@{}}
-  \toprule
-  Epochs listsize & Accuracy(within range) Accuracy outside range \\ \midrule
-  A    & 82.47 $\pm$ 3.21 \\
-  B    & 78.47 $\pm$ 2.43 \\
-  C    & 84.30 $\pm$ 2.35 \\
-  D    & 86.81 $\pm$ 3.01 \\
-  \bottomrule
-\end{tabular}
+We find from the tabulated results that it is important to completely learn the function by running a higher number of epochs.
+To comprehensively learn the scoring function,  it is crucial to have a larger list size.
+This will make our scorer model work well when the input is from the same distribution seen during training.
+Moreover,  it also gives reasonable when the input comes from the distribution edge (i.e from a location close to the distribution).
+These are good properties to have in any machine learning model.
 
-    \caption[Table caption]{\textbf{Sorting accuracy.} Obtained after sorting the numbers based on the scorer's results\\}
-    \label{tab:accuracy}
-\end{table}
-\fi
-
-show the architecture of with only scorer
-
+The loss function is not weighted in this toy example because sorting requires that each data point be on its correct location.
+Therefore,  our problem is not a direct generalization of this toy example.
+Moreover the input domain in the toy example is quite simple as compared to the real world problems.
+Nevertheless,  we do take these results into account to decide on the list size for training our proposed ranking surrogate model.
 
 \subsection{Observations}
-As we know that the second parameter of the loss function is not bound to any range, 
-the score function itself can learn scores of arbitrary range.
-Hence the model can learn score values arbitrarily large.
-We must control the output domain so that the training does not lead to underflow or overflow.
-This is because we use the exp function for getting the strict positive increasing function.
-
-The restriction of output was done using $\tanh()$ so that the range of values of the scorer remains within a managable value.
-One drawback we found was that the learnt model was extremely sensitive to the learning rate and the number of epochs.
 % The following observations were made in the case study of sorting example
 % Perhaps using other increasing positive function helps? (More reading/research required on this topic)
-
   
   Then we add the following components one after another
 
@@ -1616,11 +1585,6 @@ One drawback we found was that the learnt model was extremely sensitive to the l
 \item Different training mechanisms.
 \end{itemize}
 
-Propose using a higher list size.
-
-\subsection{Scoring function analysis}
-
-\subsection{Scoring function range}
 
 \section{Optimization cycle}
 Explain the training loop with an algorithm.
@@ -1726,7 +1690,7 @@ Hence,  after fine-tuning we are only bothered about getting the best hyper para
 This means that it is more important for our ranking function to order the the top part of the list than the bottom part.
 In this section we describe and propose the concept of weighted ranking loss functions.
 
-The concept of biased ranking loss is discussed in the paper, "Top-Rank Enhanced Listwise Optimization for Statistical Machine Translation" by  Chen et. al~\cite{TRLWO}.
+The concept of biased ranking loss is discussed in the paper, "Top-Rank Enhanced List wise Optimization for Statistical Machine Translation" by  Chen et. al~\cite{TRLWO}.
 Here Chen et. al proposes a position based weighting of the ranking function such that:
 \begin{equation}
 w_j = \frac{k - j + 1}{\Sigma_{t=1}^k t}
@@ -1766,7 +1730,6 @@ Hence we used cosine annealing for this to get the a better local minima.
 
 Show before and after curves.
 
-
 The results of this are discussed in the results section.
 
 
@@ -1788,6 +1751,8 @@ This needs to be improved which is done in Pi-Rank paper.
 \item The learnt model is extremely sensitive to the learning rate and the number of epochs.
 \item It is assumed that the target task and the training task have the same output range. 
 They must be normalized in order to get the correct results if they are not in the same range.
+\item Using $\tanh$ function restricts the output very much.
+It may not have the latent space to completely the output.
 \end{itemize}
     
 \subsection{Negative transfer learning}
