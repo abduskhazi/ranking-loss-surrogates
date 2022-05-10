@@ -1572,21 +1572,7 @@ Therefore,  our problem is not a direct generalization of this toy example.
 Moreover the input domain in the toy example is quite simple as compared to the real world problems.
 Nevertheless,  we do take these results into account to decide on the list size for training our proposed ranking surrogate model.
 
-\subsection{Observations}
-% The following observations were made in the case study of sorting example
-% Perhaps using other increasing positive function helps? (More reading/research required on this topic)
-  
-  Then we add the following components one after another
-
-\begin{itemize}
-\item Deep Set
-\item Weight
-\item Uncertainty
-\item Different training mechanisms.
-\end{itemize}
-
-
-\section{Optimization cycle}
+\section{Method training and optimization}
 Explain the training loop with an algorithm.
 
 explain get\_batch\_HPBO implementation how it is important to have all the data sets
@@ -1597,44 +1583,13 @@ TO compute 2 things can be done
 
 replace=False thing in the above function and why it is important.
 
-\subsection{Meta training}
+\subsection{Meta training}\label{sec:rlmetatraining}
 Give the meta training algorithm
 Why all tasks are taken - 
 Because we do not want bias to crop up during the training
 The idea is to meta learn commonality in the search space.
 
-\subsection{Fine tuning}\label{sec:rlfinetune}
-Given the Fine tuning algorithm.
-For reasons described in the~\ref{sec:restart},  we restart before fine tuning at every optimization cycle step.
-
-\section{Ranking Surrogate Model}
-
-\subsection{Transfer Learning}
-This is the transfer HPO-B
-
-\subsection{Using Deep Sets to build context aware models}
-
-As discussed in the literature review,  model a whole set into a latent embedding.
-For domain conditionality 
-meta train in source domain (HPOB training SS)
-meta test in target domain (HPOB test/val SS)
-
-Architecture with deep sets.. Image
-
-\subsection{Uncertainty implementation}
-Mention about the requirement to use Module list.
-Show the new architecture.
-
-The search spaces that have less data need more uncertainty
-The search spaces having more data need less uncertainty
-
-\subsubsection{Independent training}
-Implementation yet to be done
-
-\subsubsection{Training with mean and restricted output}
-Implementation yet to be done
-
-\section{Requirement of restarting training}\label{sec:restart}
+\subsubsection{Requirement of restarting training}\label{sec:restart}
 We find in our experiments that the deep ensemble performs much better in our HPO cycle when we train it from scratch at every acquisition step.
 This is counter intuitive because an already trained model will converge to a local optima quickly.
 The reason for this performance however is that the model gets biased towards the points that are observed at the beginning of the optimisation cycle.
@@ -1680,7 +1635,7 @@ This is not generally the case in our sequential optimization.
 
 We use this restart mechanism in our ranking loss model in order to make it more robust against these issues.
 
-\section{Weighted Loss}
+\subsubsection{Weighted Loss}
 General list wise loss functions are only required in the problem domains where it is essential to get the ranks of all the objects correctly.
 In our case where ranking functions are used as surrogates for the black box hyper-parameter optimization,
 this constraint can be relaxed significantly.
@@ -1720,7 +1675,12 @@ As the weighting does not decrease very rapidly,  there is a possibility of para
 For example,  at every step the top $n$ configurations can be selected,  and all of them can be tried for optimization.
 The parallelism is less effective when using inverse linear weighting or weighting proposed by Chen et al.
 
-\section{Using cosine annealing}
+\subsection{Fine tuning}\label{sec:rlfinetune}
+Given the Fine tuning algorithm.
+For reasons described in the~\ref{sec:restart},  we restart before fine tuning at every optimization cycle step.
+
+
+\subsubsection{Using cosine annealing}
 During the fine tuning of our models both in the baselines as well as the ranking loss model,  it was found that the fine tuning loss curve was varying a lot.
 
 
@@ -1731,6 +1691,46 @@ Hence we used cosine annealing for this to get the a better local minima.
 Show before and after curves.
 
 The results of this are discussed in the results section.
+
+
+\subsection{Observations}
+  
+  Then we add the following components one after another
+
+\begin{itemize}
+\item Deep Set
+\item Weight
+\item Uncertainty
+\item Different training mechanisms.
+\end{itemize}
+
+
+\section{Ranking Surrogate Model}
+
+\subsection{Transfer Learning}
+This is the transfer HPO-B
+
+\subsection{Using Deep Sets to build context aware models}
+
+As discussed in the literature review,  model a whole set into a latent embedding.
+For domain conditionality 
+meta train in source domain (HPOB training SS)
+meta test in target domain (HPOB test/val SS)
+
+Architecture with deep sets.. Image
+
+\subsection{Uncertainty implementation}
+Mention about the requirement to use Module list.
+Show the new architecture.
+
+The search spaces that have less data need more uncertainty
+The search spaces having more data need less uncertainty
+
+\subsubsection{Independent training}
+Implementation yet to be done
+
+\subsubsection{Training with mean and restricted output}
+Implementation yet to be done
 
 
 \section{Advantages and Limitations}
@@ -1753,6 +1753,7 @@ This needs to be improved which is done in Pi-Rank paper.
 They must be normalized in order to get the correct results if they are not in the same range.
 \item Using $\tanh$ function restricts the output very much.
 It may not have the latent space to completely the output.
+\item Due to disadvantages  of exp increasing positive function - Perhaps using other increasing positive function helps? (More reading/research required on this topic
 \end{itemize}
     
 \subsection{Negative transfer learning}
