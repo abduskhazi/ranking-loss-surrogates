@@ -1005,7 +1005,7 @@ Hence the result is invariant only to linear scaling.
 This advantage makes listMLE loss function superior to the ListNet as it makes the target space of functions bigger and hence the convergence can be quicker.
 Because of this advantage we use ListMLE as a list loss function in our thesis.
 
-\section{Position Enhanced Ranking}
+\section{Position Enhanced Ranking}\label{sec:positionEnhancedRanking}
 
 In many problem domains that use the ranking concept,  it may not be important that each object be placed at exact location as induced by its relevance.
 For example,  when a search engine ranks its search results, it is more important to find the most important results and rank them correctly than to order the least important results correctly.
@@ -1402,7 +1402,7 @@ Figure~\ref{fig:tanhGraph} shows how the to vary the smoothness and range of the
 
 We used $k=2$ and $\alpha=0.01$ for our scorer.
 
-\subsubsection{ListMLE Implementation}
+\subsection{ListMLE Implementation}
 
 To train the scorer the loss function ListMLE was implemented in python using the PyTorch~\cite{PyTorch} deep learning library.
 Algorithm~\ref{alg:listMLEAlgorithm} shows the steps used to obtain the loss scalar before back propagating it using the autograd functionality of PyTorch.
@@ -1494,6 +1494,56 @@ L_{mle} = \sum\limits_{j=1}^{k} \left( \log Q(j) - s^*(j) \right)
 \end{algorithmic}
 \end{algorithm}
 
+
+\subsection{Weighted Loss}
+As discussed in Section~\ref{sec:positionEnhancedRanking},  the ranking problem we are have in HPO is not the general ranking problem.
+It is more important for our ranking function to order the top part of the list than the bottom part.
+This is evident from Algorithm~\ref{alg:deepEnsembleFinetuning} where at every optimization cycle we are only concerned about selecting the best available configuration for true evaluation.
+Keeping this constraint in mind,  we need to have a weighting strategy such that
+$$
+c(j) \propto \frac{1}{j}
+$$
+where $j$ is the ranking of the object and $c(i)$ specifies its weight.
+
+In this section we discuss about some strategies to do this weighting for our problem.
+The concept of biased ranking loss is discussed in the paper, "Top-Rank Enhanced List wise Optimization for Statistical Machine Translation" by  Chen et. al~\cite{TRLWO}.
+Here Chen et. al proposes a position based weighting of the ranking function such that:
+\begin{equation}
+w_j = \frac{k - j + 1}{\Sigma_{t=1}^k t}
+\end{equation}
+where $w_j$ represents weight of the object at position $j$ in the ordered list.
+This strategy decreases the weights linearly across the ranks.
+The issue with this weighting is that it takes the weight of an object in the middle of the list to be $0.5$ times the weight of the object at the top of the list.
+This however is not what we want for our case.
+We need a sharper decrease in weights across the ranks.
+
+We could use 2 simple strategies of weighting for our problem
+\begin{itemize}
+\item Inverse linear weighting given by $w_j = \frac{1}{j}$
+\item Inverse logarithmic weighting given by $w_j = \frac{1}{\log (j+1)}$
+\end{itemize}
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.65]{images/weightingfunctions}
+    \caption{Different Weighting Functions}
+    \label{fig:weightingfunctions}
+\end{figure}
+
+Figure~\ref{fig:weightingfunctions} shows all 3 weighting strategies.
+In the case of inverse linear strategy,  we see that the weight becomes extremely small after only a few ranks in the list.
+This has an unwanted consequence for our problem.
+Because the weights of objects at the end of the list are too small,  the ranking function may not learn to rank optimally.
+
+The inverse log weighting was found to be most suitable because it neither completely ignores the objects at the end of the list nor does it given them too high an importance.
+In fact,  the weights of the rest of list are very similar which is what we want - all objects at the tail of the list are equally "unimportant" in our case.
+
+Another advantage of using inverse weighting is that we can employ parallelism to enhance our HPO during the optimization cycle.
+For example,  at every step the top $n$ configurations can be selected,  and all of them can be tried for optimization.
+This overcomes any uncertainties that may occur while ranking the top part of the list. 
+The parallelism is less effective when using the weighting proposed by Chen et al.
+
+
 \iffalse
 Applying this to HPOB... (With or without query)
     First learning from first search space.
@@ -1573,21 +1623,69 @@ Moreover the input domain in the toy example is quite simple as compared to the 
 Nevertheless,  we do take these results into account to decide on the list size for training our proposed ranking surrogate model.
 
 \section{Method training and optimization}
-Explain the training loop with an algorithm.
 
-explain get\_batch\_HPBO implementation how it is important to have all the data sets
-How it is organised into a higher order tensor
-TO compute 2 things can be done
-  1. View it as a 2d tensor (Done by efficient implementation)
-     2. Deal with it direction (Done by us)
+The proposed method in this thesis, "Ranking loss surrogate" is a transfer HPO model.
+For this reason its working principle is similar to that of FSBO model.
+Like FSBO we use surrogate learning as a knowledge transfer mechanism.
+Hence the 2 main parts of using our optimization processes are
+\begin{itemize}
+\item Meta learning the ranking loss surrogate
+\item Using the trained surrogate in the evaluation cycle (With or without fine tuning).
+\end{itemize}
 
-replace=False thing in the above function and why it is important.
+\subsection{Meta training the surrogate}\label{sec:rlmetatraining}
 
-\subsection{Meta training}\label{sec:rlmetatraining}
-Give the meta training algorithm
-Why all tasks are taken - 
-Because we do not want bias to crop up during the training
-The idea is to meta learn commonality in the search space.
+The space of hyper parameter configurations in which we are trying to get an optimum during any HPO is called HP search space.
+This search space is different for different machine learning models.
+Hence we need to train different ranking loss surrogate models for different search spaces.
+
+The same machine learning model,  however,  can be used to fit different data sets or tasks.
+This leads to different HP response surfaces in the same search space.
+Hence,  we obtain different meta data when the same model is optimized on different datasets (or tasks).
+The goal of training our model is to use different meta-data sets (or tasks) from a single search space to train our model.
+The idea is to learn all the common characteristics of the tasks and transfer this knowledge to the new task.
+
+During the training of our model we use stochastic gradient descent to train our model.
+There are 2 ways to sample a batch from the given meta data.
+\begin{itemize}
+\item Double sampling: First sample the task then sample the meta data.
+\item Sample meta data from all tasks.
+\end{itemize}
+
+We use the first method of sampling our data.
+This is because due to higher level of sampling,  we have obtain good regularization,
+faster training and an availability to use a lower learning rate.
+We use Adam optimizer with a learning rate of 0.001 for our model.
+We do our training for a 5000 epochs and in each epoch we take 100 steps in which each step does 1 double sampling.
+While sampling data points from within a meta data set, we sample without replacement.
+We use the number of lists (batch size) as 100 and the size of each list also 100.
+Algorithm~\ref{alg:RLSMetaTraining} illustrates us a brief skeleton of our meta training procedure.
+
+\begin{algorithm}[h]
+\caption{Ranking Loss surrogate meta training}
+\label{alg:RLSMetaTraining}
+\hspace*{\algorithmicindent} \textbf{Input} : $epochs \in \mathbb{I}$ \\
+ \hspace*{\algorithmicindent} \textbf{Input} : $X_{train}$,  $y_{train}$  \Comment{Meta data used to train} \\
+\hspace*{\algorithmicindent} \textbf{Input} : $s_{\theta}$ \Comment{Model to train}
+\begin{algorithmic}[1]
+\Procedure{MetaTrain}{$s_{\theta}$,  $X_{train}$,  $y_{train}$, $epochs$}
+    \For{$i < epochs$}
+            \For{$j < 100$}
+                \State $B_{X}, B_{y} \gets$ \textsc{DoubleSample}($X_{train}$) \Comment{Get the training batch}
+                \State $y_{pred} \gets s_{\theta}(B)$
+                \State $\textrm{loss} \gets L_{mle}(y_{pred},  B_{y}) $
+                \State $\theta \gets \theta - \alpha * \frac{\partial \textrm{loss}}{\partial \theta}$
+            \EndFor
+    \EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\subsection{Fine tuning}\label{sec:rlfinetune}
+Given the Fine tuning algorithm.
+For reasons described in the~\ref{sec:restart},  we restart before fine tuning at every optimization cycle step.
 
 \subsubsection{Requirement of restarting training}\label{sec:restart}
 We find in our experiments that the deep ensemble performs much better in our HPO cycle when we train it from scratch at every acquisition step.
@@ -1635,51 +1733,6 @@ This is not generally the case in our sequential optimization.
 
 We use this restart mechanism in our ranking loss model in order to make it more robust against these issues.
 
-\subsubsection{Weighted Loss}
-General list wise loss functions are only required in the problem domains where it is essential to get the ranks of all the objects correctly.
-In our case where ranking functions are used as surrogates for the black box hyper-parameter optimization,
-this constraint can be relaxed significantly.
-As discussed in section~\ref{sec:rlfinetune},  we always restart our ranking function model before
-fine-tuning it.
-Hence,  after fine-tuning we are only bothered about getting the best hyper parameter configuration from the pending configurations.
-This means that it is more important for our ranking function to order the the top part of the list than the bottom part.
-In this section we describe and propose the concept of weighted ranking loss functions.
-
-The concept of biased ranking loss is discussed in the paper, "Top-Rank Enhanced List wise Optimization for Statistical Machine Translation" by  Chen et. al~\cite{TRLWO}.
-Here Chen et. al proposes a position based weighting of the ranking function such that:
-\begin{equation}
-w_j = \frac{k - j + 1}{\Sigma_{t=1}^k t}
-\end{equation}
-where $w_j$ represents weight of the object at position $j$ in the ordered list.
-
-However, there are also some simple weightings that a person can use.  For instance inverse linear weighting given by
-\begin{equation}
-w_j = \frac{1}{j}
-\end{equation}
-and inverse logrithmic weighting given by
-\begin{equation}
-w_j = \frac{1}{\log (j+1)}
-\end{equation}
-
-\begin{figure}[htb]
-  \centering
-    \includegraphics[scale=0.65]{images/weightingfunctions}
-    \caption{Different Weighting Functions}
-    \label{fig:weightingfunctions}
-\end{figure}
-
-Figure~\ref{fig:weightingfunctions} shows all 3 weighting strategies.
-Of the 3 weighting strategies,  the inverse log weighting was found to be most suitable.
-This is because the this weighting is by far the least sharp.
-As the weighting does not decrease very rapidly,  there is a possibility of parallelizing during the optimization cycle.
-For example,  at every step the top $n$ configurations can be selected,  and all of them can be tried for optimization.
-The parallelism is less effective when using inverse linear weighting or weighting proposed by Chen et al.
-
-\subsection{Fine tuning}\label{sec:rlfinetune}
-Given the Fine tuning algorithm.
-For reasons described in the~\ref{sec:restart},  we restart before fine tuning at every optimization cycle step.
-
-
 \subsubsection{Using cosine annealing}
 During the fine tuning of our models both in the baselines as well as the ranking loss model,  it was found that the fine tuning loss curve was varying a lot.
 
@@ -1695,7 +1748,7 @@ The results of this are discussed in the results section.
 
 \subsection{Observations}
   
-  Then we add the following components one after another
+Then we add the following components one after another
 
 \begin{itemize}
 \item Deep Set
@@ -1718,6 +1771,17 @@ meta train in source domain (HPOB training SS)
 meta test in target domain (HPOB test/val SS)
 
 Architecture with deep sets.. Image
+
+THis comes into existence only when we use deep sets.
+explain get\_batch\_HPBO implementation how it is important to have all the data sets
+How it is organised into a higher order tensor
+TO compute 2 things can be done
+  1. View it as a 2d tensor (Done by efficient implementation)
+     2. Deal with it direction (Done by us)
+Why all tasks are taken - 
+Because we do not want bias to crop up during the training
+replace=False thing in the above function and why it is important.
+
 
 \subsection{Uncertainty implementation}
 Mention about the requirement to use Module list.
