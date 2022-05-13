@@ -1627,10 +1627,10 @@ Nevertheless,  we do take these results into account to decide on the list size 
 The proposed method in this thesis, "Ranking loss surrogate" is a transfer HPO model.
 For this reason its working principle is similar to that of FSBO model.
 Like FSBO we use surrogate learning as a knowledge transfer mechanism.
-Hence the 2 main parts of using our optimization processes are
+Hence the 2 main parts of using our optimization process are
 \begin{itemize}
 \item Meta learning the ranking loss surrogate
-\item Using the trained surrogate in the evaluation cycle (With or without fine tuning).
+\item Using the trained surrogate in the evaluation cycle (with or without fine tuning).
 \end{itemize}
 
 \subsection{Meta training the surrogate}\label{sec:rlmetatraining}
@@ -1645,21 +1645,23 @@ Hence,  we obtain different meta data when the same model is optimized on differ
 The goal of training our model is to use different meta-data sets (or tasks) from a single search space to train our model.
 The idea is to learn all the common characteristics of the tasks and transfer this knowledge to the new task.
 
-During the training of our model we use stochastic gradient descent to train our model.
-There are 2 ways to sample a batch from the given meta data.
+We use stochastic gradient descent to train our model.
+For this we need to sample a batch of data from the given meta data.
+There are 2 ways to do this:
 \begin{itemize}
-\item Double sampling: First sample the task then sample the meta data.
+\item Double sampling: First sample the task then sample the meta data within the task.
 \item Sample meta data from all tasks.
 \end{itemize}
 
 We use the first method of sampling our data.
 This is because due to higher level of sampling,  we have obtain good regularization,
-faster training and an availability to use a lower learning rate.
+faster training and a possibility to use a lower learning rate.
 We use Adam optimizer with a learning rate of 0.001 for our model.
-We do our training for a 5000 epochs and in each epoch we take 100 steps in which each step does 1 double sampling.
+We do our training for 5000 epochs and in each epoch we take 100 steps in which each step does 1 double sampling.
 While sampling data points from within a meta data set, we sample without replacement.
 We use the number of lists (batch size) as 100 and the size of each list also 100.
 Algorithm~\ref{alg:RLSMetaTraining} illustrates us a brief skeleton of our meta training procedure.
+After the training,  every model is saved on to a persistent location (e.g. hard disk) so that it can be load when necessary.
 
 \begin{algorithm}[h]
 \caption{Ranking Loss surrogate meta training}
@@ -1672,9 +1674,10 @@ Algorithm~\ref{alg:RLSMetaTraining} illustrates us a brief skeleton of our meta 
     \For{$i < epochs$}
             \For{$j < 100$}
                 \State $B_{X}, B_{y} \gets$ \textsc{DoubleSample}($X_{train}$) \Comment{Get the training batch}
-                \State $y_{pred} \gets s_{\theta}(B)$
+                \State $y_{pred} \gets s_{\theta}(B_{X})$
                 \State $\textrm{loss} \gets L_{mle}(y_{pred},  B_{y}) $
-                \State $\theta \gets \theta - \alpha * \frac{\partial \textrm{loss}}{\partial \theta}$
+                \State $g \gets \frac{\partial \textrm{loss}}{\partial \theta}$ \Comment{$g$ stands for gradient}
+                \State Use $g$ to update $\theta$ using the Adam optimizer
             \EndFor
     \EndFor
 \EndProcedure
@@ -1684,20 +1687,33 @@ Algorithm~\ref{alg:RLSMetaTraining} illustrates us a brief skeleton of our meta 
 
 
 \subsection{Fine tuning}\label{sec:rlfinetune}
-Given the Fine tuning algorithm.
-For reasons described in the~\ref{sec:restart},  we restart before fine tuning at every optimization cycle step.
+Fine tuning is the second major part of the optimization process.
+This may be considered optional for transfer HPO models like ours.
+However,  we found that it improved the HPO evaluation cycle performance.
+
+We take the SMBO optimization of Deep Ensembles in Algorithm~\ref{alg:deepEnsembleFinetuning} as an example to understand the fine tuning process.
+In this algorithm,  at every evaluation cycle the deep ensembles are retrained with the seen evaluations of the true HPO objective function.
+We need to modify Algorithm~\ref{alg:deepEnsembleFinetuning} by replacing Deep Ensemble training with the fine tuning of our model.
+The fine tuning  process is exactly similar to the \textsc{MetaTrain} procedure in Algorithm~\ref{alg:RLSMetaTraining}.
+The only difference is that we use seen evaluations instead of meta training data for training.
+To avoid duplication,  we do not re-write the complete algorithm again.
+
+Like FSBO,  at every evaluation cycle,  the model is reloaded from the saved state before being fine tuned.
+In the next section we discuss why this restart is required.
+Subsequently we talk about the use of cosine annealing used during fine tuning.
 
 \subsubsection{Requirement of restarting training}\label{sec:restart}
-We find in our experiments that the deep ensemble performs much better in our HPO cycle when we train it from scratch at every acquisition step.
-This is counter intuitive because an already trained model will converge to a local optima quickly.
-The reason for this performance however is that the model gets biased towards the points that are observed at the beginning of the optimisation cycle.
+
+During the implementation of deep ensembles,  we found that the model performs much better in the HPO evaluation cycle when we train it from scratch at every step (acquisition step).
+This is counter intuitive because an already trained model should converge to a local optima quickly.
+One of the reasons for this performance anomaly is that the model gets biased towards the points that are observed in the starting steps of the optimisation cycle.
 Lets say we have 2 models 
 \begin{itemize}
 \item $\textrm{m}_{\textrm{restart}}$ which always restarts training at every acquisition step.
-\item $\textrm{m}_{\textrm{reuse}}$ which uses the previously trained model for subsequent training of the optimization cycle.
+\item $\textrm{m}_{\textrm{reuse}}$ which trains the model trained in the previous optimization steps.
 \end{itemize}
 
-\begin{figure}[htp]% [H] is so declass\'e!
+\begin{figure}[h]% [H] is so declass\'e!
 \centering
 \begin{minipage}{0.45\textwidth}
 \includegraphics[width=\textwidth]{images/bias25}
@@ -1716,22 +1732,45 @@ Lets say we have 2 models
 \end{figure}
 
 
-Let $\textrm{m}_{\textrm{reuse}}$ be fine tuned for 100 epochs during the optimization cycle.
-Let there be just 1 data point to start with.
-The figures~\ref{fig:bias25},~\ref{fig:bias50},  and ~\ref{fig:bias100} show the number of times each observed data points is used for the fine tuning at the 25th, 50th and 100th optimization cycle by $\textrm{m}_{\textrm{reuse}}$  respectively.
-Generally all the data is used during fine tuning due to its scarcity at this step.
-Hence, the biases are scaled with the number of epochs.
-$\textrm{m}_{\textrm{restart}}$ does not face this issue as the fine tuning step restarts everytime.
+Let the models be fine tuned for 100 epochs at each step.
+Let there be just 1 seen HP configuration to start with.
+The figures~\ref{fig:bias25},~\ref{fig:bias50},  and ~\ref{fig:bias100} show the number of times each observed HP configuration is used for training the model at the 25th, 50th and 100th optimization cycle step by the $\textrm{m}_{\textrm{reuse}}$ model.
 
+Generally all the data is used during fine tuning due to data scarcity.
+Hence,  in our example the number of times an HP configuration is used scales with the number of epochs trained.
 The heavy bias that is present in the figures is actually not intended.
 This is because all observations should be treated equally in any training/fine-tuning step.
-Hence it is better to restart the model before fine tuning step at each optimization step.
+When we use $\textrm{m}_{\textrm{restart}}$ every known HP configuration is used only 100 times at every evaluation step.
+Hence it is better to restart the model before fine tuning.
 
-The second reason is that the model may get stuck at a stubborn local minima at any fine tuning step n $1 <= n <= 100$.
-Coming out of this local minima may require vastly different data points than actually seen.
-This is not generally the case in our sequential optimization.
+The second reason for restarting is that the model may get stuck at a stubborn local minima at any fine tuning step $n$ where $1 <= n <= 100$ in our case.
+Coming out of this local minima may require the response surface to change very drastically.
+The response will change like this only when the training data distribution significantly changes.
+This is not possible in the sequential process of SMBO because at every step only 1 new HP configuration is added to the known HP configurations.
 
-We use this restart mechanism in our ranking loss model in order to make it more robust against these issues.
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.45]{images/localMinima}
+    \caption{Figure showing changes in response surfaces and a stubborn local minima}
+    \label{fig:localMinima}
+\end{figure}
+
+Figure~\ref{fig:localMinima} depicts this issue for a simple 1 dimensional case.
+Consider the red curve.
+It represents the HP response surface for $k$ known data points.
+When we add $(k+1)^{th}$ data point,  most of the response surface remains the same.
+Only part of it changes.
+This is represented by the blue response surface.
+If our model is already trained for the red curve,  it becomes extremely difficult for it to come out of local minima because of the minimal changes in the response surface.
+We call this minima a stubborn local minima.
+This is depicted by the brown dot in the figure.
+
+If however,  we reload and retrain our model from the beginning there is more chance of it reaching the good local optima in the blue curve if it descends from the other direction.
+The number of ways to reach a good local minima increases exponentially with the increase in the HP search space dimensions.
+Hence, restarting the training (from the saved model in our case) should improve our fine tuned model.
+
+Because of these reasons,  we use the restart mechanism during the fine tuning of our ranking loss model (and also baseline implementations).
+This makes the model more robust.
 
 \subsubsection{Using cosine annealing}
 During the fine tuning of our models both in the baselines as well as the ranking loss model,  it was found that the fine tuning loss curve was varying a lot.
