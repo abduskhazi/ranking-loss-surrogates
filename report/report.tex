@@ -1697,6 +1697,8 @@ We need to modify Algorithm~\ref{alg:deepEnsembleFinetuning} by replacing Deep E
 The fine tuning  process is exactly similar to the \textsc{MetaTrain} procedure in Algorithm~\ref{alg:RLSMetaTraining}.
 The only difference is that we use seen evaluations instead of meta training data for training.
 To avoid duplication,  we do not re-write the complete algorithm again.
+We do fine tuning for 300 epochs.
+The number of epochs can be varied based on the computation resources available.
 
 Like FSBO,  at every evaluation cycle,  the model is reloaded from the saved state before being fine tuned.
 In the next section we discuss why this restart is required.
@@ -1773,34 +1775,52 @@ Because of these reasons,  we use the restart mechanism during the fine tuning o
 This makes the model more robust.
 
 \subsubsection{Using cosine annealing}
-During the fine tuning of our models both in the baselines as well as the ranking loss model,  it was found that the fine tuning loss curve was varying a lot.
+
+We plotted the fine tuning loss curves of our model
+We found that these loss curves were very jittery.
+We noticed the same behaviour when fine tuning FSBO model.
+Figure~\ref{fig:jitteryFTLoss} shows the fine tuning loss for one of the search spaces.
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.45]{images/jitteryFTLoss}
+    \caption{Figure showing jittery loss function curve}
+    \label{fig:jitteryFTLoss}
+\end{figure}
+
+We hypothesise that these jittery losses are because the learning rate is not suitable with the response curve's curvature at the targeted local minima.
+One solution to this is to use a smaller learning rate.
+However,  the fine tuning using smaller learning rate will take a long time.
+The solution we proposed and utilized was using cosine annealing.
+
+There are couple of advantages of using cosine annealing.
+First the initial learning rate is kept high in order to give the optimizer time to get to an area close to the local minima if it has not done so.
+Thereafter,  the learning rate declines quickly to the target small learning rate.
+This helps the model to get deep into the local minima and hence the possibility of the optimization to jump out of the local minima is very less.
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.45]{images/goodFTLoss}
+    \caption{Figure showing a loss curve obtained by using cosine annealing}
+    \label{fig:goodFTLoss}
+\end{figure}
+
+Figure~\ref{fig:goodFTLoss} shows a fine tuning loss curve obtained using cosine annealing.
+Even though this strategy may not be a perfect one,  it reduces the possible problems that could prop us when using a constant learning rate.
+During training,  however,  we use a constant learning rate as can use the validation loss as a reference for over fitting or under fitting.
 
 
-We obtained loss curves that were very bad during the training and were varying quite a bit
-The reason was that the learning rate during the fine tuning was too high
-Hence we used cosine annealing for this to get the a better local minima.
+\section{Ranking Surrogate Model}
 
-Show before and after curves.
-
-The results of this are discussed in the results section.
-
-
-\subsection{Observations}
+\subsection{Model improvement}
   
 Then we add the following components one after another
 
 \begin{itemize}
 \item Deep Set
-\item Weight
 \item Uncertainty
 \item Different training mechanisms.
 \end{itemize}
-
-
-\section{Ranking Surrogate Model}
-
-\subsection{Transfer Learning}
-This is the transfer HPO-B
 
 \subsection{Using Deep Sets to build context aware models}
 
