@@ -1996,49 +1996,6 @@ Implementation yet to be done
 Implementation yet to be done
 
 
-\section{Advantages and Limitations}
-
-Compare this loss function and method with other base lines..
-Advantages of the proposed Idea:
-    The amount of data instances for training is exponential in number. Which is very good for a deep learning model
-    For example if we have 100 observation set and we use a list size of 15 to train our model, we will have 100C15
-    unique instances to train.
-
-Observed disadvantages:
-\begin{itemize}
-\item In our model,  a scorer is first learnt and then using the scorer,  we rank the set of objects in question.
-When optimising the scorer,  we ignore the sorting functionality necessary to complete the process of ranking.
-This is because sorting is non differentiable. 
-This means that the true evaluation of the ranked list is not optimized.
-This needs to be improved which is done in Pi-Rank paper.
-\item The learnt model is extremely sensitive to the learning rate and the number of epochs.
-\item It is assumed that the target task and the training task have the same output range. 
-They must be normalized in order to get the correct results if they are not in the same range.
-\item Using $\tanh$ function restricts the output very much.
-It may not have the latent space to completely the output.
-\item Due to disadvantages  of exp increasing positive function - Perhaps using other increasing positive function helps? (More reading/research required on this topic
-\end{itemize}
-    
-\subsection{Negative transfer learning}
-For some search spaces,  the validation errors of the ranking loss model did not reduce at all during its training.
-In fact the validation loss became worse.
-Figure~\ref{fig:NegativeLearning} shows an illustration of this for the search space id 5527.
-This is a classic example of negative transfer learning~\cite{Weiss2016}.
-Negative transfer learning occurs when the set of source tasks (here,  training datasets) is very different from the target tasks (here, validation datasets).
-
-\begin{figure}[htb]
-  \centering
-    \includegraphics[scale=0.5]{images/NegativeLearning}
-    \caption{Training loss curve of ranking losses}
-    \label{fig:NegativeLearning}
-\end{figure}
-
-This problem should occur only in the cases where the model is context free.
-In our case,  the ranking loss model with deep set is context aware and results like these were unexpected.
-Hence the issues with negative transfer learning remains unsolved when using our model.
-One remedy for getting around this problem is to fine tune the model with a larger number of epochs.
-Nevertheless,  we cannot guarantee that the fine tuning will re-learn from the small amount observed data points during the optimization cycle.
-
 \chapter{Research Question}
 The format of this is the same as that of experiments and Results.
 Also known as Hypothesis
@@ -2142,6 +2099,49 @@ Benchmark this...
 Next with DKT (Benchmark this)
 
 Next show the best results obtained by architecture.
+
+\section{Advantages and Limitations}
+
+Compare this loss function and method with other base lines..
+Advantages of the proposed Idea:
+    The amount of data instances for training is exponential in number. Which is very good for a deep learning model
+    For example if we have 100 observation set and we use a list size of 15 to train our model, we will have 100C15
+    unique instances to train.
+
+Observed disadvantages:
+\begin{itemize}
+\item In our model,  a scorer is first learnt and then using the scorer,  we rank the set of objects in question.
+When optimising the scorer,  we ignore the sorting functionality necessary to complete the process of ranking.
+This is because sorting is non differentiable. 
+This means that the true evaluation of the ranked list is not optimized.
+This needs to be improved which is done in Pi-Rank paper.
+\item The learnt model is extremely sensitive to the learning rate and the number of epochs.
+\item It is assumed that the target task and the training task have the same output range. 
+They must be normalized in order to get the correct results if they are not in the same range.
+\item Using $\tanh$ function restricts the output very much.
+It may not have the latent space to completely the output.
+\item Due to disadvantages  of exp increasing positive function - Perhaps using other increasing positive function helps? (More reading/research required on this topic
+\end{itemize}
+    
+\subsection{Negative transfer learning}
+For some search spaces,  the validation errors of the ranking loss model did not reduce at all during its training.
+In fact the validation loss became worse.
+Figure~\ref{fig:NegativeLearning} shows an illustration of this for the search space id 5527.
+This is a classic example of negative transfer learning~\cite{Weiss2016}.
+Negative transfer learning occurs when the set of source tasks (here,  training datasets) is very different from the target tasks (here, validation datasets).
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.5]{images/NegativeLearning}
+    \caption{Training loss curve of ranking losses}
+    \label{fig:NegativeLearning}
+\end{figure}
+
+This problem should occur only in the cases where the model is context free.
+In our case,  the ranking loss model with deep set is context aware and results like these were unexpected.
+Hence the issues with negative transfer learning remains unsolved when using our model.
+One remedy for getting around this problem is to fine tune the model with a larger number of epochs.
+Nevertheless,  we cannot guarantee that the fine tuning will re-learn from the small amount observed data points during the optimization cycle.
 
 \section{Evaluation}
 \subsection{Testing}
