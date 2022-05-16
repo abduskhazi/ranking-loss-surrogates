@@ -183,7 +183,7 @@ Finally, the HPO problem can be defined using the following equation:
 
 One way to view this objective function non mathematically is that we are trying to select a hyper parameter setting of the given model to obtain the best (lowest) validation error~\cite{fsbopaper}.
 
-\subsubsection{HPO Constraints}
+\subsubsection{HPO Constraints}\label{sec:hpoConstraints}
 
 Hyperparameter optimization is different from other optimization methods because it has different constraints~\cite{bayesianOptimizationTutorial}.
 It is because of the peculiar properties of the hyper-parameter search spaces.
@@ -483,75 +483,110 @@ It is not clear whether pointwise losses (regression as in GP) are the correct w
 \subsubsection{Listwise}
 
 \section{Set-modeling with Neural Networks}
-In HPO we make predictions based on a set of observations, therefore, in this thesis, I explore the benefit of contextualizing surrogate models on the observations so far.
-\subsection{Set-transformers}
-\subsection{Deep Sets}
+
+In the previous sections we discussed about various types of surrogates that can be used for transferring knowledge in transfer HPO methods.
+Training on data from known tasks and then using this trained model for working on unknown tasks, however,  has a major shortcoming conceptually.
+Humans do not pre-condition their actions on new tasks only on their previous experiences.
+Their pre-conditioning also includes the knowledge of the current task (however little it may be).
 
 
+To model this concept,  one has to learn to represent and pre-condition knowledge from known tasks in a model.
+This makes the model context aware.
+If we consider a HP configuration and its evaluation ($\textbf{X}$, $y$) as a single object,  then the group of all the known pairs can be represented as a set.
+Here,  $\textbf{X}$ is a feature vector and $y$ is a scalar.
+Now our problem is a 2 stage process which includes
+\begin{itemize}
+\item Representation of a Set
+\item Conditioning of our model on the Set Representation.
+\end{itemize}
 
-In the remainder of this section, we discuss some sophisticated probabilistic models for doing HPO that use surrogates to reduce computational costs.
 
+We use Deep Neural networks to represent a set in this thesis because it is a model with  high representational capacity and is easy to train.
+Deep Sets by Zaheer et.  al~\cite{deepSets} and Set Transformers by lee et. al~\cite{setTransformer} are two of the interesting researches that we found in the literature.
+Since the sophisticated attention mechanisms used in Set transformers were unnecessary for us,  we chose to use the more simple architecture used in Deep Sets.
+The next section discusses about these Deep Sets.
 
+% \subsection{Set-transformers}
+\subsection{Deep Sets}\label{sec:DeepSets}
+Traditionally deep learning or machine learning models learn functions of the following format:
+$$
+f : \mathbb{R}^d \mapsto \mathbb{R}^k \quad d,k \in \mathbb{I}^+ \quad \textrm{For Regression}
+$$
+$$
+f : \mathbb{R}^d \mapsto \{c_1, c_2, ... c_n\}  \quad \textrm{For Multi-Classification}
+$$
+which can be thought of transforming objects from the input space to the output space.
 
-There are many probabilistic models such as Random Forests, Gaussian Processes, Tree parson Estimators, etc.
-But for the purpose of this thesis, we briefly mention Random forests and discuss in-depth the Gaussian processes.
+For our problem of set latent representation,  the input space changes to a space containing sets (each instance in the space is a set by itself).
+The output space however remains similar to either the regression case for regression tasks and classification case for classification tasks.
+Consider $\mathbb{X} = \{a,b,  c, ... \}$ be a set containing all possible elements within the sets of the input space.
+Then the set representation problem can be defined as:
+$$
+g : 2^{\mathbb{X}} \mapsto R^k   \quad k \in \mathbb{I}^+ \quad \textrm{For Regression}
+$$
+$$
+g : 2^{\mathbb{X}} \mapsto \{c_1, c_2, ... c_n\}  \quad \textrm{For Multi-Classification}
+$$
+Where $2^{\mathbb{X}}$ is the power set of $\mathbb{X}$.
 
+2 very important constraints of this problem are
+\begin{itemize}
+\item Permutation-Invariance constraint: The permutation of the objects within an input set should be irrelevant for the model $g$.
+\item Set cardinality invariance constraint: The cardinality of the set can be variable.
+Hence our model $g$ should be invariant to the number of elements in the input set.
+\end{itemize}
 
-\iffalse
-% Research Paper: https://arxiv.org/pdf/1612.01474.pdf
-  2 
-  3 Problem: How can we use DNN to quantify uncertainty in a prediction?
-  4 
-  5 Solutions Previously:
-  6     1. Bayesian neural networks.
-  7        A prior over weights and biases is specified. Given the data, a posterior is calculated.
-  8        Hard and complex to train.
-  9 
- 10     2. Ensemble approach. E.g Using Monte Carlo Dropout during evaluation. (Behaves like an ensemble)
- 11        Consider 10 predictions in an ensemble. Using these, we could calculate the variance and the
- 12        mean of the gaussian. Example: Section 3.2 Regression on toy datasets.
- 13 
- 14 Evaluation of Predictive uncertainties:
- 15     Scoring rules - Measure quality of predictive uncertainty.
- 16     Out of distribution uncertainty
- 17 
- 18 Contributions by authors:
- 19     Non Bayesian approach.
- 20     Ensemble of neural networks.
- 21     Adversarial training for smooth predictions (Adversarial training is optional as it improves the prediction uncertainty quality only     in some cases).
- 22 
- 23 
- 24 Proposed Implementation:
-% 25     Given theta are NN parameters, we need to predict p_theta(y|x).
- 26     p = distribution over real values in regression
- 27     p = Discrete probablistic distribution for classification.
- 28 
- 29     3 step approach - Proper scoring rules, adversarial training and ensemble of NNs.
- 30 
- 31 Understanding proper scoring rules:
- 32     A scoring function gives a numerical value to the predictive distribution.
- 33     The better the predictive distribution calibrated to the actual distribution the better the score.
- 34     Compare p (prediction distribution) and q (original distribution). The closer p and q are the better the score.
- 
- Observations:
- 37    How to combine regression and classification problems in deep ensembles - This is possible by having the correct loss function. For ex    ample addition of different parameters.
- 38    Understand the intuition behind the adversarial examples y = nn(x). We assume that nn is a smooth function hence the small
- 39    change in x should only have a small change in y. Hence nn( neighbourhood(x) ) = y
-% 40    For good training use 2^N examples for neighbourhood.
- 41    Used a custom NN architecture rather than using 1 hidden layer with 50/100 units depending on the data available.
- 42    This is because the architecture given in the paper was not helpful.
- 43 
- 44 Evaluations of confidence vs accuracy.
- 45     The deep ensembles seem to have a better accuracy with higher confidence as compared to MC-Dropout.
- 46 
- 47 For Using Deep Ensembles for HPO:
- 48     We can only use the regression version of the research because the objective scoring is a real valued number
- 49     How to model discrete input dimensions as inputs into the Deep Ensemble?
- 50 
- 51 Doubts:
- 52     Could not understand section 3.5 last paragraph correctly.
- 53 
-\fi
+Permutation equivariance is another type of constraint that the deep set paper deals with.
+In this constraint the latent space should be equivariant or symmetric to the permutation of the objects in the input set.
+This creates issues for our problem because we don't care if our latent space is some symmetric mapping of the input space.
+We want the whole set to be mapped definitively to a latent embedding.
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[scale=0.75, transform shape,
+roundnode/.style={circle, draw=brown!60, fill=black!5, very thick, minimum size=7mm},
+roundnodey/.style={circle, draw=green!60, fill=black!5, very thick, minimum size=7mm},
+squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
+]
+%Nodes
+\node[roundnode]      (X1)                             {$\textbf{X}_1, y_1$};
+\node[roundnode]      (X2)                            [below=of X1]     {$\textbf{X}_2, y_2$};
+\node[roundnode]      (X3)                            [below=of X2]     {$\textbf{X}_3, y_3$};
+\node[squarednode]      (phi1)                      [right=of X1]        {DNN$_{\theta}$};
+\node[squarednode]      (phi2)                     [right=of X2]        {DNN$_{\theta}$};
+\node[squarednode]      (phi3)                     [right=of X3]        {DNN$_{\theta}$};
+\node[squarednode]      (Pool)                     [right=of phi2]     {Pool};
+\node[squarednode]      (pho)                      [right=of Pool]     {DNN$_{\phi}$};
+\node[roundnodey]      (LatentOutput)         [right=of pho]     {Latent Output};
+
+%Lines
+\draw[->] (X1.east) -- (phi1.west);
+\draw[->] (X2.east) -- (phi2.west);
+\draw[->] (X3.east) -- (phi3.west);
+\draw[->] (phi1.east) -- (Pool.west)    node[midway, right] {$I_1$};
+\draw[->] (phi2.east) -- (Pool.west)   node[midway, above] {$I_2$};
+\draw[->] (phi3.east) -- (Pool.west)   node[midway, right] {$I_3$};
+\draw[->] (Pool.east) -- (pho.west);
+\draw[->] (pho.east) -- (LatentOutput.west);
+\end{tikzpicture}
+\caption{Skeletal of the architecture proposed in deep sets}
+\label{fig:DeepSetArchitecture}
+\end{figure}
+
+Figure~\ref{fig:DeepSetArchitecture} illustrates the architecture proposed by the deep set paper.
+We use a set of only 3 objects in the Figure for simplicity.
+The architecture passes all the 3 inputs through the a deep neural network independently to get intermediate outputs $I_1$, $I_2$, $I_3$.
+To solve the permutation invariance constraint,  any mathematical operation that is commutative and associative is applied on the intermediate outputs.
+As long as the pooling operator is permutation invariant, the proposed architecture is also permutation invariant.
+Examples of such operators are sum, mean, max etc.
+
+To solve the problem of cardinality constraint we can use the mean operator.
+Hence the pooling operation becomes:
+$$
+\textrm{Pool}(I_1, I_2, I_3) = \frac{ I_1 + I_2 + I_3}{3}
+$$
+
+The output of the pool operation is then passed through a different Deep Neural Network to finally get the Latent output.
 
 \iffalse
 \section{RGPE}
@@ -1027,7 +1062,7 @@ This is approach used in our model to improve our ranking loss function.
 The type of decreasing function to use is discussed in more detail in chapter 4.
 Note that it is also possible for using the weighting in the ListNet case as ListNET and ListMLE have similar forms.
 
-\section{Uncertainty modelling using Deep Ensembles}
+\section{Uncertainty modelling using Deep Ensembles}\label{sec:uncertaintyDeepEnsembles}
 
 Deep Neural Networks (DNNs) are machine learning models with very high representational capacity~\cite{Goodfellow-et-al-2016}.
 Due to this property,  one can use them as surrogates for HPO objective functions.
@@ -1809,46 +1844,151 @@ Figure~\ref{fig:goodFTLoss} shows a fine tuning loss curve obtained using cosine
 Even though this strategy may not be a perfect one,  it reduces the possible problems that could prop us when using a constant learning rate.
 During training,  however,  we use a constant learning rate as can use the validation loss as a reference for over fitting or under fitting.
 
-
 \section{Ranking Surrogate Model}
 
-\subsection{Model improvement}
-  
-Then we add the following components one after another
-
-\begin{itemize}
-\item Deep Set
-\item Uncertainty
-\item Different training mechanisms.
-\end{itemize}
+After explaining the learning mechanism,  we now turn to 2 important components that are used in our method.
+The first is Deep Set to make our model context aware.
+The second is the use of uncertainty for improving the output of the model.
 
 \subsection{Using Deep Sets to build context aware models}
 
-As discussed in the literature review,  model a whole set into a latent embedding.
-For domain conditionality 
-meta train in source domain (HPOB training SS)
-meta test in target domain (HPOB test/val SS)
+We have already discussed the fundamental ideas of using deep sets in  ~\ref{sec:DeepSets}.
+In this section we discuss about how to add deep sets in the ranking loss surrogate model architecture and then how to train the same.
 
-Architecture with deep sets.. Image
+The basic idea is to precondition our scoring function $s_{\theta}$ on known evaluations of the target HP space.
+These known evaluations act as a support for the scoring function.
+Hence they are subscripted as "s" in the equation.
+We then query the scoring function to get the relevant scores of new $\textbf{X}$ which are subscripted as "q" in the equation.
+The scoring function hence becomes:
+$$
+s_{\theta}(\textbf{X}_{q} | \textbf{X}_{s}, \textbf{y}_{s})
+$$
 
-THis comes into existence only when we use deep sets.
-explain get\_batch\_HPBO implementation how it is important to have all the data sets
-How it is organised into a higher order tensor
-TO compute 2 things can be done
-  1. View it as a 2d tensor (Done by efficient implementation)
-     2. Deal with it direction (Done by us)
-Why all tasks are taken - 
-Because we do not want bias to crop up during the training
-replace=False thing in the above function and why it is important.
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[scale=0.75, transform shape,
+roundnode/.style={circle, draw=brown!60, fill=black!5, very thick, minimum size=7mm},
+roundnodey/.style={circle, draw=green!60, fill=black!5, very thick, minimum size=7mm},
+squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
+]
+%Nodes
+\node[roundnode]          (Xq)                                                     {$\textbf{X}_q$, $\textbf{y}_q$};
+\node[roundnode]          (Xs)                        [below=of Xq]     {$\textbf{X}_s$};
+\node[squarednode]      (DeepSet)              [right=of Xq]        {Deep Set};
+\node[squarednode]      (Concatenation)             [below=of DeepSet]        {Concatenation};
+\node[squarednode]      (DNN)                      [right=of Concatenation]        {Basic Scorer};
+\node[roundnodey]        (ys)                             [right=of DNN] {$\textbf{y}_s$};
 
+%Lines
+\draw[->] (Xq.east) -- (DeepSet.west);
+\draw[->] (DeepSet.south) -- (Concatenation.north) node[midway, right] {Latent Output};
+\draw[->] (Xs.east) -- (Concatenation.west);
+\draw[->] (Concatenation.east) -- (DNN.west);
+\draw[->] (DNN.east) -- (ys.west);
+\end{tikzpicture}
+\caption{Skeleton of the proposed model with Deep Sets.}
+\label{fig:proposeModelDeepSets}
+\end{figure}
+
+The  architecture of the scoring function $s_{\theta}$ with deep sets is given in Figure~\ref{fig:proposeModelDeepSets}.
+For the complete architecture of the Deep Set node please refer~\ref{fig:DeepSetArchitecture}.
+We keep the node abstract for simplicity.\
+
+First the data points in the query set $\textbf{X}_q$, $\textbf{y}_q$ are passed through the deep set to get the Latent Output.
+Each $X$, $y$ are concatenated to get a single vector for input into the deep set.
+We obtain a latent output from the deep set.
+This latent output is then concatenated with the query data points.
+The concatenated result is passed through a Deep Neural Network to finally get the desired relevance scores.
+For example if there is a batch of queries given by $\{X_{q_1},  X_{q_2},  X_{q_3} ...\}$,  and the latent output is given by $O_l$ then the concatenation yields
+$$
+\{O_l:X_{q_1},  O_l:X_{q_2},  O_l:X_{q_3} ...\}
+$$
+where ":" represents concatenation of 2 vectors.
+
+\subsubsection{Meta training}
+
+Using the above given scoring function during the evaluation cycle is very straightforward.
+We use the known data points as a support set and the target data points to evaluate as the query set.
+During meta training,  however,  we have to divide the training data into support set and query set.
+
+In our data division we first select 20 ($X$, $y$) data points as a support set randomly without replacement.
+Thereafter,  we select the query points from the remaining choices (again without replacement). The number of query points depends on the batch size (100 by default).
+During the meta training we do not sample the support and query points from all the given meta datasets.
+At each step within an epoch we select one meta data to sample these points as discussed in Section~\ref{sec:rlmetatraining}.
+The training of all the components in the model are carried out together (i.e. in the same back propagation step when using Pytorch).
+For the purpose of analysing the training accurately,  we however sample data from all the training and validation task to report the training and validation loss respectively.
 
 \subsection{Uncertainty implementation}
-Mention about the requirement to use Module list.
-Show the new architecture.
 
-The search spaces that have less data need more uncertainty
-The search spaces having more data need less uncertainty
+We know from Section~\ref{sec:hpoConstraints} that the evaluation of the target objective function in HPO is noisy.
+Hence it is important for any surrogate that models this objective to have the capability of estimating uncertainty.
+The model proposed till now has no such capability.
+Hence,  in this section we propose the extension of the model to incorporate uncertainty.
 
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[scale=0.75, transform shape,
+roundnode/.style={circle, draw=brown!60, fill=black!5, very thick, minimum size=7mm},
+roundnodey/.style={circle, draw=green!60, fill=black!5, very thick, minimum size=7mm},
+squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
+]
+%Nodes
+\node[roundnode]          (Xq)                                                     {$\textbf{X}_q$, $\textbf{y}_q$};
+\node[roundnode]          (Xs)                        [below=of Xq]     {$\textbf{X}_s$};
+\node[squarednode]      (DeepSet)              [right=of Xq]        {Deep Set};
+\node[squarednode]      (Concatenation)             [below=of DeepSet]        {Concatenation};
+\node[squarednode]      (DNN2)                      [right=of Concatenation]        {Basic Scorer$_2$};
+\node[squarednode]      (DNN1)                      [above=of DNN2]                    {Basic Scorer$_1$};
+\node[squarednode]      (DNN3)                      [below=of DNN]                    {Basic Scorer$_3$};
+\node[roundnodey]        (y1)                             [right=of DNN1] {$\textbf{y}_1$};
+\node[roundnodey]        (y2)                             [right=of DNN2] {$\textbf{y}_2$};
+\node[roundnodey]        (y3)                             [right=of DNN3] {$\textbf{y}_3$};
+\node[squarednode]      (mean)                             [right=of y2] {$\mu$, $\sigma^2$};
+\node[roundnodey]        (mus)                             [right=of mean] {$\mu_s$};
+\node[roundnodey]        (sigmas)                             [below=of mus] {$\sigma^2_s$};
+
+%Lines
+\draw[->] (Xq.east) -- (DeepSet.west);
+\draw[->] (DeepSet.south) -- (Concatenation.north) node[midway] {Latent Output};
+\draw[->] (Xs.east) -- (Concatenation.west);
+\draw[->] (Concatenation.east) -- (DNN1.west);
+\draw[->] (Concatenation.east) -- (DNN2.west);
+\draw[->] (Concatenation.east) -- (DNN3.west);
+\draw[->] (DNN1.east) -- (y1.west);
+\draw[->] (DNN2.east) -- (y2.west);
+\draw[->] (DNN3.east) -- (y3.west);
+\draw[->] (y1.east) -- (mean.west);
+\draw[->] (y2.east) -- (mean.west);
+\draw[->] (y3.east) -- (mean.west);
+\draw[->] (mean.east) -- (mus.west);
+\draw[->] (mean.east) -- (sigmas.west);
+
+\end{tikzpicture}
+\caption{Full proposed scoring model with uncertainty}
+\label{fig:proposeModelDeepSetsUncertainty}
+\end{figure}
+
+Figure~\ref{fig:proposeModelDeepSetsUncertainty} shows the architecture of the model with uncertainty.
+The only addition to the model is the usage of multiple deep neural networks.
+As discussed in Section~\ref{sec:uncertaintyDeepEnsembles},  we use multiple neural networks to calculate the mean and the variance instead of using a single neural network to do so.
+Given the support set and a single query,  the scoring function modelled in Figure~\ref{fig:proposeModelDeepSetsUncertainty}  gives a mean and a variance assuming that the distribution of the possible relevance scores is a Gaussian.
+
+We train all the neural networks together using the given meta data.
+For this,  the loss function requires a definite value of the predicted output $y$.
+We use the mean $\mu_s$ for this purpose.
+Due to this combined training method the training is more efficient.
+Hence for example if we are using ListMLE,  our loss function would be given by
+\begin{equation}\label{eq:overflowissue}
+L_{mle} = -  \sum\limits_{j=1}^{k} \log \frac{\exp(\mu(\pi^*_j))}{ \sum\limits_{t=j}^k \exp(\mu(\pi^*_k))}
+\end{equation}
+
+One problem that may come up during the training of these DNNs together is that the ranges of the DNNs may be different.
+This is taken care by the fact that we use a range controller in our scoring function as shown in Figure~\ref{fig:basicScoringModel}.
+Hence, the ranges of all the DNNs are the same. 
+The variance within the ensemble is still present due to the random initialization of the neural networks.
+By using the range controlling mechanism we both make the model numerically stable and make the training more efficient.
+
+\section{Different training mechanisms.}
 \subsubsection{Independent training}
 Implementation yet to be done
 
@@ -1897,7 +2037,7 @@ This problem should occur only in the cases where the model is context free.
 In our case,  the ranking loss model with deep set is context aware and results like these were unexpected.
 Hence the issues with negative transfer learning remains unsolved when using our model.
 One remedy for getting around this problem is to fine tune the model with a larger number of epochs.
-Nevertheless,  we cannot guarantee that the finetuning will re-learn from the small amount observed data points during the optimization cycle.
+Nevertheless,  we cannot guarantee that the fine tuning will re-learn from the small amount observed data points during the optimization cycle.
 
 \chapter{Research Question}
 The format of this is the same as that of experiments and Results.
@@ -1911,6 +2051,9 @@ Moreover,  the optimum within the HP search space may be different when the ML m
 Hence we further need to do multiple HP optimizations of a model each time using a different dataset.
 In addition to this due to the stochastic nature of ML models as well as the surrogate models, 
 we would have to run the HPO multiple times for each dataset.
+
+The search spaces that have less data need more uncertainty
+The search spaces having more data need less uncertainty
 
 \section{Benchmarking Meta-Data}
 
