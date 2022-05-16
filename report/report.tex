@@ -1998,34 +1998,33 @@ Implementation yet to be done
 
 \chapter{Research Question}
 The format of this is the same as that of experiments and Results.
-Also known as Hypothesis
+Also known as Hypothesis.
 
 \chapter{Experiments and Results}
-Evaluating a novel hyper parameter surrogate is extremely expensive.
-For this,  we would have to run the HPO technique (Bayesian optimization in our case) with our surrogate on a set of different machine learning models.
-This is because each ML model has a different search space.
+
+In this chapter we present the experiments that we conducted and the results we obtained in order to answer the research questions already posed.
+We first understand the structure of the (meta)data used for meta-training,  meta-validation,  and meta testing.
+In the subsequent sections we present the results obtained in detail.
+
+\subsubsection{Meta-Data}
+
+For comparing our proposed model with other HPO models we would have to run the Bayesian optimization used in our case (with our surrogate and with other surrogates) on a set of different machine learning models.
 Moreover,  the optimum within the HP search space may be different when the ML model is trained on different data sets.
-Hence we further need to do multiple HP optimizations of a model each time using a different dataset.
-In addition to this due to the stochastic nature of ML models as well as the surrogate models, 
+Hence, we further need to do multiple HP optimizations of a model each time using a different dataset.
+In addition to this, due to the stochastic nature of ML models as well as the surrogate models, 
 we would have to run the HPO multiple times for each dataset.
 
-The search spaces that have less data need more uncertainty
-The search spaces having more data need less uncertainty
-
-\section{Benchmarking Meta-Data}
-
-For comparing our proposed model with other HPO models we have to do the above evaluation for each of the HPO model.
-As one can see,  this evaluation if done right from the training of the ML model is not feasible.
-We use the HPO-B~\cite{DBLP:journals/corr/abs-2106-06257} benchmarking in this thesis.
-Using this benchmark,  we do not need to train our ML models from scratch as the meta data also contains evaluations of multiple hyper parameters for different ML models and datasets.
-In this section we first discuss about the organisation of the benchmarking meta data.
+As one can see,  this evaluation if done right from the training of the ML models is not feasible.
+To overcome this challenge,  we use the HPO-B~\cite{DBLP:journals/corr/abs-2106-06257} benchmarking in this thesis.
+Using this benchmark,  we do not need to train our ML models from scratch as the meta data contains evaluations of multiple HP configurations for different ML models and datasets.
+In the rest of the section we discuss about the organisation of the benchmarking meta data.
 
 
 HPO-B is a benchmark that can be used for doing black box HPO.
 It can be used for both transfer models and non transfer models.
 The meta data consists of a list of (hyper-parameter) search spaces.
 These are hyper parameter search spaces of single models.
-The is organised in a json format with the structure illustrated in Figure~\ref{fig:metadataorganization}.
+It is organised in a json format with the structure illustrated in Figure~\ref{fig:metadataorganization}.
 
 \begin{figure}[htb]
 \centering
@@ -2064,11 +2063,15 @@ There are a total of 5 seeds provided for a search space and dataset combination
 The meta data in HPO-B comes in 3 versions namely \textbf{HPO-B-v1},  \textbf{HPO-B-v2}, and \textbf{HPO-B-v3}.
 Of this \textbf{HPO-B-v3} contains distlilled the search spaces that have the most datasets and can be split is split into train,  validation and test sets. 
 
-
-The meta data set in HPOB is divided into test and train data.
+The meta data set in HPO-B is divided into test and train data.
 Using meta dataset,  one can learn meta learn a model using the training split.
 Then the model is evaluated in the testing split.
-This data approach is used both in the baselines and proposed idea models.
+This data splitting approach is used both in the baselines and proposed idea models.
+
+There are 2 types of HP optimization surrogates that are studied in this thesis - transfer learning surrogates
+and non-transfer learning surrogates.
+This benchmark can be used for analysing both types of models.
+However,  in order cross compare transfer and non-transfer techniques,  we only compare against \textbf{HPO-B-v3} test split as recommended in the HPO-B paper.
 
 \iffalse
 \subsection{HPO-B Dataset}
@@ -2078,12 +2081,67 @@ Due to out of scope nature of the continous case,  in our implementation we assu
 The implementation of observe\_and\_suggest functions differs based on the surrogate model used by our problem.
 \fi
 
-\subsection{Benchmark evaluation}
-There are 2 types of HP optimization surrogates that are studied in this thesis - transfer learning surrogates
-and non-transfer learning surrogates.
-This benchmark can be used for analysing both types of models.
-However,  in order cross compare transfer and non-transfer techniques,  we only compare against HPO-B-v3 test split as recommended in the HPO-B paper.
+\section{Baseline Results}
 
+To test our proposed model,  we used 4 main baseline methods - Random Search,  SMBO using Gaussian surrogates,  SMBO using Deep Ensembles and FSBO.
+Library implementation of Random Search and GP surrogates were taken.
+Whereas the Deep Ensemble and FSBO papers were implemented in this thesis.
+The results of these baselines are discussed in this section.
+
+In the given meta data if we take the set of all combinations in \textbf{HPO-B-v3} test split i.e \{Search Spaces $\times$ Metadata sets $\times$ Seeds\},  we get 403 HP optimizations.
+In each optimization,  we start with 5 initial seeds given by HPO-B and run the evaluation cycle for 100 iterations.
+This evaluation cycle is discussed in Algorithm~\ref{alg:deepEnsembleFinetuning} albeit for deep ensembles.
+
+In the whole evaluation cycle,  an array of incumbent best (highest) HP evaluation based on the Metadata set is created.
+The incumbent array for every optimization cycle for a model is compared against other models to create a rank array for each model.
+For example,  if at step 23 the incumbent of model $a$ has a higher value than of model $b$,  then rank of model $a$ at step 23 is lower than model $b$ (When we consider lower rank to be better).
+The rank arrays of every optimization cycle is averaged to get the rank graph of a particular model.
+We present this \textbf{rank graph} as a primary form of comparison between the models in question.
+
+For example Figure~\ref{fig:RsGpRankGraph} compares the rank graph of 2 baselines.
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.5]{images/RsGpRankGraph}
+    \caption{Rank Graph of RS and SMBO with GP surrogate}
+    \label{fig:RsGpRankGraph}
+\end{figure}
+
+\subsubsection{Deep Ensembles}
+
+The deep ensembles we used contained 5 neural networks by default.  Each neural network contained 2 fully connected neural layers with 32 neurons each. 
+We considered the non-transfer case for deep ensembles first.
+Hence we did not do any meta training for this model.
+Each neural network was trained for a 1000 epochs with a learning rate of 0.02 at evaluation cycle.
+We used Adam as our optimizer.
+
+\textbf{Ablation Required for all three}
+
+\textbf{Use critical graph from HPB-O for this}
+
+The following ablations were studied for deep ensembles.
+\begin{itemize}
+\item Fine tuning deep ensembles with no restart.
+\item Using restart at every evaluation cycle.
+\item Increasing the number of neural networks to 10.
+\end{itemize}
+
+After our analysis,  we found the following advantages of this model
+\begin{itemize}
+\item Being a non transfer HPO model can be applied to any continuous HPO problem.
+\item Each neural network being independent can be trained in parallel.
+Hence we can scale up our ensemble based on the compute power available to us.
+\end{itemize}
+
+On the negative side,  we did find some disadvantages of using Deep Ensembles:
+\begin{itemize}
+\item Since we do not do any meta training we are bound to (and have to) over fit to the very less data available during the optimization cycle.
+\item It does not model discrete or semi discrete spaces correctly. 
+This is because during the learning,  the input is assumed to be continuous.
+\end{itemize}
+
+
+\iffalse
 Data used in the experiment
 Infrastructure used
 (That is the protocol)
@@ -2099,6 +2157,7 @@ Benchmark this...
 Next with DKT (Benchmark this)
 
 Next show the best results obtained by architecture.
+\fi
 
 \section{Advantages and Limitations}
 
@@ -2121,6 +2180,8 @@ They must be normalized in order to get the correct results if they are not in t
 \item Using $\tanh$ function restricts the output very much.
 It may not have the latent space to completely the output.
 \item Due to disadvantages  of exp increasing positive function - Perhaps using other increasing positive function helps? (More reading/research required on this topic
+\item The search spaces that have less data need more uncertainty
+The search spaces having more data need less uncertainty.
 \end{itemize}
     
 \subsection{Negative transfer learning}
