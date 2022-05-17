@@ -2115,31 +2115,104 @@ Hence we did not do any meta training for this model.
 Each neural network was trained for a 1000 epochs with a learning rate of 0.02 at evaluation cycle.
 We used Adam as our optimizer.
 
-\textbf{Ablation Required for all three}
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.25]{images/DEPerformance}
+    \caption{Graphs showing performance of Deep Ensembles}
+    \label{fig:DEPerformance}
+\end{figure}
 
-\textbf{Use critical graph from HPB-O for this}
+Figure~\ref{fig:DEPerformance} shows the performance of various Deep Ensemble models.
+We use the best results obtained from the previous baselines for comparing how Deep ensembles fair in the HPO-B benchmark.
+In addition to plotting the rank graph,  we also plot the  average regret that is obtain if we use these models.
+The average regret on y-axis is plotted in a log scale.
 
-The following ablations were studied for deep ensembles.
+\textbf{Ablation Required for the raw part missing.}
+
+In our study,  we studied the following main models of DE
 \begin{itemize}
-\item Fine tuning deep ensembles with no restart.
-\item Using restart at every evaluation cycle.
-\item Increasing the number of neural networks to 10.
+% \item Fine tuning deep ensembles with no restart.
+\item DE using restart at every evaluation cycle.
+\item Increasing the number of neural networks in DE to 10.
 \end{itemize}
 
-After our analysis,  we found the following advantages of this model
-\begin{itemize}
-\item Being a non transfer HPO model can be applied to any continuous HPO problem.
-\item Each neural network being independent can be trained in parallel.
+We observe that using deep ensembles does give us results which are comparable with GP.
+Increasing the number of neural network ensembles does not seem to give very high performance improvement.
+This is the case for both the ranking graph and the average regret.
+Since this ranking would be cluttered for a large ablation study,  we also make use of critical rank graphs~\cite{pineda2021hpob}.
+This is illustrated in Figure~\ref{fig:DERank100}.
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/DERank25}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/DERank50}
+\end{minipage}\par
+\vskip\floatsep% normal separation between figures
+\includegraphics[width=0.45\textwidth]{images/DERank100}
+    \caption{DE Ranking at various evaluation cycle steps}
+   \label{fig:DERank100}
+\end{figure}
+
+After our analysis,  we a couple of advantages of the DE model.
+First,  being a non transfer HPO model we found that it can be applied to any continuous HPO problem.
+Second,  as each neural network is independent of the others,  the neural networks can be trained in parallel.
 Hence we can scale up our ensemble based on the compute power available to us.
-\end{itemize}
 
-On the negative side,  we did find some disadvantages of using Deep Ensembles:
-\begin{itemize}
-\item Since we do not do any meta training we are bound to (and have to) over fit to the very less data available during the optimization cycle.
-\item It does not model discrete or semi discrete spaces correctly. 
+On the negative side,  since we do not do any meta training we are bound to (and have to) over fit to the very less data available during the optimization cycle.
+In addition to this,  it does not model discrete or semi discrete spaces correctly. 
 This is because during the learning,  the input is assumed to be continuous.
-\end{itemize}
 
+
+\subsubsection{Few Shot Bayesian Optimization (FSBO)}
+
+The reason for the selection of FSBO as a baseline was that it was the state of the art in transfer HPO.
+During our implementation of FSBO,  due to the computational resources required for the optimization cycle,  we tried to use this model with only single search spaces.
+We found that using a model with 4 neural network layers with the same width of 32 as used in the Deep Ensemble is the best for the performance of the model.
+We used early stopping for doing better training as mentioned before.
+During the fine tuning we ran our model for 500 epochs with a learning rate of 0.03.
+We used Adam optimiser for both training and fine tuning.
+However,  we used cosine annealing on in the fine tuning phase.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.5]{images/FSBOPerformance}
+    \caption{Rank graph of self implemented FSBO}
+    \label{fig:FSBOPerformance}
+\end{figure}
+
+We can see in Figure~\ref{fig:FSBOPerformance},  our implementation could not give us the state of the art results.
+Hence we used the FSBO results stored in the HPO-B benchmark instead for the comparison with the rest of the baselines.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.25]{images/FSBOBestPerformance}
+    \caption{Graphs showing best performance of FSBO}
+    \label{fig:FSBOBestPerformance}
+\end{figure}
+
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/FSBOBestPerformanceRank25}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/FSBOBestPerformanceRank50}
+\end{minipage}\par
+\vskip\floatsep% normal separation between figures
+\includegraphics[width=0.45\textwidth]{images/FSBOBestPerformanceRank100}
+    \caption{Ranking of all baselines at various evaluation steps}
+   \label{fig:FSBOBestPerformanceRank100}
+\end{figure}
+
+From Figure~\ref{fig:FSBOBestPerformance} it is evident that FSBO as a model vastly outperforms the other models both in the rank graph and the regret graph.
+Moreover,  FSBO is always in a better rank at every evaluation step.
+This can be seen in Figure~\ref{fig:FSBOBestPerformanceRank100}.
+We use the DE with 10 neural network ensemble because it was giving best results for DE.
+With the performance of the baselines set,  we now move to discuss in detail how our model compares to these methods.
 
 \iffalse
 Data used in the experiment
