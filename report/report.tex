@@ -2214,6 +2214,70 @@ This can be seen in Figure~\ref{fig:FSBOBestPerformanceRank100}.
 We use the DE with 10 neural network ensemble because it was giving best results for DE.
 With the performance of the baselines set,  we now move to discuss in detail how our model compares to these methods.
 
+
+\section{Ranking Loss model results}
+
+In this section we evaluate our built model chronologically first using basic scorer model,  then making the model context aware and thereafter adding the capability of uncertainty to the model.
+
+\subsubsection{ListMLE with Basic scoring model}
+Training of the basic scoring model with the meta data obtained relatively smooth loss curves.
+Figure~\ref{fig:GoodLossCurve4796} shows one such loss curve obtained for the search space ID 4796 in the HPO-B meta dataset.
+However,  we did find search spaces that had bad loss curves.
+Figure~\ref{fig:NegativeLearning5860} shows example of one such loss curves.
+We can deduce in this figure that the validation task is different from the training task.
+Since the testing/evaluation task may be similar to the training task,  we did not do any early stopping of the model (during training) based on the validation losses.
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/GoodLossCurve4796}
+\caption{Good training loss curve (search space ID 4796)}
+    \label{fig:GoodLossCurve4796}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/NegativeLearning5860}
+\caption{Bad training loss curve (search space ID 5896)}
+    \label{fig:NegativeLearning5860}
+\end{minipage}
+\end{figure}
+
+With the trained basic scoring model,  the optimization runs can be done without any fine tuning.
+This is nothing but obtaining the relevance scores of the pending HP configurations using our basic scorer.
+Then evaluating the true HP objective function in the order given by their respective relevance scores.
+However,  a more robust mechanism is to fine tune the scoring model based on the known HP evaluations.
+Fine tuning for every evaluation step is restarted as discussed in Section~\ref{sec:restart}.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.25]{images/RLEvaluationBasicScoring}
+    \caption{Benchmarking basic scoring model trained using ListMLE}
+    \label{fig:RLEvaluationBasicScoring}
+\end{figure}
+
+From Figure~\ref{fig:RLEvaluationBasicScoring} one can see that the hypothesis regarding fine tune is correct.
+Fine tuning does help make the model get better results in the long run.
+One very interesting result we see is that without any fine tuning,  the basic scoring model trained with listMLE is very good in the first 5 evaluation steps.
+We this more closely in the critical graph in Figure~\ref{fig:RLEvaluationBasicScoringRank5}.
+
+The reason for this is that the scorer model learns to rank the best HP configuration found in the meta data.
+This corresponds to a person trying out the best configuration seen in his experience.
+On average this works very well hence the first configurations were good for the non fine tuned model.
+In the long run however,  there is more observed data that the model can rely on.
+This is only done when the model is fine tuned.
+This is the reason why the fine tuning scorer works better in the long run as compared to the non fine tuned model.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.35]{images/RLEvaluationBasicScoringRank5}
+    \caption{Critical rank graph at evaluation step 5}
+    \label{fig:RLEvaluationBasicScoringRank5}
+\end{figure}
+
+\subsubsection{Deep Sets: Context aware scoring model}
+
+
+\subsubsection{Uncertainty addition}
+
 \iffalse
 Data used in the experiment
 Infrastructure used
