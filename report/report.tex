@@ -1850,7 +1850,7 @@ After explaining the learning mechanism,  we now turn to 2 important components 
 The first is Deep Set to make our model context aware.
 The second is the use of uncertainty for improving the output of the model.
 
-\subsection{Using Deep Sets to build context aware models}
+\subsection{Using Deep Sets to build context aware models}\label{sec:DeepSetWithModel}
 
 We have already discussed the fundamental ideas of using deep sets in  ~\ref{sec:DeepSets}.
 In this section we discuss about how to add deep sets in the ranking loss surrogate model architecture and then how to train the same.
@@ -1918,7 +1918,7 @@ At each step within an epoch we select one meta data to sample these points as d
 The training of all the components in the model are carried out together (i.e. in the same back propagation step when using Pytorch).
 For the purpose of analysing the training accurately,  we however sample data from all the training and validation task to report the training and validation loss respectively.
 
-\subsection{Uncertainty implementation}
+\subsection{Uncertainty implementation}\label{sec:UncertaintyImplementation}
 
 We know from Section~\ref{sec:hpoConstraints} that the evaluation of the target objective function in HPO is noisy.
 Hence it is important for any surrogate that models this objective to have the capability of estimating uncertainty.
@@ -2275,8 +2275,86 @@ This is the reason why the fine tuning scorer works better in the long run as co
 
 \subsubsection{Deep Sets: Context aware scoring model}
 
+We found in our research that our model could be improved by making it context aware.
+For doing this we used an architecture with deep sets described Section~\ref{sec:DeepSetWithModel}.
+As previously discussed the latent result of the deep set can be used as a context for the scoring model.
+In order to meta-train this architecture,  we needed to change the way we sample the data.
+We used a support set of 20 data points i.e \{$X_s$, $y_s$\} pairs.
+For each double sampling we sample first the task.
+Then the support points are sampled without replacement.
+Then we sample the query points $X_q$ based on the batch size and list size (By default 100 for both).
 
-\subsubsection{Uncertainty addition}
+During the training however,  we found that the loss curves were very jumpy.
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/DeepSetLoss4796}
+\caption{Loss curve for model with deep set (SSID: 4796)}
+    \label{fig:DeepSetLoss4796}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/DeepSetLoss5527}
+\caption{Loss curve for model with deep set (SSID: 5527)}
+    \label{fig:DeepSetLoss5527}
+\end{minipage}
+\end{figure}
+
+Figure~\ref{fig:DeepSetLoss4796} and Figure~\ref{fig:DeepSetLoss5527} shows this clearly.
+We think that this is because of very high representation capacity which is a consequence of using the deep set architecture.
+
+During meta tuning again we have to have a support set and query set for training.
+We cannot fix the support data points because the evaluation data is very less.
+For this reason,  we use 20\% of the points as support points and the rest as query points during the fine tuning process.
+
+The results of this training and fine tuning our model with deep sets are shown in Figure~\ref{fig:RLDeepSetevaluation}.
+In the figure "raw" means that there was no fine tuning performed and the trained model was used as is in the the evaluation/optimization cycle.
+One advantage we see with this model is that whether fine tuning is done or not,  the first few evaluations are better than the state of the art results.
+This can be seen in the Rank@5 graph critical graph given in Figure~\ref{fig:DeepSetRank5}.
+This is because there is less relearning that happens in fine tuning due to addition of context to our model.
+In the later evaluation steps, naturally,  using fine tuning makes gives better performance.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.35]{images/DeepSetRank5}
+    \caption{Critical rank graph for Model with Deep Set.}
+    \label{fig:DeepSetRank5}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/RLDeepSetevaluation}
+    \caption{Benchmarking for the Deep set evaluation data}
+    \label{fig:RLDeepSetevaluation}
+\end{figure}
+
+\subsubsection{Using weighted Loss Function}
+We discussed that using a weighting loss function makes more sense for us as discussed in Section~\ref{sec:positionEnhancedRanking}.
+The ablation of using inverse log weighting with and without fine tuning is shown in Figure~\ref{fig:RLDeepSetWeighted}.
+Here we see that there is a big improvement to our evaluation results.
+This proves the hypothesis that weighting is very essential for getting good results.
+
+The fine tuned results is better than all the baselines except FSBO.
+In fact,  it is better than FSBO in the first few evaluation steps.
+This can be seen in Figure~\ref{fig:RLDeepSetWeightedRank25}.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/RLDeepSetWeighted}
+    \caption{Ablation for weighted loss}
+    \label{fig:RLDeepSetWeighted}
+\end{figure}
+
+\subsubsection{Uncertainty}
+Uncertainty estimation is very important for every surrogate model that is used in SMBO.
+This is implemented using the ensemble method described in Section~\ref{sec:UncertaintyImplementation}.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.35]{images/RLDeepSetWeightedRank25}
+    \caption{Critical rank graph for weighting ablation.}
+    \label{fig:RLDeepSetWeightedRank25}
+\end{figure}
 
 \iffalse
 Data used in the experiment
@@ -2321,7 +2399,7 @@ It may not have the latent space to completely the output.
 The search spaces having more data need less uncertainty.
 \end{itemize}
     
-\subsection{Negative transfer learning}
+\subsubsection{Negative transfer learning}
 For some search spaces,  the validation errors of the ranking loss model did not reduce at all during its training.
 In fact the validation loss became worse.
 Figure~\ref{fig:NegativeLearning} shows an illustration of this for the search space id 5527.
