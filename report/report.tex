@@ -1368,7 +1368,7 @@ Finally we build a ranking model surrogate to improve the performance of any mod
 We use SMBO as a reference for our study.
 
 \section{Basic scoring model : Deep Neural Network}
-
+\label{sec:BasicScoringModelDNN}
 In order to discuss the implementation details of ranking loss functions,  we need to first have a reference scoring model.
 Since we also want representational capacity to be high a fully connected neural network is used as a scorer to begin with.
 This is depicted in Figure~\ref{fig:basicScoringModel}.
@@ -2413,27 +2413,58 @@ Next show the best results obtained by architecture.
 
 \section{Advantages and Limitations}
 
-Compare this loss function and method with other base lines..
-Advantages of the proposed Idea:
-    The amount of data instances for training is exponential in number. Which is very good for a deep learning model
-    For example if we have 100 observation set and we use a list size of 15 to train our model, we will have 100C15
-    unique instances to train.
 
-Observed disadvantages:
+In this section we first discuss some of the major advantages of the proposed model when compared to the baselines.
+Then we move on to critically analyse the limitations of the model.
+
+First and foremost,  one advantage of the proposed surrogate model is that it is a transfer HPO surrogate.  Previous available meta data will help the model to give better performance over non transfer HPO surrogate.
+
+Secondly,  even if the amount of meta data is limited it has little affect on the training.
+This is due to the nature of the loss function and the amount of data points that can be sampled during meta training.
+For example,  if we have a meta data set of 100 observations i.e 100 ($X$,$y$) pairs,  and we have a list size of 15,  then the total number of training samples is given by $100C15$.
+Hence the sampling method used gives us data that is exponential in number.
+And each sampled list is a unique instance to train.
+This is a big advantage for us as we can increase the complexity of the surrogate model with relative easy.
+This also has a big advantage during fine tuning where the data is very less.
+
+Another major advantage is that the range or the distribution of the actual scores is irrelevant for the training procedure.
+This inherently dampens the effect of uncertainty by itself.
+As the order of the known evaluations is the  only relevant thing,  minor variations in the output of the objective function has no effect on the training of the loss.
+This also gives us flexibility of tampering the range of our surrogate based on our requirement.
+
+\subsubsection{Disadvantages}
+Our proposed model does have some limitations which need to be further studied.
+Some of these are
 \begin{itemize}
-\item In our model,  a scorer is first learnt and then using the scorer,  we rank the set of objects in question.
-When optimising the scorer,  we ignore the sorting functionality necessary to complete the process of ranking.
+\item In our model,  a scorer is first learnt and then using this scorer,  we rank the set of query HP configurations.
+During our training of the scoring model/surrogate,  we ignore the sorting functionality necessary to complete the process of ranking.
 This is because sorting is non differentiable. 
-This means that the true evaluation of the ranked list is not optimized.
-This needs to be improved which is done in Pi-Rank paper.
-\item The learnt model is extremely sensitive to the learning rate and the number of epochs.
-\item It is assumed that the target task and the training task have the same output range. 
-They must be normalized in order to get the correct results if they are not in the same range.
-\item Using $\tanh$ function restricts the output very much.
-It may not have the latent space to completely the output.
-\item Due to disadvantages  of exp increasing positive function - Perhaps using other increasing positive function helps? (More reading/research required on this topic
-\item The search spaces that have less data need more uncertainty
-The search spaces having more data need less uncertainty.
+Which means that the true evaluation of the ranked list is not optimized.
+
+\item Our loss function makes use of exponentiation function as the strictly increasing positive function.
+This puts a major restriction on the range of the relevance scores.
+It may not have the output space to completely map the range of the true scoring function.
+More research is required to find out better strictly increasing functions.
+
+\item The range controller function we use in our model is $\tanh$ because of the function's smoothness.
+However,  if the output relevance scores of 2 HP configurations are either at the positive extreme or negative extreme,  then it may be difficult to distinguish between them.
+This can be dampenned by tuning the $k$ and $\alpha$ parameters as discussed in Section~\ref{sec:BasicScoringModelDNN},  but this does have practical limits due to the floating point implementations in computer languages.
+
+\item It is during the meta training that all the meta training tasks / meta datasets have the same output range for simplicity.
+This is the case of all outputs HPO-B.
+If there is any other meta data used,  the outputs of the different meta data (tasks) should be normalized before being used in the training process.
+
+\item The meta trained model may be biased towards one task due to a larger availability of data from this task.
+This is however dampened by the fact the we are using the double sampling mechanism.
+This makes sure all the tasks sampled equal number of times.
+However,  this leads to over fitting of the model towards the tasks that have lesser data because this data is overused during training.
+
+\iffalse
+\item The quality requirement of the uncertainty estimation and need for it is not always the same.
+The search spaces that have less data need more uncertainty and vis versa.
+ The learnt model is extremely sensitive to the learning rate and the number of epochs.
+\fi
+
 \end{itemize}
     
 \subsubsection{Negative transfer learning}
@@ -2456,6 +2487,7 @@ Hence the issues with negative transfer learning remains unsolved when using our
 One remedy for getting around this problem is to fine tune the model with a larger number of epochs.
 Nevertheless,  we cannot guarantee that the fine tuning will re-learn from the small amount observed data points during the optimization cycle.
 
+\iffalse
 \section{Evaluation}
 \subsection{Testing}
 explain how a ranking graph works ar implemented
@@ -2485,6 +2517,7 @@ show results of independent training and training with output restriction
 
 what about training independently,   this requires normalization. 
 as explained by sebastian.
+\fi
 
 \chapter{Conclusion}
 
@@ -2506,6 +2539,8 @@ Then select the best region and subdivide the space and continue the process.
 There are limitation,  cannot really guarantee the optima will be found like the gradient methods.
 Hence this method is suboptimal to the gradient based HP methods for continuous search spaces.
 
+
+This needs to be improved which is done in Pi-Rank paper.
 \iffalse
 Paper: https://arxiv.org/pdf/2012.06731.pdf
        (Impt Ref) https://arxiv.org/pdf/1903.08850.pdf
