@@ -2345,16 +2345,53 @@ This can be seen in Figure~\ref{fig:RLDeepSetWeightedRank25}.
     \label{fig:RLDeepSetWeighted}
 \end{figure}
 
-\subsubsection{Uncertainty}
-Uncertainty estimation is very important for every surrogate model that is used in SMBO.
-This is implemented using the ensemble method described in Section~\ref{sec:UncertaintyImplementation}.
-
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.35]{images/RLDeepSetWeightedRank25}
     \caption{Critical rank graph for weighting ablation.}
     \label{fig:RLDeepSetWeightedRank25}
 \end{figure}
+
+
+\subsubsection{Uncertainty}
+Uncertainty estimation is very important for every surrogate model that is used in SMBO.
+This is implemented using the ensemble method described in Section~\ref{sec:UncertaintyImplementation}.
+We see from Figure~\ref{fig:RLUncertaintybenchmark} that there is massive improvement of performance in our model after uncertainty is implemented in it.
+We can also see that it is on par with the state of the art FSBO results.
+
+In the first steps of the optimization cycle,  using uncertainty is very important.  This is because we do not have enough data to build or fine tune our surrogate model.
+Using a surrogate without uncertainty in the first steps may lead to an overconfident model that gives bad results.
+This especially not good because the evaluation cycle is a sequential process.
+The selection of the next point depends on the surrogate which has been fine-tuned with previously explored points.
+This is what makes the model with uncertainty (if estimated correctly) superior to other models.
+ 
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/RLUncertaintybenchmark}
+    \caption{Ablation for uncertainty implementation}
+    \label{fig:RLUncertaintybenchmark}
+\end{figure}
+
+One thing interesting is that the average regret of the best model we propose is not very good as compared to even the Deep Ensemble baseline.
+Since the average regret gives a biased estimation of the results and the rank graph is a more accurate picture of the results,  we conclude here that the proposed ranking loss surrogate model is better than the Deep Ensemble baseline.
+
+Finally, in Figure~\ref{fig:FinalAblation} we show how each of models built chronologically compare against each other.
+In this figure we see that the 2 main factors that improved our model were the use of a weighted loss and the use of uncertainty.
+One anomoly we see is that the addition of deep set itself seemed to give bad results.
+Nevertheless, we accept it to be better than just using the basic scoring model.
+Firstly because addition of the deep set improved the performance of the model in the first approximately 30 steps.
+This is crucial for a sequential process.
+Secondly,  because there is a possibility to reduce the probability of negative learning to occur because of the context encoded using  the deep sets.
+Also one can see that one standard deviation of both the basic scoring model and the deep set model are overlapping. 
+This signifies that their performance difference in the last ranks is not very huge.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/FinalAblation}
+    \caption{Ablation of all RL models}
+    \label{fig:FinalAblation}
+\end{figure}
+
 
 \iffalse
 Data used in the experiment
