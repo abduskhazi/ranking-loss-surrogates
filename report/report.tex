@@ -469,9 +469,42 @@ The data splitting during training is done using any variable be it discrete or 
 	\item It can handle conditional variables, unlike Gaussian processes, by making sure that data is not split based on a variable till it is guaranteed that no conditionality is broken by the split.
    \end{itemize}
 
+\subsection{Deep Neural Networks}
+Deep Neural Networks are machine learning models in which the inputs are sequentially passed through multiple functions of computation before getting the final output.
+Figure~\ref{fig:DeepNeuralNetwork} illustrates a very basic example of a deep neural network.
+The architecture of this network is such that every neuron of one layer is connected to every neuron of the next layer. 
+Hence each layer is called a fully connected layer (FC for short).
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.5]{images/DeepNeuralNetwork}
+    \caption{A sample of a fully connected deep neural network~\cite{deepNeuralNetworksImage}}
+    \label{fig:DeepNeuralNetwork}
+\end{figure}
+
+Let us denote $I$ as the input to this model and $O$ as the output.
+Let the interacting neuron layers - Input layer,  Hidden layer and the output layers be represented by functions $f_i$, $f_h$, and $f_o$ respectively.
+Then the computation of the model can be abstractly represented by
+
+\begin{equation}
+O = f_o(f_h(f_i(I)))
+\end{equation}
+
+And each function $f$ can be represented by the equation
+\begin{equation}
+f(I) = \textsc{NonLinearFunction}(\textbf{W} * I + \textbf{b})
+\end{equation}
+
+Where the matrix $\textbf{W}$  holds the weights of the connections to the neurons of the current layer and $\textbf{b}$ represents some bias that is added to the outputs of the neurons.
+The use of \textsc{NonLinearFunction} makes it possible for the neural network to represent non linear functions.
+The overall capacity of the neural network very high and it can be increased by increasing the depth of the network or by increasing the neurons at each layer.
+
+One disadvantages with deep neural network is that they cannot model uncertainty trivially.
+One method to do this is to use ensemble of neural networks or the use of specialised loss function with 2 outputs.
+Since uncertainty modelling is essential for this thesis,  it is discussed in more detail in the Section~\ref{sec:uncertaintyDeepEnsembles}.
+
 \subsection{Bayesian Neural Networks}
-\subsection{Neural Networks}
-they don't work great, because they cant model uncertainty). Uncertainty can be modeled directly, or through ensembles.
+
 
 \section{Types of Losses}
 \subsection{BO with GP uses negative log likelihood}
@@ -1988,17 +2021,11 @@ Hence, the ranges of all the DNNs are the same.
 The variance within the ensemble is still present due to the random initialization of the neural networks.
 By using the range controlling mechanism we both make the model numerically stable and make the training more efficient.
 
-\section{Different training mechanisms.}
-\subsubsection{Independent training}
-Implementation yet to be done
-
-\subsubsection{Training with mean and restricted output}
-Implementation yet to be done
-
-
+\iffalse
 \chapter{Research Question}
 The format of this is the same as that of experiments and Results.
 Also known as Hypothesis.
+\fi
 
 \chapter{Experiments and Results}
 
@@ -2412,7 +2439,7 @@ Next show the best results obtained by architecture.
 \fi
 
 \section{Advantages and Limitations}
-
+\label{sec:advantagesAndLimitations}
 
 In this section we first discuss some of the major advantages of the proposed model when compared to the baselines.
 Then we move on to critically analyse the limitations of the model.
@@ -2521,26 +2548,73 @@ as explained by sebastian.
 
 \chapter{Conclusion}
 
+The ranking loss surrogate model proposed in this thesis has a few limitations and gaps which need to be researched and implemented. 
+As the scope of this thesis was limited we could not explore many research directions.
+In this section we mention some of the topics that could be interesting to take up in any further research in this area.
+Thereafter we conclude our thesis.
 
-\section{Further work}
-Further study required with other baselines that deal with ranking loss.
+\section{Further research work}
 
-In our methods we used the ensemble of DNNs which output a list of results.
-We use this results to calculate the mean and the variance of our  prediction.
-However,  the deep ensemble paper proposes a method to directly calculate the mean
-and variance.
-However,  the integration of this idea with ranking losses is non-trivial.
-Hence the usage of this type of loss with the ranking loss function can be taken up in further research in order to check whether their is improvement in the results or not.
+We introduced uncertainty into our model with the use of Deep Ensembles. 
+With this we had many basic scoring models each giving their own.
+The mean of these neural networks was taken to be the joint output of the
+ensemble.
+This mean was used by the loss function to train the whole model.
+We can term this as "collective training" of the ensemble.
+There is,  however,  also the possibility of independent training where each neural network is trained independently.
+Some intricacies if we train this way are
+\begin{itemize}
+\item The Deep Set architecture is a backbone that is common to all basic scoring models.  How is this to be trained?
+\item Independent training implies that the range of the output of different basic scoring models is different. 
+Are these to be normalized? Or do we take the ranking from all scoring models and average them.
+\end{itemize}
 
-Working with continuous HP spaces.
-How about dividing the space into areas and use 1 HP configuration as a representative
-of the space (in the euclidean sense)
-Then select the best region and subdivide the space and continue the process.
-There are limitation,  cannot really guarantee the optima will be found like the gradient methods.
-Hence this method is suboptimal to the gradient based HP methods for continuous search spaces.
+In the proposed model,  the deep neural networks output a list of output scores. 
+We use this output to calculate the mean and the variance of the scores.
+The deep ensemble, however, paper proposes a method to directly calculate the mean and this variance.
+The integration of this idea with ranking losses is non-trivial.
+Hence the integration of this Deep Ensemble architecture with the ranking loss function can be taken up in further research work.
+It would be interesting to see the affect of this integration for HPO problems with very less meta data because Deep Ensembles by themselves as introduced by ~\cite{DeepEnsemblePaper} perform relatively good in the evaluation phase.
+
+This thesis has primarily focused on how to select HP configurations from a set of discrete HP configurations.
+Hence the model does not deal with continuous search spaces directly.
+For working with continuous HP search spaces,  we can divide the space  (in the euclidean sense) into hyper-volumes and use 1 HP configuration as a representative for the whole hyper-volume.
+Then we may select the best region and subdivide the space and continue the process till a particular granularity.
+This method is just a workaround to the main problem and we also cannot really guarantee that an optima will be found in contract to any gradient based optimization method.
+Hence,  further research needs to be done on how to formulate the ranking loss function for continuous search spaces.
+
+We already discussed in Section~\ref{sec:advantagesAndLimitations}  that the ranking loss function does not optimize the sorting function.
+The inclusion of sorting functionality in the loss function has  been proposed and studied in Swezey et.  al~\cite{PiRank}.
+On research direction would be to incorporate the ideas of PiRank in order to see if there is any improvement in the model.
+
+Lastly,  novel HPO surrogates that have not been explored by this thesis can be implemented.
+This would not only further the research empirically but also ideas used in other baselines could be incorporated to improve the model.
 
 
-This needs to be improved which is done in Pi-Rank paper.
+\section{Conclusion}
+In this thesis we study a method of Hyper parameter optimization using Sequential Model based Optimization algorithm as a reference algorithm.
+The angle of approach to this problem however is different from usually studied HPO methods.
+We formulated the problem of selecting next HP configurations within the SMBO cycle as a problem of ranking.
+Due to the nature of the ranking losses studied by us,  we needed to design a suitable surrogate for it.
+
+In the quest to design get good performance for our proposed model we systematically studied and chronologically added essential components to the model which were - addition of context using deep sets,  addition of weighting to the loss function and the addition of uncertainty to the model.
+We found that the model with all the these components gave results which were on par with the state of the art results of FSBO.
+The reason for this,  we hypothesis, is that the training and sampling mechanism for the loss function is very different as compared to the other HPO surrogates or losses.
+The advantage that our model is able to sample combinatorial number of samples from a given set of HP configurations is a upper hand for the proposed model.
+
+Even though we cannot claim the superiority of this method unequivocally due to the scope of application of the ranking loss functions,  we do encourage the reader to pursue further research in this area. 
+We believe from our research the models trained using ranking losses have the potential to give very good Hyper parameter optimization results.
+We also believe that the concepts developed in this thesis could aid in other areas of research like Information retrieval which heavily use ranking losses.
+
+
+
+
+
+\iffalse
+\subsubsection{Training with mean and restricted output}
+Implementation yet to be done
+\fi
+
 \iffalse
 Paper: https://arxiv.org/pdf/2012.06731.pdf
        (Impt Ref) https://arxiv.org/pdf/1903.08850.pdf
@@ -2561,9 +2635,6 @@ The idea of Permutation Matrices is taken from Neural sort - Neural sort (Impt r
 PLACKETT-LUCE DISTRIBUTIONS -> Very important to explain the rationale about using score as a probability
     measure for our scoring function (Check section 2.1 of paper 2 (Neural Sort))
 \fi 
- 
-\section{Conclusion}
-This is the conclusion
 
 
 \bibliography{references}
