@@ -263,13 +263,15 @@ def study_gaussian(n_trials):
     store_object(performance, "./optimization_results/gp_evaluation")
 
 
-def study_DE(n_trails):
+def study_DE(n_trails, i=None):
     hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
     # Loading previous outputs
     de_keys = get_all_combinations(hpob_hdlr, 100)
+    print("Evaluating 1 of ", len(de_keys))
+    de_keys = de_keys[i:i+1] # Only executing the required keys.
     # Evaluate DE
     de_performance = evaluate_DE(hpob_hdlr, keys_to_evaluate=de_keys)
-    store_object(de_performance, "./optimization_results/de_evaluate_32x32_E1000_l0_02_random_start")
+    store_object(de_performance, "./cluster_computation/DE_output/de_evaluate_32x32_E1000_l0_02_OPT" + str(i))
 
 
 def study_FSBO(conf_fsbo, n_keys, n_trails):
@@ -303,7 +305,7 @@ def main(opt):
         study_gaussian(n_trails)
 
     if conf.evaluate_DE:
-        study_DE(n_trails)
+        study_DE(n_trails, opt)
 
     if conf.FSBO.pretrain or conf.FSBO.evaluate:
         study_FSBO(conf.FSBO, n_keys=n_keys, n_trails=n_trails)
