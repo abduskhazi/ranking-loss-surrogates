@@ -469,9 +469,42 @@ The data splitting during training is done using any variable be it discrete or 
 	\item It can handle conditional variables, unlike Gaussian processes, by making sure that data is not split based on a variable till it is guaranteed that no conditionality is broken by the split.
    \end{itemize}
 
+\subsection{Deep Neural Networks}
+Deep Neural Networks are machine learning models in which the inputs are sequentially passed through multiple functions of computation before getting the final output.
+Figure~\ref{fig:DeepNeuralNetwork} illustrates a very basic example of a deep neural network.
+The architecture of this network is such that every neuron of one layer is connected to every neuron of the next layer. 
+Hence each layer is called a fully connected layer (FC for short).
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.5]{images/DeepNeuralNetwork}
+    \caption{A sample of a fully connected deep neural network~\cite{deepNeuralNetworksImage}}
+    \label{fig:DeepNeuralNetwork}
+\end{figure}
+
+Let us denote $I$ as the input to this model and $O$ as the output.
+Let the interacting neuron layers - Input layer,  Hidden layer and the output layers be represented by functions $f_i$, $f_h$, and $f_o$ respectively.
+Then the computation of the model can be abstractly represented by
+
+\begin{equation}
+O = f_o(f_h(f_i(I)))
+\end{equation}
+
+And each function $f$ can be represented by the equation
+\begin{equation}
+f(I) = \textsc{NonLinearFunction}(\textbf{W} * I + \textbf{b})
+\end{equation}
+
+Where the matrix $\textbf{W}$  holds the weights of the connections to the neurons of the current layer and $\textbf{b}$ represents some bias that is added to the outputs of the neurons.
+The use of \textsc{NonLinearFunction} makes it possible for the neural network to represent non linear functions.
+The overall capacity of the neural network very high and it can be increased by increasing the depth of the network or by increasing the neurons at each layer.
+
+One disadvantages with deep neural network is that they cannot model uncertainty trivially.
+One method to do this is to use ensemble of neural networks or the use of specialised loss function with 2 outputs.
+Since uncertainty modelling is essential for this thesis,  it is discussed in more detail in the Section~\ref{sec:uncertaintyDeepEnsembles}.
+
 \subsection{Bayesian Neural Networks}
-\subsection{Neural Networks}
-they don't work great, because they cant model uncertainty). Uncertainty can be modeled directly, or through ensembles.
+
 
 \section{Types of Losses}
 \subsection{BO with GP uses negative log likelihood}
@@ -1368,7 +1401,7 @@ Finally we build a ranking model surrogate to improve the performance of any mod
 We use SMBO as a reference for our study.
 
 \section{Basic scoring model : Deep Neural Network}
-
+\label{sec:BasicScoringModelDNN}
 In order to discuss the implementation details of ranking loss functions,  we need to first have a reference scoring model.
 Since we also want representational capacity to be high a fully connected neural network is used as a scorer to begin with.
 This is depicted in Figure~\ref{fig:basicScoringModel}.
@@ -1850,7 +1883,7 @@ After explaining the learning mechanism,  we now turn to 2 important components 
 The first is Deep Set to make our model context aware.
 The second is the use of uncertainty for improving the output of the model.
 
-\subsection{Using Deep Sets to build context aware models}
+\subsection{Using Deep Sets to build context aware models}\label{sec:DeepSetWithModel}
 
 We have already discussed the fundamental ideas of using deep sets in  ~\ref{sec:DeepSets}.
 In this section we discuss about how to add deep sets in the ranking loss surrogate model architecture and then how to train the same.
@@ -1918,7 +1951,7 @@ At each step within an epoch we select one meta data to sample these points as d
 The training of all the components in the model are carried out together (i.e. in the same back propagation step when using Pytorch).
 For the purpose of analysing the training accurately,  we however sample data from all the training and validation task to report the training and validation loss respectively.
 
-\subsection{Uncertainty implementation}
+\subsection{Uncertainty implementation}\label{sec:UncertaintyImplementation}
 
 We know from Section~\ref{sec:hpoConstraints} that the evaluation of the target objective function in HPO is noisy.
 Hence it is important for any surrogate that models this objective to have the capability of estimating uncertainty.
@@ -1988,17 +2021,11 @@ Hence, the ranges of all the DNNs are the same.
 The variance within the ensemble is still present due to the random initialization of the neural networks.
 By using the range controlling mechanism we both make the model numerically stable and make the training more efficient.
 
-\section{Different training mechanisms.}
-\subsubsection{Independent training}
-Implementation yet to be done
-
-\subsubsection{Training with mean and restricted output}
-Implementation yet to be done
-
-
+\iffalse
 \chapter{Research Question}
 The format of this is the same as that of experiments and Results.
 Also known as Hypothesis.
+\fi
 
 \chapter{Experiments and Results}
 
@@ -2124,39 +2151,46 @@ We used Adam as our optimizer.
 
 Figure~\ref{fig:DEPerformance} shows the performance of various Deep Ensemble models.
 We use the best results obtained from the previous baselines for comparing how Deep ensembles fair in the HPO-B benchmark.
-In addition to plotting the rank graph,  we also plot the  average regret that is obtain if we use these models.
+In addition to plotting the rank graph,  we also plot the  average regret for every model.
 The average regret on y-axis is plotted in a log scale.
-
-\textbf{Ablation Required for the raw part missing.}
+In the graph,  DE\_M5 stands for Deep Ensembles with 5 neural networks.
+And a "rs" suffix in the legend stands for models which are restarted before every evaluation.
 
 In our study,  we studied the following main models of DE
 \begin{itemize}
-% \item Fine tuning deep ensembles with no restart.
+\item Fine tuning deep ensembles with no restart.
 \item DE using restart at every evaluation cycle.
 \item Increasing the number of neural networks in DE to 10.
 \end{itemize}
 
-We observe that using deep ensembles does give us results which are comparable with GP.
+We see that using DE as a surrogate without restarts does gives us bad results as compared to the model with the restarts.
+This proves our hypothesis of the requirement of restarts as discussed in Section~\ref{sec:restart}.
+Furthermore,  we observe that using deep ensembles with restarts gives us results which are comparable with GP.
 Increasing the number of neural network ensembles does not seem to give very high performance improvement.
 This is the case for both the ranking graph and the average regret.
-Since this ranking would be cluttered for a large ablation study,  we also make use of critical rank graphs~\cite{pineda2021hpob}.
+We also make use of critical rank graphs~\cite{pineda2021hpob} to check the ranks at particular evaluation cycle steps.
 This is illustrated in Figure~\ref{fig:DERank100}.
 
 \begin{figure}[h]% [H] is so declass\'e!
 \centering
 \begin{minipage}{0.45\textwidth}
-\includegraphics[width=\textwidth]{images/DERank25}
+\includegraphics[width=\textwidth]{images/DERank5}
 \end{minipage}\hfill
 \begin{minipage}{0.45\textwidth}
-\includegraphics[width=\textwidth]{images/DERank50}
+\includegraphics[width=\textwidth]{images/DERank25}
 \end{minipage}\par
-\vskip\floatsep% normal separation between figures
-\includegraphics[width=0.45\textwidth]{images/DERank100}
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/DERank50}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/DERank100}
+\end{minipage}
+% \vskip\floatsep% normal separation between figures
     \caption{DE Ranking at various evaluation cycle steps}
    \label{fig:DERank100}
 \end{figure}
 
-After our analysis,  we a couple of advantages of the DE model.
+After our analysis,  we found a couple of advantages of the DE model.
 First,  being a non transfer HPO model we found that it can be applied to any continuous HPO problem.
 Second,  as each neural network is independent of the others,  the neural networks can be trained in parallel.
 Hence we can scale up our ensemble based on the compute power available to us.
@@ -2214,6 +2248,185 @@ This can be seen in Figure~\ref{fig:FSBOBestPerformanceRank100}.
 We use the DE with 10 neural network ensemble because it was giving best results for DE.
 With the performance of the baselines set,  we now move to discuss in detail how our model compares to these methods.
 
+
+\section{Ranking Loss model results}
+
+In this section we evaluate our built model chronologically first using basic scorer model,  then making the model context aware and thereafter adding the capability of uncertainty to the model.
+
+\subsubsection{ListMLE with Basic scoring model}
+Training of the basic scoring model with the meta data obtained relatively smooth loss curves.
+Figure~\ref{fig:GoodLossCurve4796} shows one such loss curve obtained for the search space ID 4796 in the HPO-B meta dataset.
+However,  we did find search spaces that had bad loss curves.
+Figure~\ref{fig:NegativeLearning5860} shows example of one such loss curves.
+We can deduce in this figure that the validation task is different from the training task.
+Since the testing/evaluation task may be similar to the training task,  we did not do any early stopping of the model (during training) based on the validation losses.
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/GoodLossCurve4796}
+\caption{Good training loss curve (search space ID 4796)}
+    \label{fig:GoodLossCurve4796}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/NegativeLearning5860}
+\caption{Bad training loss curve (search space ID 5896)}
+    \label{fig:NegativeLearning5860}
+\end{minipage}
+\end{figure}
+
+With the trained basic scoring model,  the optimization runs can be done without any fine tuning.
+This is nothing but obtaining the relevance scores of the pending HP configurations using our basic scorer.
+Then evaluating the true HP objective function in the order given by their respective relevance scores.
+However,  a more robust mechanism is to fine tune the scoring model based on the known HP evaluations.
+Fine tuning for every evaluation step is restarted as discussed in Section~\ref{sec:restart}.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.25]{images/RLEvaluationBasicScoring}
+    \caption{Benchmarking basic scoring model trained using ListMLE}
+    \label{fig:RLEvaluationBasicScoring}
+\end{figure}
+
+From Figure~\ref{fig:RLEvaluationBasicScoring} one can see that the hypothesis regarding fine tune is correct.
+Fine tuning does help make the model get better results in the long run.
+One very interesting result we see is that without any fine tuning,  the basic scoring model trained with listMLE is very good in the first 5 evaluation steps.
+We this more closely in the critical graph in Figure~\ref{fig:RLEvaluationBasicScoringRank5}.
+
+The reason for this is that the scorer model learns to rank the best HP configuration found in the meta data.
+This corresponds to a person trying out the best configuration seen in his experience.
+On average this works very well hence the first configurations were good for the non fine tuned model.
+In the long run however,  there is more observed data that the model can rely on.
+This is only done when the model is fine tuned.
+This is the reason why the fine tuning scorer works better in the long run as compared to the non fine tuned model.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.35]{images/RLEvaluationBasicScoringRank5}
+    \caption{Critical rank graph at evaluation step 5}
+    \label{fig:RLEvaluationBasicScoringRank5}
+\end{figure}
+
+\subsubsection{Deep Sets: Context aware scoring model}
+
+We found in our research that our model could be improved by making it context aware.
+For doing this we used an architecture with deep sets described Section~\ref{sec:DeepSetWithModel}.
+As previously discussed the latent result of the deep set can be used as a context for the scoring model.
+In order to meta-train this architecture,  we needed to change the way we sample the data.
+We used a support set of 20 data points i.e \{$X_s$, $y_s$\} pairs.
+For each double sampling we sample first the task.
+Then the support points are sampled without replacement.
+Then we sample the query points $X_q$ based on the batch size and list size (By default 100 for both).
+
+During the training however,  we found that the loss curves were very jumpy.
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/DeepSetLoss4796}
+\caption{Loss curve for model with deep set (SSID: 4796)}
+    \label{fig:DeepSetLoss4796}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/DeepSetLoss5527}
+\caption{Loss curve for model with deep set (SSID: 5527)}
+    \label{fig:DeepSetLoss5527}
+\end{minipage}
+\end{figure}
+
+Figure~\ref{fig:DeepSetLoss4796} and Figure~\ref{fig:DeepSetLoss5527} shows this clearly.
+We think that this is because of very high representation capacity which is a consequence of using the deep set architecture.
+
+During meta tuning again we have to have a support set and query set for training.
+We cannot fix the support data points because the evaluation data is very less.
+For this reason,  we use 20\% of the points as support points and the rest as query points during the fine tuning process.
+
+The results of this training and fine tuning our model with deep sets are shown in Figure~\ref{fig:RLDeepSetevaluation}.
+In the figure "raw" means that there was no fine tuning performed and the trained model was used as is in the the evaluation/optimization cycle.
+One advantage we see with this model is that whether fine tuning is done or not,  the first few evaluations are better than the state of the art results.
+This can be seen in the Rank@5 graph critical graph given in Figure~\ref{fig:DeepSetRank5}.
+This is because there is less relearning that happens in fine tuning due to addition of context to our model.
+In the later evaluation steps, naturally,  using fine tuning makes gives better performance.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.35]{images/DeepSetRank5}
+    \caption{Critical rank graph for Model with Deep Set.}
+    \label{fig:DeepSetRank5}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/RLDeepSetevaluation}
+    \caption{Benchmarking for the Deep set evaluation data}
+    \label{fig:RLDeepSetevaluation}
+\end{figure}
+
+\subsubsection{Using weighted Loss Function}
+We discussed that using a weighting loss function makes more sense for us as discussed in Section~\ref{sec:positionEnhancedRanking}.
+The ablation of using inverse log weighting with and without fine tuning is shown in Figure~\ref{fig:RLDeepSetWeighted}.
+Here we see that there is a big improvement to our evaluation results.
+This proves the hypothesis that weighting is very essential for getting good results.
+
+The fine tuned results is better than all the baselines except FSBO.
+In fact,  it is better than FSBO in the first few evaluation steps.
+This can be seen in Figure~\ref{fig:RLDeepSetWeightedRank25}.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/RLDeepSetWeighted}
+    \caption{Ablation for weighted loss}
+    \label{fig:RLDeepSetWeighted}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.35]{images/RLDeepSetWeightedRank25}
+    \caption{Critical rank graph for weighting ablation.}
+    \label{fig:RLDeepSetWeightedRank25}
+\end{figure}
+
+
+\subsubsection{Uncertainty}
+Uncertainty estimation is very important for every surrogate model that is used in SMBO.
+This is implemented using the ensemble method described in Section~\ref{sec:UncertaintyImplementation}.
+We see from Figure~\ref{fig:RLUncertaintybenchmark} that there is massive improvement of performance in our model after uncertainty is implemented in it.
+We can also see that it is on par with the state of the art FSBO results.
+
+In the first steps of the optimization cycle,  using uncertainty is very important.  This is because we do not have enough data to build or fine tune our surrogate model.
+Using a surrogate without uncertainty in the first steps may lead to an overconfident model that gives bad results.
+This especially not good because the evaluation cycle is a sequential process.
+The selection of the next point depends on the surrogate which has been fine-tuned with previously explored points.
+This is what makes the model with uncertainty (if estimated correctly) superior to other models.
+ 
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/RLUncertaintybenchmark}
+    \caption{Ablation for uncertainty implementation}
+    \label{fig:RLUncertaintybenchmark}
+\end{figure}
+
+One thing interesting is that the average regret of the best model we propose is not very good as compared to even the Deep Ensemble baseline.
+Since the average regret gives a biased estimation of the results and the rank graph is a more accurate picture of the results,  we conclude here that the proposed ranking loss surrogate model is better than the Deep Ensemble baseline.
+
+Finally, in Figure~\ref{fig:FinalAblation} we show how each of models built chronologically compare against each other.
+In this figure we see that the 2 main factors that improved our model were the use of a weighted loss and the use of uncertainty.
+One anomoly we see is that the addition of deep set itself seemed to give bad results.
+Nevertheless, we accept it to be better than just using the basic scoring model.
+Firstly because addition of the deep set improved the performance of the model in the first approximately 30 steps.
+This is crucial for a sequential process.
+Secondly,  because there is a possibility to reduce the probability of negative learning to occur because of the context encoded using  the deep sets.
+Also one can see that one standard deviation of both the basic scoring model and the deep set model are overlapping. 
+This signifies that their performance difference in the last ranks is not very huge.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/FinalAblation}
+    \caption{Ablation of all RL models}
+    \label{fig:FinalAblation}
+\end{figure}
+
+
 \iffalse
 Data used in the experiment
 Infrastructure used
@@ -2233,31 +2446,62 @@ Next show the best results obtained by architecture.
 \fi
 
 \section{Advantages and Limitations}
+\label{sec:advantagesAndLimitations}
 
-Compare this loss function and method with other base lines..
-Advantages of the proposed Idea:
-    The amount of data instances for training is exponential in number. Which is very good for a deep learning model
-    For example if we have 100 observation set and we use a list size of 15 to train our model, we will have 100C15
-    unique instances to train.
+In this section we first discuss some of the major advantages of the proposed model when compared to the baselines.
+Then we move on to critically analyse the limitations of the model.
 
-Observed disadvantages:
+First and foremost,  one advantage of the proposed surrogate model is that it is a transfer HPO surrogate.  Previous available meta data will help the model to give better performance over non transfer HPO surrogate.
+
+Secondly,  even if the amount of meta data is limited it has little affect on the training.
+This is due to the nature of the loss function and the amount of data points that can be sampled during meta training.
+For example,  if we have a meta data set of 100 observations i.e 100 ($X$,$y$) pairs,  and we have a list size of 15,  then the total number of training samples is given by $100C15$.
+Hence the sampling method used gives us data that is exponential in number.
+And each sampled list is a unique instance to train.
+This is a big advantage for us as we can increase the complexity of the surrogate model with relative easy.
+This also has a big advantage during fine tuning where the data is very less.
+
+Another major advantage is that the range or the distribution of the actual scores is irrelevant for the training procedure.
+This inherently dampens the effect of uncertainty by itself.
+As the order of the known evaluations is the  only relevant thing,  minor variations in the output of the objective function has no effect on the training of the loss.
+This also gives us flexibility of tampering the range of our surrogate based on our requirement.
+
+\subsubsection{Disadvantages}
+Our proposed model does have some limitations which need to be further studied.
+Some of these are
 \begin{itemize}
-\item In our model,  a scorer is first learnt and then using the scorer,  we rank the set of objects in question.
-When optimising the scorer,  we ignore the sorting functionality necessary to complete the process of ranking.
+\item In our model,  a scorer is first learnt and then using this scorer,  we rank the set of query HP configurations.
+During our training of the scoring model/surrogate,  we ignore the sorting functionality necessary to complete the process of ranking.
 This is because sorting is non differentiable. 
-This means that the true evaluation of the ranked list is not optimized.
-This needs to be improved which is done in Pi-Rank paper.
-\item The learnt model is extremely sensitive to the learning rate and the number of epochs.
-\item It is assumed that the target task and the training task have the same output range. 
-They must be normalized in order to get the correct results if they are not in the same range.
-\item Using $\tanh$ function restricts the output very much.
-It may not have the latent space to completely the output.
-\item Due to disadvantages  of exp increasing positive function - Perhaps using other increasing positive function helps? (More reading/research required on this topic
-\item The search spaces that have less data need more uncertainty
-The search spaces having more data need less uncertainty.
+Which means that the true evaluation of the ranked list is not optimized.
+
+\item Our loss function makes use of exponentiation function as the strictly increasing positive function.
+This puts a major restriction on the range of the relevance scores.
+It may not have the output space to completely map the range of the true scoring function.
+More research is required to find out better strictly increasing functions.
+
+\item The range controller function we use in our model is $\tanh$ because of the function's smoothness.
+However,  if the output relevance scores of 2 HP configurations are either at the positive extreme or negative extreme,  then it may be difficult to distinguish between them.
+This can be dampenned by tuning the $k$ and $\alpha$ parameters as discussed in Section~\ref{sec:BasicScoringModelDNN},  but this does have practical limits due to the floating point implementations in computer languages.
+
+\item It is during the meta training that all the meta training tasks / meta datasets have the same output range for simplicity.
+This is the case of all outputs HPO-B.
+If there is any other meta data used,  the outputs of the different meta data (tasks) should be normalized before being used in the training process.
+
+\item The meta trained model may be biased towards one task due to a larger availability of data from this task.
+This is however dampened by the fact the we are using the double sampling mechanism.
+This makes sure all the tasks sampled equal number of times.
+However,  this leads to over fitting of the model towards the tasks that have lesser data because this data is overused during training.
+
+\iffalse
+\item The quality requirement of the uncertainty estimation and need for it is not always the same.
+The search spaces that have less data need more uncertainty and vis versa.
+ The learnt model is extremely sensitive to the learning rate and the number of epochs.
+\fi
+
 \end{itemize}
     
-\subsection{Negative transfer learning}
+\subsubsection{Negative transfer learning}
 For some search spaces,  the validation errors of the ranking loss model did not reduce at all during its training.
 In fact the validation loss became worse.
 Figure~\ref{fig:NegativeLearning} shows an illustration of this for the search space id 5527.
@@ -2277,6 +2521,7 @@ Hence the issues with negative transfer learning remains unsolved when using our
 One remedy for getting around this problem is to fine tune the model with a larger number of epochs.
 Nevertheless,  we cannot guarantee that the fine tuning will re-learn from the small amount observed data points during the optimization cycle.
 
+\iffalse
 \section{Evaluation}
 \subsection{Testing}
 explain how a ranking graph works ar implemented
@@ -2306,26 +2551,76 @@ show results of independent training and training with output restriction
 
 what about training independently,   this requires normalization. 
 as explained by sebastian.
+\fi
 
 \chapter{Conclusion}
 
+The ranking loss surrogate model proposed in this thesis has a few limitations and gaps which need to be researched and implemented. 
+As the scope of this thesis was limited we could not explore many research directions.
+In this section we mention some of the topics that could be interesting to take up in any further research in this area.
+Thereafter we conclude our thesis.
 
-\section{Further work}
-Further study required with other baselines that deal with ranking loss.
+\section{Further research work}
 
-In our methods we used the ensemble of DNNs which output a list of results.
-We use this results to calculate the mean and the variance of our  prediction.
-However,  the deep ensemble paper proposes a method to directly calculate the mean
-and variance.
-However,  the integration of this idea with ranking losses is non-trivial.
-Hence the usage of this type of loss with the ranking loss function can be taken up in further research in order to check whether their is improvement in the results or not.
+We introduced uncertainty into our model with the use of Deep Ensembles. 
+With this we had many basic scoring models each giving their own.
+The mean of these neural networks was taken to be the joint output of the
+ensemble.
+This mean was used by the loss function to train the whole model.
+We can term this as "collective training" of the ensemble.
+There is,  however,  also the possibility of independent training where each neural network is trained independently.
+Some intricacies if we train this way are
+\begin{itemize}
+\item The Deep Set architecture is a backbone that is common to all basic scoring models.  How is this to be trained?
+\item Independent training implies that the range of the output of different basic scoring models is different. 
+Are these to be normalized? Or do we take the ranking from all scoring models and average them.
+\end{itemize}
 
-Working with continuous HP spaces.
-How about dividing the space into areas and use 1 HP configuration as a representative
-of the space (in the euclidean sense)
-Then select the best region and subdivide the space and continue the process.
-There are limitation,  cannot really guarantee the optima will be found like the gradient methods.
-Hence this method is suboptimal to the gradient based HP methods for continuous search spaces.
+In the proposed model,  the deep neural networks output a list of output scores. 
+We use this output to calculate the mean and the variance of the scores.
+The deep ensemble, however, paper proposes a method to directly calculate the mean and this variance.
+The integration of this idea with ranking losses is non-trivial.
+Hence the integration of this Deep Ensemble architecture with the ranking loss function can be taken up in further research work.
+It would be interesting to see the affect of this integration for HPO problems with very less meta data because Deep Ensembles by themselves as introduced by ~\cite{DeepEnsemblePaper} perform relatively good in the evaluation phase.
+
+This thesis has primarily focused on how to select HP configurations from a set of discrete HP configurations.
+Hence the model does not deal with continuous search spaces directly.
+For working with continuous HP search spaces,  we can divide the space  (in the euclidean sense) into hyper-volumes and use 1 HP configuration as a representative for the whole hyper-volume.
+Then we may select the best region and subdivide the space and continue the process till a particular granularity.
+This method is just a workaround to the main problem and we also cannot really guarantee that an optima will be found in contract to any gradient based optimization method.
+Hence,  further research needs to be done on how to formulate the ranking loss function for continuous search spaces.
+
+We already discussed in Section~\ref{sec:advantagesAndLimitations}  that the ranking loss function does not optimize the sorting function.
+The inclusion of sorting functionality in the loss function has  been proposed and studied in Swezey et.  al~\cite{PiRank}.
+On research direction would be to incorporate the ideas of PiRank in order to see if there is any improvement in the model.
+
+Lastly,  novel HPO surrogates that have not been explored by this thesis can be implemented.
+This would not only further the research empirically but also ideas used in other baselines could be incorporated to improve the model.
+
+
+\section{Conclusion}
+In this thesis we study a method of Hyper parameter optimization using Sequential Model based Optimization algorithm as a reference algorithm.
+The angle of approach to this problem however is different from usually studied HPO methods.
+We formulated the problem of selecting next HP configurations within the SMBO cycle as a problem of ranking.
+Due to the nature of the ranking losses studied by us,  we needed to design a suitable surrogate for it.
+
+In the quest to design get good performance for our proposed model we systematically studied and chronologically added essential components to the model which were - addition of context using deep sets,  addition of weighting to the loss function and the addition of uncertainty to the model.
+We found that the model with all the these components gave results which were on par with the state of the art results of FSBO.
+The reason for this,  we hypothesis, is that the training and sampling mechanism for the loss function is very different as compared to the other HPO surrogates or losses.
+The advantage that our model is able to sample combinatorial number of samples from a given set of HP configurations is a upper hand for the proposed model.
+
+Even though we cannot claim the superiority of this method unequivocally due to the scope of application of the ranking loss functions,  we do encourage the reader to pursue further research in this area. 
+We believe from our research the models trained using ranking losses have the potential to give very good Hyper parameter optimization results.
+We also believe that the concepts developed in this thesis could aid in other areas of research like Information retrieval which heavily use ranking losses.
+
+
+
+
+
+\iffalse
+\subsubsection{Training with mean and restricted output}
+Implementation yet to be done
+\fi
 
 \iffalse
 Paper: https://arxiv.org/pdf/2012.06731.pdf
@@ -2347,9 +2642,6 @@ The idea of Permutation Matrices is taken from Neural sort - Neural sort (Impt r
 PLACKETT-LUCE DISTRIBUTIONS -> Very important to explain the rationale about using score as a probability
     measure for our scoring function (Check section 2.1 of paper 2 (Neural Sort))
 \fi 
- 
-\section{Conclusion}
-This is the conclusion
 
 
 \bibliography{references}
