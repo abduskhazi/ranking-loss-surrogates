@@ -23,7 +23,8 @@ def acquisition_EI(X, y, X_query, rl_model):
     # For now using the best according to the actual values.
     best_y = np.max(y.detach().cpu().numpy())
     # Calculate the predicted mean & variance values of all the required samples
-    mean, variance = rl_model.forward_mean_var((X, y, X_query))
+    # mean, variance = rl_model.forward_mean_var((X, y, X_query))
+    mean, variance = rl_model.forward_mean_var(X)
     mean = mean.detach().cpu().numpy()
     std_dev = torch.sqrt(variance).detach().cpu().numpy()
     z = (mean - best_y) / (std_dev + 1E-9)
@@ -218,8 +219,6 @@ class RankingLossSurrogate(nn.Module):
 
     def get_fine_tune_batch(self, X_obs, y_obs):
 
-        # Taking 20% of the data as the support set.
-        support_size = int(0.2 * X_obs.shape[0])
         idx_support = np.random.choice(X_obs.shape[0], size=support_size, replace=False)
         idx_query = np.delete(np.arange(X_obs.shape[0]), idx_support)
 
@@ -231,7 +230,7 @@ class RankingLossSurrogate(nn.Module):
         return s_ft_X, s_ft_y, q_ft_X, q_ft_y
 
     def fine_tune(self, X_obs, y_obs):
-        epochs = 300
+        epochs = 1000
         loss_list = []
         optimizer = torch.optim.Adam([{'params': self.parameters(), 'lr': 0.001},])
         scheduler_fn = lambda x, y: torch.optim.lr_scheduler.CosineAnnealingLR(x, y, eta_min=0.0001)
@@ -240,25 +239,18 @@ class RankingLossSurrogate(nn.Module):
             self.train()
             optimizer.zero_grad()
 
-            s_ft_X, s_ft_y, q_ft_X, q_ft_y = self.get_fine_tune_batch(X_obs, y_obs)
+            prediction = self.forward(X_obs)
+            prediction, y_obs = self.flatten_for_loss_list(prediction, y_obs)
 
-            q_ft_y_pred = self.forward((s_ft_X, s_ft_y, q_ft_X))
-            q_ft_y_pred, q_ft_y = self.flatten_for_loss_list(q_ft_y_pred, q_ft_y)
+            # Viewing everything as a 2D tensor.
+            y_obs = y_obs.view(-1, y_obs.shape[-1])
+            prediction = prediction.view(-1, prediction.shape[-1])
 
-            q_ft_y = q_ft_y.view(-1, q_ft_y.shape[-1])
-            q_ft_y_pred = q_ft_y_pred.view(-1, q_ft_y_pred.shape[-1])
-
-            loss = rankNet(q_ft_y_pred, q_ft_y)
-
-            # loss = loss_list_wise_mle(q_ft_y_pred, q_ft_y) # !!!!! NOt using loss ... issues..
-            # loss = torch.mean(loss)
+            loss = rankNet(prediction, y_obs)
 
             loss.backward()
             optimizer.step()
             scheduler.step()
-
-            # if loss.item() < min(loss_list + [float('inf')]):
-            #    self.save(self.file_name + "_ft_early_stop")
 
             loss_list += [loss.item()/X_obs.shape[0]]
 
@@ -284,12 +276,10 @@ class RankingLossSurrogate(nn.Module):
         y_obs = torch.from_numpy(y_obs)
         X_pen = torch.from_numpy(X_pen)
 
-        # Doing restarts from the saved model
+        # Doing reloads from the saved model for every fine tuning.
         restarted_model = RankingLossSurrogate(input_dim=-1, file_name=self.file_name)
         restarted_model.fine_tune(X_obs, y_obs)
         scores = acquisition_EI(X_obs, y_obs, X_pen, restarted_model)
-        # restarted_model((X_obs, y_obs, X_pen))
-        # scores = scores.detach().numpy()
 
         idx = np.argmax(scores)
         return idx

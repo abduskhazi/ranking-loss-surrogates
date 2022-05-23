@@ -14,7 +14,11 @@ import configs as conf
 
 import rankinglosses
 from rankinglosses import RankingLossSurrogate
+
+import pairwiserankingloss
+
 # For memory management
+import sys
 import gc
 
 def store_object(obj, obj_name):
@@ -112,6 +116,16 @@ def evaluate_FSBO(hpob_hdlr, keys_to_evaluate):
         store_object(performance, "./optimization_results/intermittent_dkt_evaluation_32x4_100_03_cosAnn")
         # gc.collect()
 
+    return performance
+
+def evaluate_pairwise_ranking_losses(hpob_hdlr, keys_to_evaluate):
+    performance = []
+    for key in keys_to_evaluate:
+        search_space_id, dataset, _, _ = key
+        input_dim = hpob_hdlr.get_input_dim(search_space_id, dataset)
+        method_rl = pairwiserankingloss.RankingLossSurrogate(input_dim=input_dim, file_name=search_space_id)
+        res = evaluate_combinations(hpob_hdlr, method_rl, keys_to_evaluate=[key])
+        performance += res
     return performance
 
 def evaluate_ranking_losses(hpob_hdlr, keys_to_evaluate):
@@ -278,7 +292,7 @@ def study_FSBO(conf_fsbo, n_keys, n_trails):
         dkt_performance = evaluate_FSBO(hpob_hdlr, keys_to_evaluate=dkt_keys)
         store_object(dkt_performance, "./optimization_results/dkt_evaluation_32x4_100_03_cosAnn")
 
-def main():
+def main(opt):
     n_trails = 101
     n_keys = 1000
 
@@ -303,6 +317,17 @@ def main():
         rl_keys = get_all_combinations(hpob_hdlr, 100)[:n_keys]
         rl_performance = evaluate_ranking_losses(hpob_hdlr, keys_to_evaluate=rl_keys)
         store_object(rl_performance, "./optimization_results/rl_evaluation_deep_set_weighted_early_stopping")
+
+    if conf.PairWiseRankingLoss.pretrain:
+        pairwiserankingloss.pre_tain_HPOB(opt)
+
+    if conf.PairWiseRankingLoss.evaluate:
+        print("Pairwise RankingLosses: Evaluate test set (testing meta dataset)")
+        hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
+        rl_keys = get_all_combinations(hpob_hdlr, 100)[:n_keys]
+        rl_keys = rl_keys[opt:opt+1]
+        rl_performance = evaluate_pairwise_ranking_losses(hpob_hdlr, keys_to_evaluate=rl_keys)
+        store_object(rl_performance, "./cluster_computation/RL_output/rl_pairwise_uncertainty_OPT" + str(opt))
 
     if conf.plot_ranks:
         plot_rank_graph(n_keys=n_keys, n_trials=n_trails)
@@ -330,9 +355,11 @@ def convert_to_json(eval_file):
 
 if __name__ == '__main__':
     mp.freeze_support()
-    main()
 
-    # convert_to_json("./optimization_results/rl_evaluation_deep_set_weighted_early_stopping")
+    opt = int(sys.argv[1])
+    main(opt)
+
+    # convert_to_json("./optimization_results/de_evaluate_32x32_E1000_l0_02_no_restart")
 
 
 """
