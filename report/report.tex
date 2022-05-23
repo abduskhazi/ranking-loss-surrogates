@@ -2151,39 +2151,46 @@ We used Adam as our optimizer.
 
 Figure~\ref{fig:DEPerformance} shows the performance of various Deep Ensemble models.
 We use the best results obtained from the previous baselines for comparing how Deep ensembles fair in the HPO-B benchmark.
-In addition to plotting the rank graph,  we also plot the  average regret that is obtain if we use these models.
+In addition to plotting the rank graph,  we also plot the  average regret for every model.
 The average regret on y-axis is plotted in a log scale.
-
-\textbf{Ablation Required for the raw part missing.}
+In the graph,  DE\_M5 stands for Deep Ensembles with 5 neural networks.
+And a "rs" suffix in the legend stands for models which are restarted before every evaluation.
 
 In our study,  we studied the following main models of DE
 \begin{itemize}
-% \item Fine tuning deep ensembles with no restart.
+\item Fine tuning deep ensembles with no restart.
 \item DE using restart at every evaluation cycle.
 \item Increasing the number of neural networks in DE to 10.
 \end{itemize}
 
-We observe that using deep ensembles does give us results which are comparable with GP.
+We see that using DE as a surrogate without restarts does gives us bad results as compared to the model with the restarts.
+This proves our hypothesis of the requirement of restarts as discussed in Section~\ref{sec:restart}.
+Furthermore,  we observe that using deep ensembles with restarts gives us results which are comparable with GP.
 Increasing the number of neural network ensembles does not seem to give very high performance improvement.
 This is the case for both the ranking graph and the average regret.
-Since this ranking would be cluttered for a large ablation study,  we also make use of critical rank graphs~\cite{pineda2021hpob}.
+We also make use of critical rank graphs~\cite{pineda2021hpob} to check the ranks at particular evaluation cycle steps.
 This is illustrated in Figure~\ref{fig:DERank100}.
 
 \begin{figure}[h]% [H] is so declass\'e!
 \centering
 \begin{minipage}{0.45\textwidth}
-\includegraphics[width=\textwidth]{images/DERank25}
+\includegraphics[width=\textwidth]{images/DERank5}
 \end{minipage}\hfill
 \begin{minipage}{0.45\textwidth}
-\includegraphics[width=\textwidth]{images/DERank50}
+\includegraphics[width=\textwidth]{images/DERank25}
 \end{minipage}\par
-\vskip\floatsep% normal separation between figures
-\includegraphics[width=0.45\textwidth]{images/DERank100}
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/DERank50}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/DERank100}
+\end{minipage}
+% \vskip\floatsep% normal separation between figures
     \caption{DE Ranking at various evaluation cycle steps}
    \label{fig:DERank100}
 \end{figure}
 
-After our analysis,  we a couple of advantages of the DE model.
+After our analysis,  we found a couple of advantages of the DE model.
 First,  being a non transfer HPO model we found that it can be applied to any continuous HPO problem.
 Second,  as each neural network is independent of the others,  the neural networks can be trained in parallel.
 Hence we can scale up our ensemble based on the compute power available to us.
