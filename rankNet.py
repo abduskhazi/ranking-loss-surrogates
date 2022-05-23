@@ -3,8 +3,8 @@ from itertools import product
 import torch
 from torch.nn import BCEWithLogitsLoss
 
-from allrank.data.dataset_loading import PADDED_Y_VALUE
-
+DEFAULT_EPS = 1e-10
+PADDED_Y_VALUE = -1
 
 def rankNet_weightByGTDiff(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE):
     """
