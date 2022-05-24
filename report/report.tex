@@ -504,7 +504,33 @@ One method to do this is to use ensemble of neural networks or the use of specia
 Since uncertainty modelling is essential for this thesis,  it is discussed in more detail in the Section~\ref{sec:uncertaintyDeepEnsembles}.
 
 \subsection{Bayesian Neural Networks}
+One way to quantify uncertainty is to use stochastic artificial neural networks.
+These are also called Bayesian Neural Networks because they are based on Bayesian inference mechanism~\cite{BayesianNeuralNetworks}.
+The basic idea is to make sure that the output of any layer in the neural network is stochastic and not a point estimate like in the case of classical artificial neural networks.
 
+In Bayesian neural networks the stochasticity is added by using a stochastic activation function or representing the weights and biases of the network with a probability distribution.
+Consider all weights and biases of a Bayesian neural network be represented by a parameter vector $\mathbf{\theta}$.
+Let the probability distribution of the parameters $p(\mathbf{\theta})$ be a Gaussian distribution.
+This is called prior probability distribution in Bayesian inference statistics.
+
+\textbf{We learn the posterior in the following way}
+
+Let the neural network be represented by $f$. 
+The uncertainty calculation is done using the following equations
+
+$$
+\{\mathbf{\theta}_1, \mathbf{\theta}_2,  \mathbf{\theta}_3, ... \} \sim p(\mathbf{\theta})
+$$
+$$
+\textbf{y} = \{f_{\mathbf{\theta}_1}(x),  f_{\mathbf{\theta}_2}(x),  f_{\mathbf{\theta}_3}(x) ...\}
+$$
+
+First we take a set samples from $p(\mathbf{\theta})$.
+Using these samples we calculate multiple values of $f_{\theta}$ for our input $x$.
+Using these multiple output values,  one can calculate the mean and the variance of the network.
+
+
+\textbf{What are the disadvantages of BNNs and why we do not use it.}
 
 \section{Types of Losses}
 \subsection{BO with GP uses negative log likelihood}
@@ -1665,13 +1691,13 @@ We report the average of 5 runs in the Table~\ref{table:caseStudyResults}.
 \resizebox{\linewidth}{!} {
 \begin{tabular}{ | c | c | c | c | c | c | }
 \hline
-\textbf{Training Epochs} & \textbf{List size} & \textbf{Learning Rate} & \textbf{In-range Acc.} & \textbf{Out-range Acc.} & \textbf{Hybrid Acc.} \\ [0.5 ex]
+\textbf{Training Epochs} & \textbf{List size} & \textbf{In-range Acc.} & \textbf{Out-range Acc.} & \textbf{Hybrid Acc.} \\ [0.5 ex]
 \hline \hline
-1000 & 3 & 0.0001 & 0.99 & 0.27 & 0.40\\
-100 & 3 & 0.0001 & 0.77 & 0.29 & 0.11\\
-100 & 30 & 0.0001 & 0.80 & 0.79 & 0.46\\
-100 & 100 & 0.0001 & 0.99 & 0.0 & 0.39\\
-1000 & 100 & 0.0001 & 1.0 & 0.71 & 0.48\\
+1000 & 3 & 0.99 & 0.27 & 0.40\\
+100 & 3  & 0.77 & 0.29 & 0.11\\
+100 & 30  & 0.80 & 0.79 & 0.46\\
+100 & 100  & 0.99 & 0.0 & 0.39\\
+1000 & 100  & 1.0 & 0.71 & 0.48\\
 \hline
 \end{tabular}
 }
