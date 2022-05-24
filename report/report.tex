@@ -505,32 +505,38 @@ Since uncertainty modelling is essential for this thesis,  it is discussed in mo
 
 \subsection{Bayesian Neural Networks}
 One way to quantify uncertainty is to use stochastic artificial neural networks.
-These are also called Bayesian Neural Networks because they are based on Bayesian inference mechanism~\cite{BayesianNeuralNetworks}.
+These are also called Bayesian Neural Networks (BNN) because they are trained using Bayesian inference mechanism~\cite{BayesianNeuralNetworks}.
 The basic idea is to make sure that the output of any layer in the neural network is stochastic and not a point estimate like in the case of classical artificial neural networks.
 
-In Bayesian neural networks the stochasticity is added by using a stochastic activation function or representing the weights and biases of the network with a probability distribution.
-Consider all weights and biases of a Bayesian neural network be represented by a parameter vector $\mathbf{\theta}$.
-Let the probability distribution of the parameters $p(\mathbf{\theta})$ be a Gaussian distribution.
-This is called prior probability distribution in Bayesian inference statistics.
+In Bayesian neural networks the stochasticity is added by using a stochastic activation function or stochastic weights and biases.
+Consider the case where we model a BNN using stochastic weights and biases.
+All weights and biases can be represented by a parameter vector $\mathbf{\theta}$.
+We then have to define a probability distribution of the parameter vector $p(\theta)$.
+This is the prior or Hypothesis in Bayesian jargon.
+For example one prior could be a multivariate Gaussian distribution with a mean and a covariance matrix.
+Given the training data $D$,  we calculate the new probability distribution to get the posterior distribution $p(\theta | D)$ using Bayes theorem.
+Here $D$ is also called evidence.
+We do not mention the intricacies of the BNN training procedure as it is out of scope for this thesis.
 
-\textbf{We learn the posterior in the following way}
-
-Let the neural network be represented by $f$. 
+To understand the estimation of uncertainty,  let the neural network be represented by $f_{\theta}$ for a definite parameter vector $\theta$. 
 The uncertainty calculation is done using the following equations
+\begin{align*}
+\mathbf{\theta}_i \sim p(\mathbf{\theta}| D)  \\
+y_i = f_{\mathbf{\theta}_i}(x) \\
+\textit{where} \quad i \in \mathbb{I}^+
+\end{align*}
 
-$$
-\{\mathbf{\theta}_1, \mathbf{\theta}_2,  \mathbf{\theta}_3, ... \} \sim p(\mathbf{\theta})
-$$
-$$
-\textbf{y} = \{f_{\mathbf{\theta}_1}(x),  f_{\mathbf{\theta}_2}(x),  f_{\mathbf{\theta}_3}(x) ...\}
-$$
+First we sample a set of parameters from the posterior probability distribution $p(\theta | D)$.
+Using these parameters we calculate multiple values of $y$ for the given input, say $x$.
+Using these multiple output values,  one can calculate the mean and the variance of the output of the network.
+Note that if the output of the Bayesian Neural Network is a vector we would need to calculate the covariance matrix to get the multivariate variance.
 
-First we take a set samples from $p(\mathbf{\theta})$.
-Using these samples we calculate multiple values of $f_{\theta}$ for our input $x$.
-Using these multiple output values,  one can calculate the mean and the variance of the network.
-
-
-\textbf{What are the disadvantages of BNNs and why we do not use it.}
+Even though BNNs are theoretically very robust,  practically they are difficult to train.
+Firstly,  the exact estimation of the posterior is computationally intractable.
+Hence approximate methods like Monte Carlo Markov chains and variational inference methods are used to train the BNNs.
+Even these approximations are computationally more expensive than the a classical artificial neural network.
+Moreover,  it is not clear from the beginning what prior probability distribution should be used  for the stochastic parameters.
+Because of these disadvantages we do not use them for as surrogates in our thesis.
 
 \section{Types of Losses}
 \subsection{BO with GP uses negative log likelihood}
