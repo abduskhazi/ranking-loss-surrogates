@@ -178,7 +178,7 @@ class RankingLossPair(nn.Module):
         legend = ["Fine tune Loss for pointwise Ranking loss"]
         plt.legend(legend)
         plt.title("SSID: " + self.ssid + "; Input dim: " + str(self.input_dim))
-        plt.savefig(self.save_folder + self.ssid + "_" + int(sys.argv[1]) + "_fine_tune_loss.png")
+        plt.savefig(self.save_folder + self.ssid + "_" + sys.argv[1] + "_fine_tune_loss.png")
         plt.close()
 
     def fine_tune(self, X_obs, y_obs, epochs, lr):
