@@ -118,6 +118,7 @@ Understanding listwise loss function:
     * Main difference is that the loss function used is different.
     * Loss function is intuitive in that they would want to raise the probability of getting the ground truth permutation.
     * They increase the probability of getting the exact (ground truth) permutation using the scores given by f.
+    * The exact probability need not be the same which increases the target function space.
 
     Both the papers use linear network model for some simplicity. But we can use the non-linearity due to available library
         implementations
