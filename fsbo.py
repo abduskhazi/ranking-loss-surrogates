@@ -42,6 +42,7 @@ class NN(nn.Module):
         self.hidden_layers = []
         for i in range(n_hidden):
             self.hidden_layers += [nn.Linear(32, 32)]
+            # Not using a module list here i think is the problem of not getting good results.
         self.fc_last = nn.Linear(32, output_dim)
 
     def forward(self, x):
