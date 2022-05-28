@@ -542,12 +542,80 @@ Because of these disadvantages we do not use them for as surrogates in our thesi
 \subsection{BO with GP uses negative log likelihood}
 It is not clear whether pointwise losses (regression as in GP) are the correct way to model HPO responses, because we only care for the minima regions (best performing configurations), and not for estimating all observations accurately.
 
-\subsection{Ranking loss could be the answer in modeling hp optima better}
-\subsubsection{Pointwise}
-\subsubsection{Pairwise}
-\subsubsection{Listwise}
 
-\section{Set-modeling with Neural Networks}
+\subsection{Ranking Losses}\label{sec:ranklearning}
+
+Consider a set $\mathbb{A} = \{a_1,  a_2,  a_3, ... ,  a_n\}$ where each object $a_i \in \mathbb{D}$ for some domain $\mathbb{D}$.
+Let us consider that an object with a lower rank is more preferable than an object with a higher rank.
+Then,  the task of ranking the objects of set $\mathbb{A}$ is defined as ordering all objects $a_i \in \mathbb{A}$ such that
+$$
+\texttt{Rank}(a_i) < \texttt{Rank}(a_j) \iff a_i  \succ a_j
+$$
+
+Here \texttt{Rank} of an object $a_i$ is analogous to its position in the ordered list.
+This task can be modelled by a machine learning model.
+In the most general case the cardinality of $\mathbb{A}$ is not fixed.
+Practically building a machine learning model that takes a whole set of an unknown cardinality as input is not trivial.
+To keep the model simple,  it is divided into the following components:~\cite{procedureforrankinginintro}
+\begin{itemize}
+\item Calculation of relevance scores of each $a_i \in \mathbb{A}$.
+\item Ordering or sorting of objects based on their relevance scores. 
+\end{itemize}
+
+Doing a gradient based optimization for this model is not possible.
+This is because sorting is non differentiable and we cannot get a gradient with respect to it.
+Hence, to do a gradient based optimization,  we only model the calculation of relevance scores by the machine learning model.
+We represent this model by $s$.
+We use the letter "s" to signify that we are calculating a "score" for an object. 
+$s$ is defined as
+$$
+s : \mathbb{A} \mapsto \mathbb{R}
+$$
+One can use $s$ to rank a newly given set of objects.
+First the relevant scores of the objects are predicted by $s$.
+Thereafter,  using these relevant scores,  the objects are sorted.
+
+Learning a machine learning model requires an optimizing criteria on the output of the model.
+This output in our case is the sorted list of objects.
+The optimizing criteria in the jargon of machine learning is called a loss function.
+Hence,  in our case the loss function can be referred as a \textit{Ranking Loss}.
+
+Ranking losses can be broadly classified into the following types~\cite{RankingLossFirstPaperRead}:
+\begin{itemize}
+\item  Point-wise ranking losses
+\item  Pair-wise ranking losses
+\item  List-wise ranking losses
+\end{itemize}
+
+In point-wise ranking losses,  the loss function views the ranking problem as a problem of assigning a label to each queried data point.
+Hence,  each learning instance is a single object $a_i$ within the set $\mathbb{A}$.
+For example,  Li et. al.~\cite{McRank} use point-wise ranking losses for their proposed model called McRank.
+Li et.  al.  formulate the ranking problem as a multilevel classification problem.
+Each data point is classified independently using soft classification.
+The score of an object then is its expected rank.
+Similarly,  Cossock et.  al.~\cite{subsetregressionpaper} use point-wise ranking losses for doing subset regression. 
+\iffalse
+Therefore, the complete scoring function comprises of a multi-level classifier and an external expectation calculation.
+\fi
+
+In pair-wise ranking losses,  the loss function's input is a pair of objects.
+In this case we learn to model pair-wise preferences.
+The loss function tries to separate the input data points as much as possible in the output space by minimising the pair-wise classification error~\cite{pairwisepreferencespaper}.
+Examples of models built using pair-wise loss functions are Rankboost~\cite{rankboostpaper} and RankNet~\cite{ranknetpaper}.
+
+In list-wise ranking losses,  a single learning instance is the whole input set i.e all the objects in the input set.
+This makes an intuitive sense because we cannot rank the objects independently as an object's rank is relative to the ranks of other objects in a set.
+This is the fundamental advantage of list-wise ranking losses when compared to the point-wise and pair-wise losses.
+Moreover,  it has been shown by Cao et. al.~\cite{listwisebetter} that training a model with list wise losses gives us a superior model as compared to training with point-wise or pair-wise losses.
+The 2 most prominent list-wise loss functions are ListNet~\cite{listwisebetter} and ListMLE~\cite{listmlepaper}.
+We discuss and analyse these loss functions in detail in Chapter~\ref{chap:Background}.
+
+\iffalse
+We hence use the list wise approach to ranking.
+Ranking loss could be the answer in modeling hp optima better.
+\fi
+
+\section{Set-modelling with Neural Networks}
 
 In the previous sections we discussed about various types of surrogates that can be used for transferring knowledge in transfer HPO methods.
 Training on data from known tasks and then using this trained model for working on unknown tasks, however,  has a major shortcoming conceptually.
@@ -871,63 +939,11 @@ only fine tune best fit is not giving good results. Investigation in progress.
 
 
 \chapter{Background}
+\label{chap:Background}
 
 In this chapter we discuss in detail the fundamental concepts one must grasp in order to understand the thesis work.
 First we talk about the problem of ranking and ranking losses.
 Thereafter, we discuss the modelling of uncertainty done using Deep Neural Network ensembles.
-
-\section{Rank Learning}\label{sec:ranklearning}
-
-Consider a set of objects $\mathbb{A} = \{\textbf{x}_1, \textbf{x}_2, \textbf{x}_3, ... \textbf{x}_n\}$ where each $\textbf{x}$ belongs to a domain $\mathbb{D}$.
-The problem of ranking is defined as finding an ordered list of objects in $\mathbb{A}$ such that an object $\textbf{x}_i$ is ranked before $\textbf{x}_j$ if $\textbf{x}_i$  is more relevant/important than $\textbf{x}_j$.
-To accomplish this objective,  a ranking model needs to be learnt.
-In the most general case the cardinality of $\mathbb{A}$ is not fixed.
-For this reason, the ranking model, say $f_r$, can be thought of as a process that is divided in the following steps~\cite{procedureforrankinginintro}
-\begin{itemize}
-\item Obtaining a relevance score of each object in set $\mathbb{A}$.
-\item Sorting the objects based on their relevance score. 
-\end{itemize}
-
-We can learn the ranking model $f_r$ by optimizing a criteria on the output of the model i.e the sorted list of object.
-This criteria in the jargon of machine learning is called a loss function.
-Hence,  it can be referred to as a \textit{Ranking Loss}.
-
-Since the step of sorting is non differentiable,  it cannot generally be learnt during the optimization of our Ranking Loss.
-Hence the ranking model,  $f_r$,  boils down to a relevance scoring function.
-After learning $f_r$,  one can use it to rank newly given sets of objects by first finding their relevant scores and then sorting them accordingly.
-
-Various types of ranking losses can be used in our optimization to learn the scoring function.
-These can be broadly classified into the following types~\cite{RankingLossFirstPaperRead}:
-\begin{itemize}
-\item  Point-wise ranking losses
-\item  Pair-wise ranking losses
-\item  List-wise ranking losses
-\end{itemize}
-
-In point-wise ranking loss,  the loss function views the problem of ranking as that of assigning a label to each of the input data points.
-Hence,  for learning,  each instance is a single object $x_i$ within the set $\mathbb{A}$.
-For example,  in the McRank paper~\cite{McRank},  the authors reformulate the ranking problem as a multilevel classification problem where each data point is classified independently.
-They then calculate the score as the expected rank of the object based on its soft classification.
-Therefore, the complete scoring function comprises of a multi-level classifier and an external expectation calculation.
-
-In pair-wise ranking loss,  the loss function's input is a pair of objects.
-This loss function learns to model pair-wise preferences.
-The function tries to separate the input data points as much as possible in the output space by minimising the pair-wise classification error~\cite{pairwisepreferencespaper}.
-
-In list-wise ranking losses,  the loss is defined on the complete set of objects.
-The 2 most important list-wise loss functions are
-\begin{itemize}
-\item ListNet~\cite{listwisebetter}.
-\item ListMLE~\cite{listmlepaper}.
-\end{itemize}
-
-The point wise and pair wise ranking models do not view the ranking problem as a problem to rank a set of 
-objects.
-This is quite intuitive and is a fundamental advantage as compared with other methods.
-It has been shown in~\cite{listwisebetter} that list wise approaches are superior in performance to point wise and pair wise losses.
-We hence use the list wise approach to ranking.
-We discuss and analyse the loss functions ListNet and ListMLE in detail in
-the next sections
 
 \section{Loss functions: Definition}
 
