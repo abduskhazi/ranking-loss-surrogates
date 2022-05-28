@@ -942,10 +942,13 @@ only fine tune best fit is not giving good results. Investigation in progress.
 \label{chap:Background}
 
 In this chapter we discuss in detail the fundamental concepts one must grasp in order to understand the thesis work.
-First we talk about the problem of ranking and ranking losses.
-Thereafter, we discuss the modelling of uncertainty done using Deep Neural Network ensembles.
+We have already talked about the concept of ranking in Section~\ref{sec:ranklearning}.
+In this chapter, we take the next step to define the ranking loss functions abstractly.
+Thereafter, we discuss the concrete loss functions studied in this thesis.
+We also talk about how uncertainty is modelled using Deep Neural Network ensembles.
+Lastly,  we discuss the details about the baseline implementations of Deep Ensembles and FSBO that we did in this thesis.
 
-\section{Loss functions: Definition}
+\section{Ranking Loss functions: Definition}
 
 \iffalse
 \begin{table}[ht]
@@ -981,33 +984,102 @@ Consider data in the format shown in table~\ref{tab:dataformat} is given to us.
   ... & $\{...\}$ & $\{...\}$ \\
   \bottomrule
 \end{tabular}
-\caption{Data format used to train the scoring function using list wise ranking loss}
+\caption{Data format used to train the scoring function.}
 \label {tab:dataformat}
 \end{table}
-Here let each data point $a$ be a sample/element from the set $\mathbb{A}$.
-Each $y$ represents the ground truth preference score of objects belonging to a set $\mathbb{Y}$.
-These preference scores of objects are relative to the objects within the input set.
+Let each data point $a_i$ be a sample/element from the set $\mathbb{A}$.
+Each $y_i$ represents the ground truth preference score of objects belonging to a set $\mathbb{Y}$.
+These preference scores of objects are relative to the objects within $\mathbb{A}$.
 Let $s$ be the scoring function to be learnt.
 Hence, the declaration of $s$ is given by
 $$
 s : \mathbb{A} \mapsto \mathbb{R}
 $$
 
-As we can see from the table,  one instance in our data consists of a set of objects as input and a set of corresponding ground truths to train from.
-To learn the function $s$ we optimize our list wise loss function.
-This loss function takes as input the whole set of objects and their ground truth as one instance.
-If we take any set $\mathbb{P}$ such that $\mathbb{P} \subseteq \mathbb{A}$,  the declaration of the list wise loss $L$ is hence given by
+The signature of the loss function depends on the type of loss we use.
+This is because the learning instance is of a different type in point-wise, pair-wise and list-wise losses.
+For point-wise loss functions,  each instance learning instance is a single object the loss function and its ground truth.  Its format hence can be defined as:
 \begin{equation}
-L : s(\mathbb{P}) \times \mathbb{Y}^{|\mathbb{P}|} \mapsto \mathbb{R}
+L_{\texttt{point-wise}} : s(\mathbb{A}) \times \mathbb{Y} \mapsto \mathbb{R}
 \end{equation}
 
-Where the scoring function $s$ applied to the $\mathbb{P}$ gives us the set of corresponding scores of all objects in $\mathbb{P}$.
-We will consider the ground truth values to be $\mathbb{R}$ for our analysis as this is type of value
-we have in our data sets.
+Similarly,   the pair-wise loss function has each instance as a pair of objects and their corresponding ground truths.  Its format can hence be defined as:
 
-In the next 2 sections we analyse ListNet and ListMLE,  the prominent listwise loss functions in the literature.
+\begin{equation}
+L_{\texttt{pair-wise}} : s_1(\mathbb{A}) \times s_2(\mathbb{A}) \times \mathbb{Y}_1 \times \mathbb{Y}_2 \mapsto \mathbb{R}
+\end{equation}
 
-\section{Loss function: ListNet}
+For list-wise losses,  one learning instance is a set of objects their corresponding ground truths.
+If we take any set $\mathbb{P}$ such that $\mathbb{P} \subseteq \mathbb{A}$,  the declaration of the list wise loss $L$ is hence given by
+\begin{equation}
+L_{\texttt{list-wise}} : s_1(\mathbb{A}) \times s_2(\mathbb{A}) ...  s_{|\mathbb{A}|}(\mathbb{A}) \times \mathbb{Y}_1 \times \mathbb{Y}_2 \times ...  \mathbb{Y}_{|\mathbb{A}|} \mapsto \mathbb{R}
+\end{equation}
+
+We consider the ground truth values to be $\mathbb{R}$ for our analysis of all loss functions.
+We have real valued ground truths in our data sets as well.
+
+In the next sections we analyse the loss functions that we we studied in this thesis.
+As list-wise loss functions are more advantageous conceptually than others we discuss them in more detail.
+
+\section{Loss function Point Wise: Subset Regression}
+
+For analysing point-wise loss functions,  we take the subset regression loss function proposed by Cossock et. al. ~\cite{subsetregressionpaper} as a reference.
+We reused the implementation written by Pobrotyn et. al.~\cite{Pobrotyn2020ContextAwareLT} for our analysis.
+
+This loss function is very similar to the Root Mean Squared Error loss function.
+Given a batch containing $a_i$ and their corresponding ground truth values $y_i$ where $0 \leq i \leq N$,  the loss function is of the form
+\begin{equation}
+L_{\texttt{SubsetRegression}} = \frac{1}{N} \sum\limits_{i=1}^{N} (s(a_i) - \texttt{level}(y_i))^2
+\end{equation}
+
+The $\texttt{level}$ is given by the rank of $y_i$ in the current batch.
+For example,  consider we have 3 ground truth values $\{y_1 = 0.8, y_2 = 0.9, y_3 = 0.1\}$.
+If we consider that a higher $y$ value is better and a lower rank/level is better then 
+$\texttt{level}(y_1) = 2,  \texttt{level}(y_2) = 1,  \texttt{level}(y_3) = 3$
+
+To keep the implementation such that the score value is in the same given range as the regression value,  Pobrotyn et. al.~\cite{Pobrotyn2020ContextAwareLT} use a slightly modified version of the loss function which is conceptually the same.
+This loss function is given by
+\begin{equation}
+L_{\texttt{SubsetRegression}} = \frac{1}{N} \sum\limits_{i=1}^{N} (\texttt{distinct\_levels} * s(a_i) - y_i)^2
+\end{equation}
+Where,  $\texttt{distinct\_levels}$ is the total number of distinct ground truth values in the given batch.
+
+As you can see the loss function does not directly make the scoring
+function learn the output regression value.
+This property is common across all ranking loss functions.
+
+\section{Loss function pairwise: RankNet}
+
+To analyse how pair-wise loss functions are helpful for the HPO problem,
+we study one pairwise loss function namely RankNet~\cite{ranknetpaper}.
+We reused the implementation written by Pobrotyn et. al.~\cite{Pobrotyn2020ContextAwareLT} for our analysis.
+
+As we know from table~\ref{tab:dataformat} we are always given a set of values and their corresponding ground truths to train from.
+Hence, we have $\{a_1, a_2, a_3..., a_n\}$ inputs and $\{y_1, y_2, y_3..., y_n\}$ ground truths.
+As the $L_{\texttt{pair-wise}}$ takes only pairs of values we obtain first the scores of all objects to get $\{s(a_1), s(a_2), s(a_3)..., s(a_n)\}$.
+Then,  we form pairs of inputs to the loss function.
+After forming the pairs, one instance of the loss function is of the form$\{s(a_1), s(a_2), y_1, y_2\}$.
+
+For the loss function,  the order of the objects in the pair is not relevant.
+So,  instead of taking 2 pairs containing the same objects (but in different order) and their ground truth values,  only 1 pair is taken such that $s(a_1) - s(a_2) > 0$.
+This makes the implementation easier.
+Let the actual probability of $a_1 \succ a_2$ is given by $P^*$,  and the predicted value of the same is given by $P$.
+Then the pairwise loss is nothing but the cross entropy loss given by
+\begin{equation}
+L_{\texttt{RankNet}} = \texttt{C.E.Loss} = -P^*\log P - (1 - P^*)\log(1-P)
+\end{equation}
+
+To calculate the predicted probability the following function was used
+$$
+P(a_1 \succ a_2) = \frac{e^{s(a_1) - s(a_2)}}{1 + e^{s(a_1) - s(a_2)} }
+$$
+
+We have also seen that the pair-wise loss function only tries to classify the input objects.
+This means we only need to know if one object is better than the other from the ground truth values.
+Hence a binary cross entry loss function is used instead of a general one in the implementation.
+So $P^* \in \{0, 1\}$ in our case.
+
+\section{Loss function list-wise: ListNet}
 
 In this section we try to intuitively explain the ListNet idea proposed in~\cite{listwisebetter}.
 Our objective is to learn the scoring function $s$ such that it returns scores that are similar in relevance/order when compared to the ground truth scores.
