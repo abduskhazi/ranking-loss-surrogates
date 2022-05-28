@@ -2397,7 +2397,42 @@ We use the DE with 10 neural network ensemble because it was giving best results
 With the performance of the baselines set,  we now move to discuss in detail how our model compares to these methods.
 
 
-\section{Ranking Loss model results}
+\section{Ranking Loss model results: Research question results}
+
+As discussed in Chapter~\ref{chap:ProposedIdea},  our
+proposed idea had 2 components - ranking losses and the surrogate model.
+Both the topics have several research questions that need to be studied.
+In this section we discuss the results or answers obtained to these research questions in different sections separately.
+In each section we present an ablation study to highlight the essential components of our model.
+
+For the purpose of uniformity we use the following strategy - We will use the same number of neural networks and the same neural network architecture in this entire study.
+We however,  may not be able to keep the learning rate the same. 
+This is because each loss function may require different learning rate to perform the best as the HP response surface changes with the loss function.
+Like in the best case of Deep Ensembles,  we use 10 neural networks where each neural network has two 32 neuron layers.
+
+\subsection{Study of ranking losses}
+
+In this section we discuss the following question - are ranking losses better for HPO than regression ones?
+Secondly,  which ranking loss is better for HPO: point-wise,  pair-wise or list-wise loss?
+
+For the regression case,  we use Deep Ensemble baseline implementation proposed by Lakshminarayanan et. al~\cite{DeepEnsemblePaper} as a reference. 
+For point-wise,  rank-wise and list-wise ranking losses we use subset regression,  RankNet and ListMLE loss functions respectively.
+We first test the non-transfer HPO case where there is no meta training conducted on any of the models.
+The models are directly trained during the evaluation phase.
+We also reinitialize the models before every evaluation step.
+The reason for this has been discussed in depth in Section~\ref{sec:rlfinetune}.
+
+We train each neural network for 1000 epochs at every evaluation step.
+The learning rate used is 0.02 and we do not use any cosine annealing.
+The reason for these choices is to keep all the parameters exactly the same as compared to the best case of DE results (Our reference method for the non Transfer HPO case).
+
+\textbf{Non-Transfer case results for DE,  Pointwise,  Pairwise,  listwise (No cosine annealing + 1000 epochs LR =0.02 + 10 NN + separate training of each NN = like in the case of DE)}
+
+Now we move on to the transfer HPO case.
+In this case,  we train on the meta data with a fixed learning rate.
+However,  during fine-tuning we use cosine annealing due to the reasons discussed in Section~\ref{sec:rlfinetune}.
+
+\textbf{Transfer case results for DE,  Pointwise,  Pairwise,  listwise (Decide the technique / LR / cos etc..)}
 
 In this section we evaluate our built model chronologically first using basic scorer model,  then making the model context aware and thereafter adding the capability of uncertainty to the model.
 
