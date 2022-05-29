@@ -172,11 +172,6 @@ def nn_train(args):
     nn, X, Y, search_space_range, epochs, lr, batch_size = args
     nn.train_finetune(X, Y, search_space_range, epochs=epochs, lr=lr, batch_size=batch_size)
 
-def parallel_meta_train(args):
-    nn, meta_train_data, meta_val_data, epochs, lr, batch_size = args;
-    loss_list, val_loss_list = nn.meta_train(meta_train_data, meta_val_data, epochs, lr, batch_size);
-    return loss_list, val_loss_list
-
 class DeepEnsembleRegression(nn.Module):
     def __init__(self, input_dim=1, M=10, parallel_training=False):
         super(DeepEnsembleRegression, self).__init__()
@@ -191,20 +186,8 @@ class DeepEnsembleRegression(nn.Module):
 
     def meta_train(self, meta_train_data, meta_val_data, epochs=1000, lr=0.001, batch_size=100):
         # Returning one of the values / ideally return the mean of the results.
-        with mp.Pool(len(self.nn_list)) as p:
-            tuple_list = p.map(parallel_meta_train, [(nn, meta_train_data, meta_val_data, epochs, lr, batch_size) for nn in self.nn_list])
-
-        loss_list = []
-        val_loss_list = []
-        for res in tuple_list:
-            l, vl = res
-            loss_list += [l]
-            val_loss_list += [vl]
-
-        loss_list = np.array(loss_list, dtype=np.float32)
-        val_loss_list = np.array(val_loss_list, dtype=np.float32)
-        loss_list = np.mean(loss_list, axis=0).tolist()
-        val_loss_list = np.mean(val_loss_list, axis=0).tolist()
+        for nn in self.nn_list:
+            loss_list, val_loss_list = nn.meta_train(meta_train_data, meta_val_data, epochs, lr, batch_size)
 
         return loss_list, val_loss_list
 
@@ -339,8 +322,6 @@ def meta_train_on_HPOB(i):
         plt.savefig(de_regression.save_folder + "loss_" + search_space_id + ".png")
 
 if __name__ == '__main__':
-    mp.freeze_support()
-
     i = int(sys.argv[1])
     run = int(sys.argv[2])
 
