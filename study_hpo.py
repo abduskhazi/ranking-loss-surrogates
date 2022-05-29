@@ -203,6 +203,20 @@ def convert_eval_to_dictionary(eval_object):
             eval_dict[k] = p
     return eval_dict
 
+def average_loss_lists(tuple_list):
+    loss_list = []
+    val_loss_list = []
+    for res in tuple_list:
+        l, vl = res
+        loss_list += [l]
+        val_loss_list += [vl]
+
+    loss_list = np.array(loss_list, dtype=np.float32)
+    val_loss_list = np.array(val_loss_list, dtype=np.float32)
+    loss_list = np.mean(loss_list, axis=0).tolist()
+    val_loss_list = np.mean(val_loss_list, axis=0).tolist()
+
+    return loss_list, val_loss_list
 
 def get_common_keys(eval_object_list):
     # Create the list of dictionaries with non empty performance lists
