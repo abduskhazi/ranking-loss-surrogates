@@ -211,8 +211,18 @@ class RankingLossSurrogate(nn.Module):
         self.sc.load_state_dict(state_dict["scorer"])
 
     def train_model_separate(self, meta_train_data, meta_val_data, epochs, batch_size, list_size, lr):
+        loss_list = []
+        val_loss_list = []
         for nn in self.sc:
-            loss_list, val_loss_list = nn.meta_train(meta_train_data, meta_val_data, epochs, batch_size, list_size, lr)
+            l, vl = nn.meta_train(meta_train_data, meta_val_data, epochs, batch_size, list_size, lr)
+            loss_list += [l]
+            val_loss_list += [vl]
+
+        loss_list = np.array(loss_list, dtype=np.float32)
+        val_loss_list = np.array(val_loss_list, dtype=np.float32)
+        loss_list = np.mean(loss_list, axis=0).tolist()
+        val_loss_list = np.mean(val_loss_list, axis=0).tolist()
+
         return loss_list, val_loss_list
 
     def get_fine_tune_batch(self, X_obs, y_obs):

@@ -185,9 +185,17 @@ class DeepEnsembleRegression(nn.Module):
         self.nn_list = nn.ModuleList(self.nn_list)
 
     def meta_train(self, meta_train_data, meta_val_data, epochs=1000, lr=0.001, batch_size=100):
-        # Returning one of the values / ideally return the mean of the results.
+        loss_list = []
+        val_loss_list = []
         for nn in self.nn_list:
-            loss_list, val_loss_list = nn.meta_train(meta_train_data, meta_val_data, epochs, lr, batch_size)
+            l, vl = nn.meta_train(meta_train_data, meta_val_data, epochs, lr, batch_size)
+            loss_list += [l]
+            val_loss_list += [vl]
+
+        loss_list = np.array(loss_list, dtype=np.float32)
+        val_loss_list = np.array(val_loss_list, dtype=np.float32)
+        loss_list = np.mean(loss_list, axis=0).tolist()
+        val_loss_list = np.mean(val_loss_list, axis=0).tolist()
 
         return loss_list, val_loss_list
 
