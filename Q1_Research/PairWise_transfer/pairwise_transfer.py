@@ -76,7 +76,7 @@ def rankNet(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE, weight_by_dif
     return BCEWithLogitsLoss(weight=weight)(pred_diffs, true_diffs)
 
 def average_ranks(X_query, rl_model):
-    # Calculating the average rank of all input points.
+    # Calculating the average rank of all inputs.
     score_list = []
     for nn in rl_model.sc:
         score_list += [nn(X_query).detach().numpy().flatten()]

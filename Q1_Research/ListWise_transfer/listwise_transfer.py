@@ -55,7 +55,7 @@ def listMLE(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_VAL
     return torch.mean(torch.sum(observation_loss, dim=1))
 
 def average_ranks(X_query, rl_model):
-    # Calculating the average rank of all input points.
+    # Calculating the average rank of all inputs.
     score_list = []
     for nn in rl_model.sc:
         score_list += [nn(X_query).detach().numpy().flatten()]
@@ -335,7 +335,7 @@ if __name__ == '__main__':
 
     if non_transfer:
         print("Non Transfer: Evaluating DE with List-Wise loss");
-        non_transfer_PointWise(i, run)
+        non_transfer_ListWise(i, run)
 
     if transfer:
         print("HPO Transfer: Evaluating DE with List-Wise loss");

@@ -51,7 +51,7 @@ def pointwise_rmse(y_pred, y_true, no_of_levels, padded_value_indicator=PADDED_Y
     return torch.mean(rmses)
 
 def average_ranks(X_query, rl_model):
-    # Calculating the average rank of all input points.
+    # Calculating the average rank of all inputs.
     score_list = []
     for nn in rl_model.sc:
         score_list += [nn(X_query).detach().numpy().flatten()]

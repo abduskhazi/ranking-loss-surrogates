@@ -75,7 +75,7 @@ def rankNet(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE, weight_by_dif
 
 
 def average_ranks(X_query, rl_model):
-    # Calculating the average rank of all input points.
+    # Calculating the average rank of all inputs.
     score_list = []
     for nn in rl_model.sc:
         score_list += [nn(X_query).detach().numpy().flatten()]
@@ -143,7 +143,6 @@ class RankingLossPair(nn.Module):
         self.sc = self.create_embedder_scorers_uncertainty(self.input_dim)
         self.sc.load_state_dict(state_dict["scorer"])
 
-
     def flatten_for_loss_list(self, pred, y):
         flatten_from_dim = len(pred.shape) - 2
         pred = torch.flatten(pred, start_dim=flatten_from_dim)
@@ -175,7 +174,7 @@ class RankingLossPair(nn.Module):
         # Plotting fine tune loss
         plt.figure(np.random.randint(999999999))
         plt.plot(np.array(loss_list, dtype=np.float32))
-        legend = ["Fine tune Loss for pointwise Ranking loss"]
+        legend = ["Fine tune Loss for pairwise Ranking loss"]
         plt.legend(legend)
         plt.title("SSID: " + self.ssid + "; Input dim: " + str(self.input_dim))
         plt.savefig(self.save_folder + self.ssid + "_" + sys.argv[1] + "_fine_tune_loss.png")

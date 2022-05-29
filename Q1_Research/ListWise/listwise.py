@@ -58,7 +58,7 @@ def listMLE(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_VAL
 
 
 def average_ranks(X_query, rl_model):
-    # Calculating the average rank of all input points.
+    # Calculating the average rank of all inputs.
     score_list = []
     for nn in rl_model.sc:
         score_list += [nn(X_query).detach().numpy().flatten()]
@@ -158,7 +158,7 @@ class RankingLossList(nn.Module):
         # Plotting fine tune loss
         plt.figure(np.random.randint(999999999))
         plt.plot(np.array(loss_list, dtype=np.float32))
-        legend = ["Fine tune Loss for pointwise Ranking loss"]
+        legend = ["Fine tune Loss for listwise Ranking loss"]
         plt.legend(legend)
         plt.title("SSID: " + self.ssid + "; Input dim: " + str(self.input_dim))
         plt.savefig(self.save_folder + self.ssid + "_" + sys.argv[1] + "_fine_tune_loss.png")
@@ -208,8 +208,8 @@ if __name__ == '__main__':
     run = int(sys.argv[2])
 
     if non_transfer:
-        print("Non Transfer: Evaluating DE with Pair-Wise loss");
+        print("Non Transfer: Evaluating DE with List-Wise loss");
         non_transfer_ListWise(i, run)
 
     if transfer:
-        print("HPO Transfer: Evaluating DE with Pair-Wise loss (Not yet implemented)");
+        print("HPO Transfer: Evaluating DE with List-Wise loss (Not yet implemented)");
