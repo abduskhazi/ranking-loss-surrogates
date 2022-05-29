@@ -134,13 +134,13 @@ class Scorer(nn.Module):
             with torch.no_grad():
                 self.eval()
 
-                # Calculating full training loss (Maybe use 25 slate length, pair wise loss is ineffcient)
-                train_X, train_y = get_batch_HPBO(meta_train_data, batch_size, 25)
+                # Calculating full training loss (Maybe use 10 slate length, pair wise loss is ineffcient)
+                train_X, train_y = get_batch_HPBO(meta_train_data, batch_size, 10)
                 prediction = self.forward(train_X)
                 loss = self.generate_loss(prediction, train_y)
 
                 # Calculating validation loss
-                val_X, val_y = get_batch_HPBO(meta_val_data, batch_size, 25)
+                val_X, val_y = get_batch_HPBO(meta_val_data, batch_size, 10)
                 pred_val = self.forward(val_X)
                 val_loss = self.generate_loss(pred_val, val_y)
 
