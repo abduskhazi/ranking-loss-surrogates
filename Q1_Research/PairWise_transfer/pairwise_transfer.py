@@ -112,7 +112,7 @@ class Scorer(nn.Module):
         # Viewing everything as a 2D tensor.
         y_true = y_true.view(-1, y_true.shape[-1])
         prediction = prediction.view(-1, prediction.shape[-1])
-        loss = rankNet(prediction, y_true, y_true.shape[-1])
+        loss = rankNet(prediction, y_true)
         return loss
 
     def meta_train(self,meta_train_data, meta_val_data, epochs, batch_size, list_size, lr):
