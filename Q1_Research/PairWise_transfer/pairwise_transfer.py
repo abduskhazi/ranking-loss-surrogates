@@ -270,7 +270,7 @@ class RankingLossSurrogate(nn.Module):
         # Plotting fine tune loss
         plt.figure(np.random.randint(999999999))
         plt.plot(np.array(loss_list, dtype=np.float32))
-        legend = ["Fine tune Loss for pointwise Ranking loss"]
+        legend = ["Fine tune Loss for pairwise Ranking loss"]
         plt.legend(legend)
         plt.title("SSID: " + self.ssid + "; Input dim: " + str(self.input_dim))
         plt.savefig(self.save_folder + self.ssid + "_fine_tune_loss.png")
