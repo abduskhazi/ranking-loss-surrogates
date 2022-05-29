@@ -4,12 +4,14 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import scipy
+import multiprocessing as mp
 
 # Local repo imports parent folder path
 import sys
 sys.path.append('../../../ranking-loss-surrogates')
 from HPO_B.hpob_handler import HPOBHandler
 from study_hpo import get_all_combinations, store_object, evaluate_combinations
+from study_hpo import average_loss_lists
 from fsbo import convert_meta_data_to_np_dictionary, get_input_dim
 
 # =======================================================================================
@@ -167,6 +169,11 @@ def get_batch_HPBO_single(meta_train_data, batch_size, slate_length):
         query_y += [torch.from_numpy(y[idx].flatten())]
     return torch.stack(query_X), torch.stack(query_y)
 
+def parallel_meta_train(args):
+    nn, meta_train_data, meta_val_data, epochs, batch_size, list_size, lr = args;
+    loss_list, val_loss_list = nn.meta_train(meta_train_data, meta_val_data, epochs, batch_size, list_size, lr)
+    return loss_list, val_loss_list
+
 class RankingLossSurrogate(nn.Module):
     def __init__(self, input_dim, ssid, load=False):
         super(RankingLossSurrogate, self).__init__()
@@ -215,8 +222,12 @@ class RankingLossSurrogate(nn.Module):
         self.sc.load_state_dict(state_dict["scorer"])
 
     def train_model_separate(self, meta_train_data, meta_val_data, epochs, batch_size, list_size, lr):
-        for nn in self.sc:
-            loss_list, val_loss_list = nn.meta_train(meta_train_data, meta_val_data, epochs, batch_size, list_size, lr)
+        with mp.Pool(len(list(self.sc))) as p:
+            tuple_list = p.map(parallel_meta_train,
+                               [(nn, meta_train_data, meta_val_data, epochs, batch_size, list_size, lr) for nn in
+                                self.sc])
+
+        loss_list, val_loss_list = average_loss_lists(tuple_list)
         return loss_list, val_loss_list
 
     def get_fine_tune_batch(self, X_obs, y_obs):
@@ -330,6 +341,8 @@ def meta_train_on_HPOB(i):
 
 
 if __name__ == '__main__':
+    mp.freeze_support()
+
     i = int(sys.argv[1])
     run = int(sys.argv[2])
 
