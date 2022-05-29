@@ -15,6 +15,7 @@ import sys
 sys.path.append('../../../ranking-loss-surrogates')
 from HPO_B.hpob_handler import HPOBHandler
 from study_hpo import get_all_combinations, store_object, evaluate_combinations
+from study_hpo import average_loss_lists
 from fsbo import convert_meta_data_to_np_dictionary, get_input_dim
 
 
@@ -194,18 +195,7 @@ class DeepEnsembleRegression(nn.Module):
         with mp.Pool(len(self.nn_list)) as p:
             tuple_list = p.map(parallel_meta_train, [(nn, meta_train_data, meta_val_data, epochs, lr, batch_size) for nn in self.nn_list])
 
-        loss_list = []
-        val_loss_list = []
-        for res in tuple_list:
-            l, vl = res
-            loss_list += [l]
-            val_loss_list += [vl]
-
-        loss_list = np.array(loss_list, dtype=np.float32)
-        val_loss_list = np.array(val_loss_list, dtype=np.float32)
-        loss_list = np.mean(loss_list, axis=0).tolist()
-        val_loss_list = np.mean(val_loss_list, axis=0).tolist()
-
+        loss_list, val_loss_list = average_loss_lists(tuple_list)
         return loss_list, val_loss_list
 
     def train(self, X, Y, search_space_range=1, epochs=1000, lr=0.001, batch_size=100):
