@@ -58,7 +58,7 @@ def average_ranks(X_query, rl_model):
 
     # Rank them and return the average rank.
     score_list = np.stack(score_list)
-    ranks = scipy.stats.rankdata(-1 * score_list, axis=-1)
+    ranks = scipy.stats.rankdata(score_list, axis=-1)
     mean_rank = np.mean(ranks, axis=0)
 
     return mean_rank
