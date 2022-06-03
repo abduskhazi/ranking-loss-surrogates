@@ -283,6 +283,14 @@ class RankingLossList(nn.Module):
 
         return predictions
 
+    def generate_loss(self, prediction, y_true):
+        prediction, y_true = self.flatten_for_loss_list(prediction, y_true)
+        # Viewing everything as a 2D tensor.
+        y_true = y_true.view(-1, y_true.shape[-1])
+        prediction = prediction.view(-1, prediction.shape[-1])
+        loss = listMLE(prediction, y_true)
+        return loss
+
     def fine_tune_together(self, X_obs, y_obs, epochs, lr):
         epochs = epochs
         loss_list = []
@@ -293,14 +301,12 @@ class RankingLossList(nn.Module):
 
             s_ft_X, s_ft_y, q_ft_X, q_ft_y = get_fine_tune_batch(X_obs, y_obs)
 
-            prediction = self.forward((s_ft_X, s_ft_y, q_ft_X))
-            prediction, y_obs_res = self.flatten_for_loss_list(prediction, y_obs)
+            losses = []
+            predictions = self.forward_separate_deep_set((s_ft_X, s_ft_y, q_ft_X))
+            for p in predictions:
+                losses += [self.generate_loss(p, q_ft_y)]
 
-            # Viewing everything as a 2D tensor.
-            y_obs_res = y_obs_res.view(-1, y_obs_res.shape[-1])
-            prediction = prediction.view(-1, prediction.shape[-1])
-
-            loss = listMLE(prediction, y_obs_res)
+            loss = torch.stack(losses).mean()
 
             loss.backward()
             optimizer.step()
