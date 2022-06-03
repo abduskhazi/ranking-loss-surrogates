@@ -380,8 +380,12 @@ class RankingLossSurrogate(nn.Module):
                 optimizer.zero_grad()
 
                 s_ft_X, s_ft_y, q_ft_X, q_ft_y = get_batch_HPBO_single_DeepSet(meta_train_data, list_size)
-                prediction = self.forward((s_ft_X, s_ft_y, q_ft_X))
-                loss = self.generate_loss_DeepSet(prediction, q_ft_y)
+
+                losses = []
+                predictions = self.forward_separate_deep_set((s_ft_X, s_ft_y, q_ft_X))
+                for p in predictions:
+                    losses += [self.generate_loss_DeepSet(p, q_ft_y)]
+                loss = torch.stack(losses).mean()
 
                 loss.backward()
                 optimizer.step()
@@ -391,13 +395,19 @@ class RankingLossSurrogate(nn.Module):
 
                 # Calculating full training loss
                 s_ft_X, s_ft_y, q_ft_X, q_ft_y = get_batch_HPBO_DeepSet(meta_train_data, batch_size, list_size)
-                prediction = self.forward((s_ft_X, s_ft_y, q_ft_X))
-                loss = self.generate_loss_DeepSet(prediction, q_ft_y)
+                losses = []
+                predictions = self.forward_separate_deep_set((s_ft_X, s_ft_y, q_ft_X))
+                for p in predictions:
+                    losses += [self.generate_loss_DeepSet(p, q_ft_y)]
+                loss = torch.stack(losses).mean()
 
                 # Calculating validation loss
                 s_ft_X, s_ft_y, q_ft_X, q_ft_y = get_batch_HPBO_DeepSet(meta_val_data, batch_size, list_size)
-                prediction = self.forward((s_ft_X, s_ft_y, q_ft_X))
-                val_loss = self.generate_loss_DeepSet(prediction, q_ft_y)
+                losses = []
+                predictions = self.forward_separate_deep_set((s_ft_X, s_ft_y, q_ft_X))
+                for p in predictions:
+                    losses += [self.generate_loss_DeepSet(p, q_ft_y)]
+                val_loss = torch.stack(losses).mean()
 
             print("Epoch[", _, "] ==> Loss =", loss.item(), "; Val_loss =", val_loss.item())
             loss_list += [loss.item()]
@@ -494,14 +504,11 @@ class RankingLossSurrogate(nn.Module):
 
             s_ft_X, s_ft_y, q_ft_X, q_ft_y = get_fine_tune_batch(X_obs, y_obs)
 
-            prediction = self.forward((s_ft_X, s_ft_y, q_ft_X))
-            prediction, y_obs_res = flatten_for_loss_list(prediction, y_obs)
-
-            # Viewing everything as a 2D tensor.
-            y_obs_res = y_obs_res.view(-1, y_obs_res.shape[-1])
-            prediction = prediction.view(-1, prediction.shape[-1])
-
-            loss = listMLE(prediction, y_obs_res)
+            losses = []
+            predictions = self.forward_separate_deep_set((s_ft_X, s_ft_y, q_ft_X))
+            for p in predictions:
+                losses += [self.generate_loss_DeepSet(p, q_ft_y)]
+            loss = torch.stack(losses).mean()
 
             loss.backward()
             optimizer.step()
