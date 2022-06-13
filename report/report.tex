@@ -146,9 +146,9 @@ This sections contains the overview of the paper and how the thesis report is or
 
 \chapter{Related Work}\label{chap:relatedWork}
 
-In this chapter,  the hyper-parameter optimization problem is first defined concretely.
-Then, the various approaches already used to do the HP optimization are discussed.
-Subsequently,  some important concepts that the thesis uses to build the proposed model are also discussed.
+In this chapter,  we first define the hyper-parameter optimization problem concretely.
+Then, we discuss the approaches already used to do the HP optimization.
+Subsequently, we discuss some essential concepts that the thesis uses to build the proposed model.
 
 \section{Hyper Parameter Optimization}
 To find out the best hyper-parameter for any machine learning model $m$, we must first quantify a given hyper-parameter configuration $\textbf{x}$ by a real-valued number $v \in \mathbb{R}$.
@@ -160,14 +160,14 @@ then HPO can be defined mathematically by an abstract function, say,  $f(\textbf
 $$
      \underset{\rm \textbf{x}}{\rm argmin}  f(\textbf{x}) \;\;\;  \forall \textbf{x} \in \mathbb{S}
 $$
-where $\mathbb{S}$ is the hyper-parameter search space.
+Where $\mathbb{S}$ is the hyper-parameter search space.
 
 This function $f(\textbf{x}) \mapsto \mathbb{R}$ is evaluated in the following chronological steps:
 \begin{enumerate}
-\item Using a given hyper-parameter configuration $\textbf{x}$,  we train our model $m$ to obtain the model $m^{trained}_\textbf{x}$. It consists of learning the parameters of our model, E.g. learning the weights and biases of a Deep Neural Network.
+\item Using a given hyper-parameter configuration $\textbf{x}$,  we train our model $m$ to obtain the model $m^{trained}_\textbf{x}$. It consists of learning the parameters of our model, E.g., learning the weights and biases of a Deep Neural Network.
 We use the training data to learn this model.
 \item The validation data is passed through $m^{trained}_\textbf{x}$ to obtain the required results.
-These results are evaluated based on an evaluation criterion '$\textrm{eval}$'. This criterion is different for different problems, e.g. Regression, Classification, etc.
+These results are evaluated based on an evaluation criterion '$\textrm{eval}$'. This criterion is different for different problems, e.g., Regression and Classification.
 The result of this evaluation is a real-value that gives a score for the configuration $\textbf{x}$.
 \end{enumerate}
 
@@ -181,21 +181,21 @@ Finally, the HPO problem can be defined using the following equation:
 \underset{\rm \textbf{x}}{\rm argmin} \;\; f(m^{trained}_\textbf{x} (\textrm{Data}_\textrm{val})) \mapsto \mathbb{R}   \;\;\;  \forall \textbf{x} \in \mathbb{S}
 \end{equation}
 
-One way to view this objective function non mathematically is that we are trying to select a hyper parameter setting of the given model to obtain the best (lowest) validation error~\cite{fsbopaper}.
+One way to view this objective function non-mathematically is that we are trying to select a hyper parameter setting of the given model to obtain the best (lowest) validation error~\cite{fsbopaper}.
 
 \subsubsection{HPO Constraints}\label{sec:hpoConstraints}
 
 Hyperparameter optimization is different from other optimization methods because it has different constraints~\cite{bayesianOptimizationTutorial}.
 It is because of the peculiar properties of the hyper-parameter search spaces.
-Finding out the correct hyper-parameter setting is generally not feasible using a brute-force approach (trying out all possible combinations of hyper-parameters) because the search space itself has many dimensions, and the search space may be continuous.
+Finding the correct hyper-parameter setting is generally not feasible using a brute-force approach (trying out all possible combinations of hyper-parameters) because the search space has many dimensions, and the search space may be continuous.
 More specifically,  some of the important constraints of this optimization problem are:
 
 \begin{enumerate}
 \item The evaluation of a given HPO configuration is computationally expensive.
 \item It is a non-convex optimization problem.
 \item The process of getting $m^{trained}_\textbf{x}$ from $m$ is stochastic hence the value $v_{\textbf{x}}$ is noisy.
-\item Some dimensions have conditional constraints. The values of some dimensions may depend on the values of others. For example, the number of neurons in layer 3 only makes sense if we have 3 or more layers in a neural network.
-\item The search space is hybrid in terms of continuity. Some of the dimensions (variables) may be continuous, while others may be discrete.
+\item Some dimensions have conditional constraints. The values of some dimensions may depend on the values of others. For example, the number of neurons in layer three only makes sense if we have three or more layers in a neural network.
+\item The search space is hybrid in terms of continuity. Some dimensions (variables) may be continuous, while others may be discrete.
 Using a gradient method is hence not trivial.
 \end{enumerate}
 
@@ -206,18 +206,17 @@ Multi-fidelity HPO and Online HPO.
 \subsection{Black-box HPO}
 In this approach the HPO objective function $f$ in equation~\ref{eq:hpoobjectivefunc}
 is treated as a blackbox.
-The problem is thus generalised to finding a global optima of $f$.
-Some of the straightforward black-box HPO methods include Manual Search,  Grid Search and Random Search.
-The optimization technique called Bayesian optimization gives us a more sophisticated mechanism to deal with this problem. 
+The problem is generalized to finding a global optimum of $f$.
+Some straightforward black-box HPO methods include Manual Search,  Grid Search, and Random Search.
+The Bayesian optimization technique gives us a more sophisticated mechanism to deal with this problem. 
 
 Manual Search in the HPO search space is feasible when we have expert knowledge of the problem and the given model. 
-The idea is to select configurations step by step by observing the results obtained
-so that we do not waste computation time evaluating similar configurations through intuition.
+The idea is to select configurations step by step by observing the results obtained so we do not waste computation time evaluating similar configurations through intuition.
 This approach may be helpful for small models with lesser constraints.
 However, as the HPO search space becomes very large or conditional constraints become too complex, the selection of configurations becomes more and more difficult.
 Hence a more systematic and automated approach is more practical.
 
-Grid search is a more systematic approach in which we divide the search space into grid points similar to ones in a Euclidean graph.
+Grid search is a more systematic approach to dividing the search space into grid points similar to those in a Euclidean graph.
 Let there be $m$ dimensions in the search space $\mathbb{S}$. Let the selected number of values for each dimension be $n_1, n_2, ... n_m$. In the case of a discrete variable, the selected values will be a subset of the possible values, whereas, in the case of a continuous variable, we need to select the values based on a selected granularity.
 The cross-product of the selected subsets gives us the configurations to be evaluated. Hence, the number of configurations to evaluate will be $n_1 * n_2 * ... n_m$.
 The number of configurations we need to evaluate in this approach becomes a big issue for this method as the dimensions of the search spaces increase.
@@ -230,15 +229,16 @@ Hence this approach becomes intractability for large search spaces.
     \label{fig:rshpofig}
 \end{figure}
 
-One issue with the Grid Search approach is that we assume that all dimensions in the HPO search space are equally important. It is not the case in many HPO problems.  The Grid layout in Figure~\ref{fig:rshpofig}(left) shows illustrates this.  For example, the learning rate in deep neural networks is much more important than many other parameters. If dimension $p$ is the most important in the search space, then it makes sense to evaluate more values of $p$. Random Search helps us solve this problem. 
+One issue with the Grid Search approach is that we assume that all dimensions in the HPO search space are equally important. It is not the case in many HPO problems. The Grid layout in Figure~\ref{fig:rshpofig}(left) illustrates this. For example, the learning rate in deep neural networks is much more important than many other parameters. If dimension $p$ is the most important in the search space, then it makes sense to evaluate more values of $p$. Random Search helps us solve this problem. 
 The Random layout in Figure~\ref{fig:rshpofig}(right) illustrates this. 
 Hence Random Search can be used as a trivial baseline for comparing other HPO models.
 
 One advantage of these methods is that there are no restrictions on the HPO search spaces. Hence, they are suitable for any HPO problem at hand.
 On the other hand, these methods are non-probabilistic.
 Hence they cannot deal with noisy evaluations of the HPO configuration well.
-Moreover, these methods are computationally expensive. The reason is that they do not use surrogate evaluators and hence train and evaluate the whole model.
+Moreover, these methods are computationally expensive. The reason is that they do not use surrogate evaluators and train and evaluate the whole model.
 Also, these search methods give us optimal HPO configurations only by chance.
+
 \subsubsection{Bayesian Optimization}
 
 Bayesian optimization tries to solve both computational costs and noisy evaluations of our objective function $f$.
@@ -253,7 +253,7 @@ The core procedure of the optimization process is the following:
 \item Append (x', f(x')) to D and repeat the process.
 \end{itemize}
 
-The above process repeats till the computational resources are finished (here time) or we find an acceptable HPO configuration.
+The above process repeats till the computational resources are finished (here time), or we find an acceptable HPO configuration.
 This procedure is also called SMBO (Sequential model-based Optimization).
 The procedure alternates between collecting data and fitting the model with the 
 collected data~\cite{SMBOPaper}.
@@ -261,82 +261,82 @@ collected data~\cite{SMBOPaper}.
 Hence, there are two essential components of Bayesian optimization:
 
 \begin{itemize}
-\item Probabilistic surrogate model of the objective function.  Some surrogates are discussed in detail in the subsequent sections in this chapter.
+\item Probabilistic surrogate model of the objective function. Some surrogates are discussed in detail in the subsequent sections in this chapter.
 \item The acquisition function
 \end{itemize}
 
 \subsubsection{Acquisition functions}
-The acquisition functions used in the bayesian optimization need to do balance exploitation of information from the known/observed data points and exploration of unknown data points in the domain.
+The acquisition functions used in the Bayesian optimization need to balance the exploitation of information from the known/observed data points and exploration of unknown data points in the domain.
 The following functions are some of the most prominent acquisition functions found in the literature~\cite{GPTutorial}
 \begin{itemize}
 \item \textbf{Upper Confidence Bound (UCB)}: It returns the best possible hyperparameter configuration using a linear combination of the mean and the standard deviation.
-\item \textbf{Probability of Improvement}: It gives the probability with which we can get a better hyperparameter configuration than the incumbent best configuration.
+\item \textbf{Probability of Improvement}: It gives the probability that we can get a better hyperparameter configuration than the incumbent best configuration.
 \item \textbf{Expected Improvement}: Given a Gaussian distribution at a new input point, it finds the expectation of improvement i.e ($f(x) - f_{max}$) over the part of normal that is greater than $f_{max}$.
 \end{itemize}
 
- \textbf{Expected Improvement} acquisition function is used all around the thesis in order to do a fair comparison of the models and algorithms.
+ \textbf{Expected Improvement} acquisition function is used all around the thesis to make a fair comparison of the models and algorithms.
+
 
 \subsection{Online HPO}
-Traditionally to evaluate and select a new HP configuration,  the objective function $f$ is fully evaluated.
-In the most general sense this can be applied to both discrete and continuous HP search spaces.
-Some advanced methods have proposed even gradient based HP optimization.
+Traditionally, the objective function $f$ is fully evaluated to select a new HP configuration.
+In the most general sense, this can be applied to both discrete and continuous HP search spaces.
+Some advanced methods have proposed even gradient-based HP optimization.
 
-For example,  Maclaurin et al.~\cite{hypergradient} proposed a relatively cheap method to obtain hyper gradients i.e gradients of hyper parameters with respect to the whole objective function $f$.
+For example,  Maclaurin et al.~\cite{hypergradient} proposed a relatively cheap method to obtain hyper gradients, i.e., gradients of hyper parameters for the whole objective function $f$.
 Further,  Franceschi et al.~\cite{HPOAsBilevelOptimization} formulated the whole HPO problem as a bi level optimization problem~\cite{hutterneuripstutorial}.
 
-In all these methods as the hyper parameters and the parameters of the model are being learnt disjointly,  they can be referred to as offline HPO.
-The idea of online HPO is that it tries to evaluate and update the HP configuration during the training of the model itself.
+In all these methods, as the hyper and model parameters are learned disjointly, they can be referred to as offline HPO.
+The idea of online HPO is that it tries to evaluate and update the HP configuration during the model's training.
 
-Sometimes only a single hyper parameter is learnt online.
-For example,  Baydin et al.~\cite{onlineLearningRateUpdate},  proposes the online learning of the learning rate.  They target this hyper parameter because it is the single most important hyper parameter.
-In other times all parameters may be learnt.
-For example,  Luketina el at. ~\cite{gradientbasedHPOtuning} proposes to interleave the updating of training parameters and hyper parameters.
+Sometimes only a single hyperparameter is learned online.
+For example,  Baydin et al.~\cite{onlineLearningRateUpdate} propose the online learning of the learning rate. They target this hyper parameter because it is the single most important one.
+In other times all parameters may be learned. Luketina et al. ~\cite{gradientbasedHPOtuning} describe this example by proposing the interleaved updating of training parameters and hyperparameters.
 
 
 \subsection{Multi-fidelity HPO}
 If we treat our HPO objective function $f$ as a black box function,  we would need to evaluate equation~\ref{eq:hpoobjectivefunc} fully.
-This is prohibitively expensive as evaluating a single HP configuration may take days~\cite{hutter2019automated}.
+This evaluation is prohibitively expensive as evaluating a single HP configuration may take days~\cite{hutter2019automated}.
 Multi-fidelity hyper parameter optimization tries to solve this problem by evaluating the HP candidates on cheap functions $f_{approx}$ that approximate the objective function $f$.
 
-Here, $f_{approx}$  is called a fidelity as it copies or reproduces the true objective function upto some degree.
-For example,  a fidelity could be evaluation of the HP configuration on only a subset of data,  the evaluation of the HP on downscaled image data or learning only for a few epochs etc.
-The idea is to trade off between the performance of the approximate function and its optimization accuracy such that we get best selection of HP using the least compute power.
-Since the true evaluation of HP configuration using $f$ is not done,  it is an approximate optimization technique.
+Here, $f_{approx}$  is called fidelity as it reproduces the actual objective function to some degree.
+For example, a fidelity could be an evaluation of the HP configuration on only a subset of data, the evaluation of the HP on downscaled image data, or learning only for a few epochs.
+The idea is to trade-off between the performance of the approximate function and its optimization accuracy such that we get the best selection of HP using the least compute power.
+Since we do not do the actual evaluation of HP configuration using $f$, it is an approximate optimization technique.
 
 The technique does not belong to the black box HPO domain.
-This can be understood very clearly if we take the example of the "few epochs" fidelity.
-Clearly,  the optimization algorithm looks into the training process the learns the objective function to prematurely exit it if need be.
-Thus getting a feedback from within the "black box" of the HPO objective function.
+It can be understood very clearly if we consider the "few epochs" fidelity.
+The optimization algorithm looks into the training process and learns the objective function to exit it earlier.
+It thus gets feedback from within the "black box" of the HPO objective function.
 
-The reason this technique is called multi-fidelity is because it may use different fidelities within the optimization process to get the best HP configuration.
-For example,  while using successive having technique~\cite{successivehalving} for HPO one can start with a given "budget fidelity" for example - defined number of epochs or defined amount of training time.
-At each step of the optimization process,  the budget is doubled and the worst performing HP configurations are eliminated for the next step.
+This technique is named multi-fidelity because it may use different fidelities within the optimization process to get the best HP configuration.
+While using successive having technique~\cite{successivehalving} for HPO, one can start with a given "budget fidelity," for example - a defined number of epochs or a defined amount of training time.
+The budget doubles at each step of the optimization process, and we eliminate the worst-performing HP configurations for the next step.
 Hence it uses "multiple" fidelities during the optimization process.
 
 
 \section{Transfer-learning for HPO}
 
-The HPO methods discussed so far,  evaluate each HP configuration from scratch.
+The HPO methods discussed so far evaluate each HP configuration from scratch.
 In addition to being computationally inefficient,  it is contrary to how humans learn.
 Humans use prior experience that they have accumulated and condition their actions on this knowledge.
 Any machine learning mechanism that uses this concept is called a transfer learning method~\cite{Weiss2016}.
 
-This concept of transfer learning can be utilized to accelerate HPO.
-For example,  Gomes et al. ~\cite{svmhpmetalearnt} propose to meta learn a set of good HP configurations for the SVM.
-They propose that if we learn HP configurations that worked well previously,  then there is high chance of finding that a new SVM model also works with these parameters well.
-This concept of warm starting the HP optimization is also proposed by Reif et al.~\cite{metalearningwarmstartpaper} albeit for genetic algorithms.
+The concept of transfer learning can be utilized to accelerate HPO.
+For example,  Gomes et al. ~\cite{svmhpmetalearnt} propose to meta-learn a set of exemplary HP configurations for the SVM.
+They propose that if we learn HP configurations that previously worked well, there is a high chance of finding that a new SVM model also works with these parameters.
+Reif et al.~\cite{metalearningwarmstartpaper} also proposed this concept of warm starting the HP optimization for genetic algorithms.
 
-There are 2 broad ways to transfer knowledge for doing HP optimization - By learning surrogates or by doing warm starting of initial configurations.
+There are two broad ways to transfer knowledge for HP optimization: by learning surrogates or by doing warm starting of initial configurations.
 
 \subsection{Warm starting}
 
-Before running any HPO method,  normally experts study the data being used to train the given model.
-Based on their study they suggest a few initial HP configurations that have worked well for similar datasets according to their experience.
-These initial configurations are evaluated for the given model and the evaluated values act as a starting point (or hinge) for the HPO method.
-This is essentially automated by the warm starting method~\cite{Feurer2014UsingMT}.
+Before running any HPO method, typically, experts study the data used to train the given model.
+They suggest a few initial HP configurations that have worked well for similar datasets, according to their experience.
+These initial configurations are evaluated for the given model, and the evaluated values act as a starting point (or hinge) for the HPO method.
+The idea of warm starting is to automate the selection of the initial configurations before the HPO optimization runs.
 
-In the above mentioned papers ~\cite{svmhpmetalearnt},  ~\cite{metalearningwarmstartpaper} the authors use the meta learnt HP configurations as starting points for finding the optima in the HP response surface.
-Additionally this idea was also proposed for the SMBO optimization algorithm by Feurer et al. ~\cite{Feurer2014UsingMT}.
+Warm starting was used by Gomes et al. ~\cite{svmhpmetalearnt}, and Reif et al. ~\cite{metalearningwarmstartpaper}. In their respective papers, the authors used the meta-learned HP configurations as starting points for finding the optima in the HP response surface.
+This idea was also proposed for the SMBO optimization algorithm by Feurer et al. ~\cite{Feurer2014UsingMT}.
 
 
 \subsection{Meta-learning of surrogates}
@@ -2399,42 +2399,133 @@ With the performance of the baselines set,  we now move to discuss in detail how
 
 \section{Ranking Loss model results: Research question results}
 
-As discussed in Chapter~\ref{chap:ProposedIdea},  our
-proposed idea had 2 components - ranking losses and the surrogate model.
-Both the topics have several research questions that need to be studied.
-In this section we discuss the results or answers obtained to these research questions in different sections separately.
-In each section we present an ablation study to highlight the essential components of our model.
+As discussed in Chapter~\ref{chap:ProposedIdea},  our proposed idea has two components - a ranking loss and a surrogate model.
+In both these components, several research questions need to be studied.
+This section discusses the results or answers to these research questions in different sub-sections separately.
+In each section, we present an ablation study to highlight the essential components of our proposed idea.
 
-For the purpose of uniformity we use the following strategy - We will use the same number of neural networks and the same neural network architecture in this entire study.
-We however,  may not be able to keep the learning rate the same. 
-This is because each loss function may require different learning rate to perform the best as the HP response surface changes with the loss function.
-Like in the best case of Deep Ensembles,  we use 10 neural networks where each neural network has two 32 neuron layers.
+For uniformity, we use the following strategy - We will use the same number of neural networks and the same neural network architecture in our study.
+We also try to keep the learning rate similar for similar components.
+For different components, however, we use different learning rates.
+For example, learning rates during meta-training and fine-tuning are different.
+Similarly, each loss function may require a different learning rate to perform the best as the HP response surfaces change with the used loss function.
+Like in the best case of Deep Ensembles, we use ten neural networks in our ensemble. Each neural network has two 32-neuron layers.
+
+One crucial point to remember in this ablation study is that the acquisition function used in the case of ranking losses is different compared to ordinary losses. The expected improvement acquisition function has no meaning for the ranking losses. Each neural network in the ensemble outputs a separate score for any queried HP configuration. The outputs may not be in the same range as the evaluation range of the HP configuration. For this reason, selecting the following best HP configuration is based on the best average rank of the HP configuration.
 
 \subsection{Study of ranking losses}
 
-In this section we discuss the following question - are ranking losses better for HPO than regression ones?
-Secondly,  which ranking loss is better for HPO: point-wise,  pair-wise or list-wise loss?
+In this section, we discuss the following question - are ranking losses better for HPO than regression ones? Secondly, which ranking loss is better for HPO: point-wise,  pair-wise, or list-wise loss?
+For the regression case,  we use the Deep Ensemble baseline implementation proposed by Lakshminarayanan et al. ~\cite{DeepEnsemblePaper} as a reference. We use subset regression,  RankNet, and ListMLE loss functions for point-wise, rank-wise, and list-wise ranking losses, respectively. 
 
-For the regression case,  we use Deep Ensemble baseline implementation proposed by Lakshminarayanan et. al~\cite{DeepEnsemblePaper} as a reference. 
-For point-wise,  rank-wise and list-wise ranking losses we use subset regression,  RankNet and ListMLE loss functions respectively.
-We first test the non-transfer HPO case where there is no meta training conducted on any of the models.
-The models are directly trained during the evaluation phase.
-We also reinitialize the models before every evaluation step.
-The reason for this has been discussed in depth in Section~\ref{sec:rlfinetune}.
+\subsubsection{Non transfer HPO}
+We first test the non-transfer HPO case where the surrogate models are not meta-trained. We only do fine-tune (or training) during the evaluation phase. We also reinitialize the models before every evaluation step. We have discussed the reason for this in-depth in Section~\ref{sec:rlfinetune}.
+We train each neural network for 1000 epochs at every evaluation step. The learning rate is 0.02, and we do not use cosine annealing.
+Using cosine annealing here did not make sense since there is no guarantee that the randomly initialized model is near a local optimum.
+Hence, we need a bigger learning rate to find quicker optimization.
+We try to keep all the parameters the same as the best case of DE results (Our reference method for the non Transfer HPO case)
 
-We train each neural network for 1000 epochs at every evaluation step.
-The learning rate used is 0.02 and we do not use any cosine annealing.
-The reason for these choices is to keep all the parameters exactly the same as compared to the best case of DE results (Our reference method for the non Transfer HPO case).
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.25]{images/Q1AblationNonTransfer}
+    \caption{Comparison of Ranking losses with regression losses (Non transfer case)}
+    \label{fig:Q1AblationNonTransfer}
+\end{figure}
 
-\textbf{Non-Transfer case results for DE,  Pointwise,  Pairwise,  listwise (No cosine annealing + 1000 epochs LR =0.02 + 10 NN + separate training of each NN = like in the case of DE)}
+Firstly, we see that the average regret for both the regression losses is similar. This result is expected because the only significant difference between the two models is how uncertainty is modeled. Secondly,  we see from Figure~\ref{fig:Q1AblationNonTransfer} that the models trained with ranking losses are better at the beginning of the optimization steps cycle than the regression losses. This can be seen in the critical rank graphs of Figure~\ref{fig:Q1AblationNonTransferRank100} as well. However, the pointwise loss function very quickly deteriorates in performance in the long run. The pointwise loss function tries to learn the rank directly from the input. The learned ranks also depend on the other HP configurations in a given batch. Hence this loss function does not train the model to learn relative differences in the HP configurations.
 
-Now we move on to the transfer HPO case.
-In this case,  we train on the meta data with a fixed learning rate.
-However,  during fine-tuning we use cosine annealing due to the reasons discussed in Section~\ref{sec:rlfinetune}.
 
-\textbf{Transfer case results for DE,  Pointwise,  Pairwise,  listwise (Decide the technique / LR / cos etc..)}
 
-In this section we evaluate our built model chronologically first using basic scorer model,  then making the model context aware and thereafter adding the capability of uncertainty to the model.
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/Q1AblationNonTransferRank@25}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/Q1AblationNonTransferRank@50}
+\end{minipage}\par
+\vskip\floatsep% normal separation between figures
+\includegraphics[width=0.45\textwidth]{images/Q1AblationNonTransferRank@100}
+    \caption{Critical rank graph of the non transfer ablation study (Non transfer case)}
+   \label{fig:Q1AblationNonTransferRank100}
+\end{figure}
+
+
+\subsubsection{Transfer HPO}
+In the transfer HPO case,  we first train the models with the meta-training data given by the HPO-B data set and then store our models on persistent storage.
+We train the models for 5000 epochs with a fixed learning rate of 0.001.
+We used a batch size of 100 for all models. We used a list size of 100 for the list-wise loss functions.
+However, we use cosine annealing during fine-tuning for the reasons discussed in Section~\ref{sec:rlfinetune}.
+It is because there is a very high chance that the learned model is close to any one of the local optima (the exception to this is the negative learning rate case discussed later).
+
+The selection of batches of HP configuration for training is not trivial.
+For any given search space,  we have data on multiple tasks.
+As the distribution of HP configurations may differ for different tasks, we need to learn to rank the HP configurations against other configurations within the same task.
+Hence, for each step within an epoch (i.e., for the number of batches within the epoch),  we randomly select a task (i.e., meta-dataset) and then select the HP configurations within this task.
+This sampling mechanism is the double sampling mechanism we discussed in Section~\ref{sec:rlmetatraining}.
+Double sampling is not required during fine-tuning as we are fine-tuning only for a particular task.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.25]{images/Q1AblationTransfer}
+    \caption{Comparison of Ranking losses with regression losses (Transfer case)}
+    \label{fig:Q1AblationTransfer}
+\end{figure}
+
+Figure~\ref{fig:Q1AblationTransfer} compares the average regret and the ranking graph for the regression and ranking losses for the transfer case.
+As we can see here,  the listwise ranking losses are far superior to other losses.
+It is also interesting to see that the average regret of the list-wise losses is similar to the regression losses in the transfer case.
+To check the overall performance of the list-wise loss models, we compare this model with the worst,  medium, and best performing surrogates as sentinels for the study.
+The random selection strategy is the worst performing,  whereas FSBO is the best performing SMBO surrogate. We use a GP surrogate to represent a surrogate with a medium performance.
+Figure~\ref{fig:Q1FinalAblation} shows this ablation.
+The list-wise loss function functions better than the state-of-the-art transfer HPO model "FSBO" in the first 15 to 20 evaluation steps.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.25]{images/Q1FinalAblation}
+    \caption{Comparison of list-wise transfer with standard HPO surrogates}
+    \label{fig:Q1FinalAblation}
+\end{figure}
+
+
+\subsection{Study of weighted list Wise losses}
+
+In Section~\ref{sec:positionEnhancedRanking} we discussed the requirement for weighting for our problem.
+This section presents a short ablation to study its effect on our models.
+We do not separate the transfer and non-transfer cases here.
+We use inverse log weighting for the weighting in our case.
+From Figure~\ref{fig:Q2Ablation}, we see that both in the case of transfer HPO and non-transfer HPO, the weighting positively impacted the performance. Moreover, the models trained with weighted list-wise losses are better at every optimization cycle step.
+
+Even though the difference in the average regret is not significant in the 4 cases,  the ranking graph differences are pretty significant. One thing to note here is that when we use list-wise loss,  we train and fine-tune with the same weighted loss. We do not use a different weighting (like the inverse linear weighting for training and inverse log weighting for the meta training). Moreover, we use the double sampling mechanism discussed above during meta-training.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.25]{images/Q2Ablation}
+    \caption{Comparison of list-wise transfer with standard HPO surrogates}
+    \label{fig:Q2Ablation}
+\end{figure}
+
+\iffalse
+The fine tuned results is better than all the baselines except FSBO.
+In fact,  it is better than FSBO in the first few evaluation steps.
+This can be seen in Figure~\ref{fig:RLDeepSetWeightedRank25}.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/RLDeepSetWeighted}
+    \caption{Ablation for weighted loss}
+    \label{fig:RLDeepSetWeighted}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.35]{images/RLDeepSetWeightedRank25}
+    \caption{Critical rank graph for weighting ablation.}
+    \label{fig:RLDeepSetWeightedRank25}
+\end{figure}
+
+In this section, we evaluate our built model chronologically, first using the basic scorer model,  then making the model context-aware, and then adding uncertainty capability to the model.
+\fi
 
 \subsubsection{ListMLE with Basic scoring model}
 Training of the basic scoring model with the meta data obtained relatively smooth loss curves.
@@ -2543,30 +2634,6 @@ In the later evaluation steps, naturally,  using fine tuning makes gives better 
     \includegraphics[scale=0.20]{images/RLDeepSetevaluation}
     \caption{Benchmarking for the Deep set evaluation data}
     \label{fig:RLDeepSetevaluation}
-\end{figure}
-
-\subsubsection{Using weighted Loss Function}
-We discussed that using a weighting loss function makes more sense for us as discussed in Section~\ref{sec:positionEnhancedRanking}.
-The ablation of using inverse log weighting with and without fine tuning is shown in Figure~\ref{fig:RLDeepSetWeighted}.
-Here we see that there is a big improvement to our evaluation results.
-This proves the hypothesis that weighting is very essential for getting good results.
-
-The fine tuned results is better than all the baselines except FSBO.
-In fact,  it is better than FSBO in the first few evaluation steps.
-This can be seen in Figure~\ref{fig:RLDeepSetWeightedRank25}.
-
-\begin{figure}[h]
-  \centering
-    \includegraphics[scale=0.20]{images/RLDeepSetWeighted}
-    \caption{Ablation for weighted loss}
-    \label{fig:RLDeepSetWeighted}
-\end{figure}
-
-\begin{figure}[h]
-  \centering
-    \includegraphics[scale=0.35]{images/RLDeepSetWeightedRank25}
-    \caption{Critical rank graph for weighting ablation.}
-    \label{fig:RLDeepSetWeightedRank25}
 \end{figure}
 
 
