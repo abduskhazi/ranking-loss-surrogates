@@ -1498,15 +1498,15 @@ The results already present in the benchmarking data of~\cite{pineda2021hpob} we
 
 % \section{Proposed Idea: : Ranking Loss Surrogates}
 
-The choice of surrogate to use in model based optimization is very crucial.
-Does the surrogate have enough representational capacity?
+The choice of the surrogate to use in model-based optimization is very crucial.
+Does the surrogate have enough representative capacity?
 Does it have the capability of representing uncertainty?
-How is the surrogate learnt?
-These are some of the questions that need to be answered before selecting a surrogate model.
-The selection of a surrogate model has a direct impact on the performance of the model based optimization algorithm.
+How is the surrogate learned?
+These are some questions that need to be answered before selecting a surrogate model.
+The selection of a surrogate model directly impacts the performance of the model-based optimization algorithm.
 
-In the quest to improve HPO surrogates,  we propose and analyse a new type of surrogate model that is based on the concept of ranking.
-There are 2 components of our proposed idea
+In the quest to improve HPO surrogates,  we propose and analyze a new type of surrogate model based on the ranking concept.
+There are two components of our proposed idea.
 
 \begin{itemize}
 \item The learning mechanism of the surrogate model.
@@ -1514,13 +1514,14 @@ There are 2 components of our proposed idea
 \end{itemize}
 
 This chapter discusses in detail both these components.
-We first assume that a good surrogate model of sufficient representational capacity already exists.
+We assume that a good surrogate model of sufficient representational capacity already exists.
 This model should also have the capability to represent uncertainty.
-Therefore we use a Deep Ensembles for this purpose.
-We then analyse and implement the proposed learning algorithm that uses the concept of ranking.
-We then do a simple case study of inverse mapping using the learnt model.
-Finally we make the proposed ranking loss surrogate context aware by adding deep sets into its architecture.
+Therefore we use Deep Ensembles for this purpose.
+We then analyze and implement the proposed learning algorithm that uses the concept of ranking.
+We also do a simple case study of inverse mapping using the learned model.
+Finally, we make the proposed ranking loss surrogate context-aware by adding deep sets into its architecture.
 We use SMBO as a reference HPO algorithm for our study.
+
 
 \section{Basic scoring model : Deep Neural Network}
 \label{sec:BasicScoringModelDNN}
