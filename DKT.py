@@ -100,8 +100,8 @@ class DKT(nn.Module):
 
         # Schedular function for training
         scheduler_fn = lambda x, y: torch.optim.lr_scheduler.CosineAnnealingLR(x, y, eta_min=1e-7)
-        optimizer = torch.optim.Adam([{'params': self.model.parameters(), 'lr': 0.0001},
-                                           {'params': self.feature_extractor.parameters(), 'lr': 0.0001}])
+        optimizer = torch.optim.Adam([{'params': self.model.parameters(), 'lr': 0.001},
+                                           {'params': self.feature_extractor.parameters(), 'lr': 0.001}])
         scheduler = scheduler_fn(optimizer, b_n)
 
         # Scaling should be ignored because it gives very bad results.

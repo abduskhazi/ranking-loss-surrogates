@@ -9,8 +9,22 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 # For memory management
 import gc
+import sys
+from collections import namedtuple
+import pickle
+import time
+import gpytorch
 
 from HPO_B.hpob_handler import HPOBHandler
+# from study_hpo import get_all_combinations, store_object, evaluate_combinations
+
+def store_object(obj, obj_name):
+    with open(obj_name, "wb") as fp:
+        pickle.dump(obj, fp)
+
+def load_object(obj_name):
+    with open(obj_name, "rb") as fp:
+        return pickle.load(fp)
 
 device = torch.device("cpu")
 if torch.cuda.is_available():
@@ -43,6 +57,7 @@ class NN(nn.Module):
         for i in range(n_hidden):
             self.hidden_layers += [nn.Linear(32, 32)]
             # Not using a module list here i think is the problem of not getting good results.
+        self.hidden_layers = nn.ModuleList(self.hidden_layers)
         self.fc_last = nn.Linear(32, output_dim)
 
     def forward(self, x):
@@ -142,7 +157,7 @@ class FSBO:
         # Running the outer loop a 100 times as this is not specified exactly in the paper.
         # Finding y_min and y_max for creating a scale invariant model
         y_min, y_max = get_min_max(meta_data)
-        epochs = 2000
+        epochs = 5000
 
         meta_data = convert_meta_data_to_np_dictionary(meta_data)
         meta_val_data = convert_meta_data_to_np_dictionary(meta_val_data)
@@ -170,8 +185,8 @@ class FSBO:
             else:
                 div_count = 0
             if div_count > 10:  # Maybe 30? probably not a good idea
-                break
-                # no_breaking = True
+                # break
+                no_breaking = True
 
             loss_list += [loss]
             val_loss_list += [val_loss]
@@ -183,6 +198,7 @@ class FSBO:
                   "Validation Loss"
                   ]
         plt.legend(legend)
+        plt.title("SSID: " + self.ssid + "; Input dim: " + str(self.input_dim))
         plt.savefig(self.params.checkpoint_dir + "_loss.png")
 
         return loss_list, val_loss_list
@@ -191,12 +207,12 @@ class FSBO:
     # a little bit more specific to this.
     def finetune(self, X, y):
         self.dkt.load_checkpoint(self.params.checkpoint_dir)
-        epochs = 100  # ....
+        epochs = 5000  # ....
 
         scheduler_fn = lambda x, y: torch.optim.lr_scheduler.CosineAnnealingLR(x, y, eta_min=1e-4)
         # 500 with 0.1 giving best results
-        optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.03},
-                                      {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.03}])
+        optimizer = torch.optim.Adam([{'params': self.dkt.model.parameters(), 'lr': 0.001},
+                                      {'params': self.dkt.feature_extractor.parameters(), 'lr': 0.001}])
         scheduler = scheduler_fn(optimizer, epochs)
 
         loss_list = []
@@ -208,29 +224,33 @@ class FSBO:
             scheduler.step()
 
         plt.figure(np.random.randint(999999999))
-        plt.plot(np.array(loss_list[-40:], dtype=np.float32))
-        legend = ["Fine tune Loss (last 40)"]
+        plt.plot(np.array(loss_list, dtype=np.float32))
+        legend = ["Fine tune Loss"]
         plt.legend(legend)
+        plt.title("SSID: " + self.ssid + "; Input dim: " + str(self.input_dim))
         plt.savefig(self.params.checkpoint_dir + "_fine_tune_loss.png")
         plt.close()
 
         return loss_list
 
     def get_params(self, ssid):
-        params = parse_args_regression('train_regression')
+        # params = parse_args_regression('train_regression')
         # optional seeding property
         # np.random.seed(params.seed)
         # torch.manual_seed(params.seed)
         # torch.backends.cudnn.deterministic = True
         # torch.backends.cudnn.benchmark = False
 
+        params = namedtuple("params", "checkpoint_dir")
+
         # Creating folder and filename to store the trained model.
-        save_dir = './save/'
-        params.checkpoint_dir = '%scheckpoints/%s/' % (save_dir, params.dataset)
+        save_dir = './FSBO_save/'
+        fsbo_config = "all_HPOB_32x4_matern_multistep_epoch"
+        params.checkpoint_dir = '%scheckpoints/%s/' % (save_dir, fsbo_config)
         if not os.path.isdir(params.checkpoint_dir):
             os.makedirs(params.checkpoint_dir)
         params.checkpoint_dir = '%scheckpoints/%s/%s_%s_%s' % (
-            save_dir, params.dataset, params.method, params.model, ssid)
+            save_dir, fsbo_config, "DKT", "DNN", ssid)
 
         return params
 
@@ -265,28 +285,109 @@ class FSBO:
         idx = np.argmax(scores)
         return idx
 
+# created as a stub for parallel evaluations.
+def evaluation_worker(hpob_hdlr, method, args):
+    search_space, dataset, seed, n_trials = args
+    print(search_space, dataset, seed, n_trials)
+    res = []
+    try:
+        t_start = time.time()
+        res = hpob_hdlr.evaluate(method,
+                                  search_space_id=search_space,
+                                  dataset_id=dataset,
+                                  seed=seed,
+                                  n_trials=n_trials)
+        t_end = time.time()
+        print(search_space, dataset, seed, n_trials, "Completed in", t_end - t_start, "s")
+    # This exception needs to be ignored due to issues with GP fitting the HPO-B data
+    except gpytorch.utils.errors.NotPSDError:
+        print("Ignoring the error and not recording this as a valid evaluation combination")
+        res = []
+    return (search_space, dataset, seed, n_trials), res
+
+def get_all_combinations(hpob_hdlr, n_trials):
+    # A total of 430 combinations are present in this if all seeds are used.
+    seed_list = ["test0", "test1", "test2", "test3", "test4"]
+    evaluation_list = []
+    for search_space in hpob_hdlr.get_search_spaces():
+        for dataset in hpob_hdlr.get_datasets(search_space):
+            for seed in seed_list: # ["test2"]:  # seed_list: # use this for running on all possible seeds
+                evaluation_list += [(search_space, dataset, seed, n_trials)]
+
+    return evaluation_list
+
+def evaluate_combinations(hpob_hdlr, method, keys_to_evaluate):
+
+    print("Evaluating for", method)
+
+    evaluation_list = []
+    for key in keys_to_evaluate:
+        search_space, dataset, seed, n_trials = key
+        evaluation_list += [(search_space, dataset, seed, n_trials)]
+
+    performance = []
+    run_i = 0
+    for eval_instance in evaluation_list:
+        result = evaluation_worker(hpob_hdlr, method, eval_instance)
+        performance.append(result)
+        run_i = run_i + 1
+        print("Completed Running", run_i, end="\n")
+        gc.collect()
+
+    return performance
+
+
+def evaluate_FSBO(hpob_hdlr, keys_to_evaluate):
+    performance = []
+    for key in keys_to_evaluate:
+        search_space_id, dataset, _, _ = key
+        input_dim = hpob_hdlr.get_input_dim(search_space_id, dataset)
+        method_fsbo = FSBO(search_space_id, input_dim=input_dim,
+             latent_dim=10, batch_size=70, num_batches=50)
+        #method_fsbo = FSBO(search_space_id, input_dim=input_dim,
+        #                  latent_dim=32, batch_size=100, num_batches=1000)
+        res = evaluate_combinations(hpob_hdlr, method_fsbo, keys_to_evaluate=[key])
+        performance += res
+    return performance
+
+def evaluate(i, run):
+    print("Evaluate test set (testing meta dataset)")
+    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
+    dkt_keys = get_all_combinations(hpob_hdlr, 100)[i:i+1]
+    dkt_performance = evaluate_FSBO(hpob_hdlr, keys_to_evaluate=dkt_keys)
+    store_object(dkt_performance, "./FSBO_save/" + str(run) + "dkt_evaluation_32x4_100_03_cosAnn_" + str(i))
+
 if __name__ == '__main__':
     # mp.freeze_support()
-    # Pretrain hpob with a single search space (hardcoded for now)
-    search_space_id = '4796'
+    i = int(sys.argv[1])
+    run = int(sys.argv[2])
+    mode = sys.argv[3]  # train/evaluate
 
-    # Pretrain DKT
-    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
-    meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
-    fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_train_data),
-                latent_dim=10, batch_size=70, num_batches=50)
-    fsbo.train(meta_train_data)
+    if mode == "train":
+        # Pretrain DKT
+        hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3")
+        search_space_id = hpob_hdlr.get_search_spaces()[i]
+        print("Training FSBO for " + search_space_id)
+        meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
+        meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
+        fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_train_data),
+                    latent_dim=10, batch_size=70, num_batches=50)
+        fsbo.train(meta_train_data, meta_val_data)
 
-    # Running the Fine tuning loop...
-    hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
-    meta_test_data = hpob_hdlr.meta_test_data[search_space_id]
-    fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_test_data),
-                latent_dim=10, batch_size=70, num_batches=50)
-    for d_id in meta_test_data:
-        X = meta_test_data[d_id]["X"]
-        y = meta_test_data[d_id]["y"]
-        X = np.array(X, dtype=np.float32)
-        y = np.array(y, dtype=np.float32)
-        X = torch.from_numpy(X)
-        y = torch.from_numpy(y).flatten()
-        fsbo.finetune(X, y)
+    if mode == "evaluate":
+        evaluate(i, run)
+"""
+        # Running the Fine tuning loop...
+        hpob_hdlr = HPOBHandler(root_dir="HPO_B/hpob-data/", mode="v3-test")
+        meta_test_data = hpob_hdlr.meta_test_data[search_space_id]
+        fsbo = FSBO(search_space_id, input_dim=get_input_dim(meta_test_data),
+                    latent_dim=10, batch_size=70, num_batches=50)
+        for d_id in meta_test_data:
+            X = meta_test_data[d_id]["X"]
+            y = meta_test_data[d_id]["y"]
+            X = np.array(X, dtype=np.float32)
+            y = np.array(y, dtype=np.float32)
+            X = torch.from_numpy(X)
+            y = torch.from_numpy(y).flatten()
+            fsbo.finetune(X, y)
+"""
