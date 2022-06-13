@@ -1598,9 +1598,9 @@ We used $k=2$ and $\alpha=0.01$ for our scorer.
 \subsection{Uncertainty implementation}\label{sec:UncertaintyImplementation}
 
 We know from Section~\ref{sec:hpoConstraints} that the evaluation of the target objective function in HPO is noisy.
-Hence it is important for any surrogate that models this objective function to have the capability of estimating uncertainty.
+Hence it is essential for any surrogate that models this objective function to have the capability of estimating uncertainty.
 The basic model proposed till now has no such capability.
-In this section we incorporate uncertainty into the basic scoring model.
+In this section, we incorporate uncertainty into the basic scoring model.
 
 \begin{figure}[htb]
 \centering
@@ -1617,9 +1617,9 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \node[roundnodey]        (y1)                             [right=of DNN1] {$\textbf{y}_1$};
 \node[roundnodey]        (y2)                             [right=of DNN2] {$\textbf{y}_2$};
 \node[roundnodey]        (y3)                             [right=of DNN3] {$\textbf{y}_3$};
-\node[squarednode]      (mean)                             [right=of y2] {$\mu$, $\sigma^2$};
-\node[roundnodey]        (mus)                             [right=of mean] {$\mu_s$};
-\node[roundnodey]        (sigmas)                             [below=of mus] {$\sigma^2_s$};
+\node[squarednode]      (mean)                             [right=of y2] {$Rank$};
+\node[roundnodey]        (mus)                             [right=of mean] {$\mu_r$};
+\node[roundnodey]        (sigmas)                             [below=of mus] {$\sigma^2_r$};
 
 %Lines
 \draw[->] (X.east) -- (DNN1.west);
@@ -1641,20 +1641,28 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 
 Figure~\ref{fig:proposeModelUncertainty} shows the architecture of the model with uncertainty.
 We add multiple basic scorers (and hence DNNs) to our model.
-As discussed in Section~\ref{sec:uncertaintyDeepEnsembles},  we use multiple neural networks to calculate the mean and the variance instead of using a single neural network to do so.
-The mean and the variance is calculated assuming that the distribution of the possible relevance scores is a Gaussian distribution.
+In the uncertainty estimation discussed in Section~\ref{sec:uncertaintyDeepEnsembles}, the mean and variance of the DDN's output score are directly calculated.
+The uncertainty estimation in our case is a little different.
+As we are primarily interested in ranking the HP configurations, individual scores and their distributions have less meaning for us.
 
-The ranking loss function requires a definite value of the predicted output $y$.
-For this reason we can employ 2 training strategies:
+Hence instead, we first calculate the rank of each HP configuration in the batch as per the scorers' output.
+Using these ranks, we calculate the mean rank $\mu_r$ and variance in the rank $\sigma^2_r$.
+Any acquisition function that uses a ranking model needs to use this "ranking distribution" instead of the scoring distribution.
+
+To train this ensemble, we can employ two strategies:
 \begin{itemize}
 \item Train each network separately.
-\item Use the mean $\mu_s$ of the entire network in the loss function.
+\item Use the mean score of the entire architecture to train together.
 \end{itemize}
 A combined training method may make the training more efficient.
-However,  each network's output may affect the the training of all other networks. 
-This may reduce the variance in the ensemble which is a disadvantage.
+However,  each network's output may affect the training of all other networks.
+Moreover, it is absolutely no issue if the outputs of separate DNNs are in different ranges. What matters is the relative rank within a batch.
+It is theoretically unnecessary to train the networks together.
+The combined training also reduces the variance in the ensemble, which is a disadvantage.
 Therefore we train each network separately.
-After adding Deep Sets we train all of them together due to the architectural requirement.
+\iffalse
+After adding Deep Sets, we train all of them together due to the architectural requirement.
+\fi
 
 \iffalse
 Hence for example if we are using ListMLE,  our loss function would be given by
@@ -1663,11 +1671,22 @@ L_{mle} = -  \sum\limits_{j=1}^{k} \log \frac{\exp(\mu(\pi^*_j))}{ \sum\limits_{
 \end{equation}
 \fi
 
+
+Throughout our study, we will use an elementary acquisition function for ranking loss surrogates. This acquisition function selects the HP configuration with the best average rank.
+The reason for this decision is because of the non-trivial properties of the ranking space.
+Note that the acquisition function needs to work in the ranking space rather than the scorers' output space.
+The ranking of an object is relative to the input data. This property makes the ranking of HP configurations fluid.
+Hence the expected rank of an HP configuration is not defined in absolute terms. It is conditioned on the other HP configurations used in the ranking process.
+Due to these intricacies of the ranking space, we believe a detailed study of the acquisition function in the ranking space is necessary. Such a study is out of scope for this thesis. Therefore, We leave the study of sophisticated acquisition functions in the ranking space for future research.
+
+
+\iffalse
 One problem that may come up during the training of these DNNs together is that the ranges of the DNNs may be different.
 This is taken care by the fact that we use a range controller in our scoring function as shown in Figure~\ref{fig:basicScoringModel}.
 Hence, the ranges of all the DNNs are the same. 
 The variance within the ensemble is still present due to the random initialization of the neural networks.
 By using the range controlling mechanism we both make the model numerically stable and make the training more efficient.
+\fi
 
 \subsection{ListMLE Implementation}
 
