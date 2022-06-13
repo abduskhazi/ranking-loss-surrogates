@@ -2505,6 +2505,100 @@ Even though the difference in the average regret is not significant in the 4 cas
     \label{fig:Q2Ablation}
 \end{figure}
 
+
+\subsection{Study of Surrogate Design: Addition of Deep Sets}
+
+We found in our research that our model could be improved by making it context-aware. We used an architecture with deep sets described in Section~\ref{sec:DeepSetWithModel}. As previously discussed, the latent result of the deep-set is used as a context for the scoring model. To meta-train this architecture,  we needed to change the training and sampling mechanisms.
+
+For sampling, we used a support set of data points, i.e., \{$X_s$, $y_s$\} that is 20\% of the actual batch size. The concept of double sampling is also used in this case. For each double sampling, we sample first the task.
+Then the support points are sampled without replacement from this task.
+Subsequently, we sample the query points $X_q$ based on the batch size and list size (By default, 100 for both).
+During meta tuning, we must also have a support and query set for training.
+We again use 20\% of the points as support points and the rest as query points during the fine-tuning process.
+
+One major issue when training with deep sets is that we cannot train the neural networks separately.
+It is because of the common backbone in ensemble architecture.
+In order to keep the training as separate as possible, we initialize the neural networks separately. After that, we calculate the loss of each neural network separately with the same batch data. Then we aggregate the losses and back-propagate the aggregated loss through the whole architecture. Note that we do not aggregate the scores of the neural networks but the ranking losses obtained from each scoring neural network.
+
+Figure~\ref{fig:Q3Ablation} shows the results of this study. In the non-transfer case,  the model becomes terrible. The primary reason for this is that the complexity of the architecture is very high, and it needs a considerable amount of data to train. This data is absent during the HPO optimization cycle. However,  in the case of transfer learning,  we see an enormous improvement when we use deep sets. It makes intuitive sense because each task is different from the other. The embedding of this information, or rather the difference in information, helps the model distinguish the tasks and pre-condition the learning process. 
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.25]{images/Q3Ablation}
+    \caption{Studying how the addition of context (Deep Sets) affects our model}
+    \label{fig:Q3Ablation}
+\end{figure}
+
+We compare the best results obtained so far with the sentinel performances of GP,  FSBO,  and Random search. Figure~\ref{fig:Q3AblationFinal} illustrates this.  Two interesting observations can be made from our results. First,  our model performs significantly well in the first evaluation steps, and the performance later deteriorates w.r.t to state-of-the-art results. Hence,  this model can be used in any transfer HPO case with limited evaluation steps due to the computation budget. Secondly,   the average regret is also significantly better in the initial phase. Hence, we can unequivocally state that our proposed model is a good candidate to consider in any transfer HPO problem. 
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.25]{images/Q3AblationFinal}
+    \caption{Best model with sentinal HPO performance}
+    \label{fig:Q3AblationFinal}
+\end{figure}
+
+We also present in Figure~\ref{fig:Q3AblationFinalRank100} the critical rank graphs for reference.
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/Q3AblationFinalRank@25}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/Q3AblationFinalRank@50}
+\end{minipage}\par
+\vskip\floatsep% normal separation between figures
+\includegraphics[width=0.45\textwidth]{images/Q3AblationFinalRank@100}
+    \caption{Critical rank graph of the list wise weighted transfer learning with deep sets with sentinel performances}
+   \label{fig:Q3AblationFinalRank100}
+\end{figure}
+
+
+\iffalse
+
+This is because less relearning happens in fine-tuning due to the addition of context to our model.
+
+During the training however,  we found that the loss curves were very jumpy.
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/DeepSetLoss4796}
+\caption{Loss curve for model with deep set (SSID: 4796)}
+    \label{fig:DeepSetLoss4796}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/DeepSetLoss5527}
+\caption{Loss curve for model with deep set (SSID: 5527)}
+    \label{fig:DeepSetLoss5527}
+\end{minipage}
+\end{figure}
+
+Figure~\ref{fig:DeepSetLoss4796} and Figure~\ref{fig:DeepSetLoss5527} shows this clearly.
+We think that this is because of very high representation capacity which is a consequence of using the deep set architecture.
+
+The results of this training and fine tuning our model with deep sets are shown in Figure~\ref{fig:RLDeepSetevaluation}.
+In the figure "raw" means that there was no fine tuning performed and the trained model was used as is in the the evaluation/optimization cycle.
+One advantage we see with this model is that whether fine tuning is done or not,  the first few evaluations are better than the state of the art results.
+This can be seen in the Rank@5 graph critical graph given in Figure~\ref{fig:DeepSetRank5}.
+In the later evaluation steps, naturally,  using fine tuning makes gives better performance.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.35]{images/DeepSetRank5}
+    \caption{Critical rank graph for Model with Deep Set.}
+    \label{fig:DeepSetRank5}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/RLDeepSetevaluation}
+    \caption{Benchmarking for the Deep set evaluation data}
+    \label{fig:RLDeepSetevaluation}
+\end{figure}
+\fi
+
 \iffalse
 The fine tuned results is better than all the baselines except FSBO.
 In fact,  it is better than FSBO in the first few evaluation steps.
@@ -2579,61 +2673,6 @@ This is the reason why the fine tuning scorer works better in the long run as co
     \includegraphics[scale=0.35]{images/RLEvaluationBasicScoringRank5}
     \caption{Critical rank graph at evaluation step 5}
     \label{fig:RLEvaluationBasicScoringRank5}
-\end{figure}
-
-\subsubsection{Deep Sets: Context aware scoring model}
-
-We found in our research that our model could be improved by making it context aware.
-For doing this we used an architecture with deep sets described Section~\ref{sec:DeepSetWithModel}.
-As previously discussed the latent result of the deep set can be used as a context for the scoring model.
-In order to meta-train this architecture,  we needed to change the way we sample the data.
-We used a support set of 20 data points i.e \{$X_s$, $y_s$\} pairs.
-For each double sampling we sample first the task.
-Then the support points are sampled without replacement.
-Then we sample the query points $X_q$ based on the batch size and list size (By default 100 for both).
-
-During the training however,  we found that the loss curves were very jumpy.
-
-\begin{figure}[h]% [H] is so declass\'e!
-\centering
-\begin{minipage}{0.45\textwidth}
-\includegraphics[width=\textwidth]{images/DeepSetLoss4796}
-\caption{Loss curve for model with deep set (SSID: 4796)}
-    \label{fig:DeepSetLoss4796}
-\end{minipage}\hfill
-\begin{minipage}{0.45\textwidth}
-\includegraphics[width=\textwidth]{images/DeepSetLoss5527}
-\caption{Loss curve for model with deep set (SSID: 5527)}
-    \label{fig:DeepSetLoss5527}
-\end{minipage}
-\end{figure}
-
-Figure~\ref{fig:DeepSetLoss4796} and Figure~\ref{fig:DeepSetLoss5527} shows this clearly.
-We think that this is because of very high representation capacity which is a consequence of using the deep set architecture.
-
-During meta tuning again we have to have a support set and query set for training.
-We cannot fix the support data points because the evaluation data is very less.
-For this reason,  we use 20\% of the points as support points and the rest as query points during the fine tuning process.
-
-The results of this training and fine tuning our model with deep sets are shown in Figure~\ref{fig:RLDeepSetevaluation}.
-In the figure "raw" means that there was no fine tuning performed and the trained model was used as is in the the evaluation/optimization cycle.
-One advantage we see with this model is that whether fine tuning is done or not,  the first few evaluations are better than the state of the art results.
-This can be seen in the Rank@5 graph critical graph given in Figure~\ref{fig:DeepSetRank5}.
-This is because there is less relearning that happens in fine tuning due to addition of context to our model.
-In the later evaluation steps, naturally,  using fine tuning makes gives better performance.
-
-\begin{figure}[h]
-  \centering
-    \includegraphics[scale=0.35]{images/DeepSetRank5}
-    \caption{Critical rank graph for Model with Deep Set.}
-    \label{fig:DeepSetRank5}
-\end{figure}
-
-\begin{figure}[h]
-  \centering
-    \includegraphics[scale=0.20]{images/RLDeepSetevaluation}
-    \caption{Benchmarking for the Deep set evaluation data}
-    \label{fig:RLDeepSetevaluation}
 \end{figure}
 
 
