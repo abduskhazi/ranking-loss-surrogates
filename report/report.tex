@@ -2380,13 +2380,22 @@ Finally, we also do restarts for the FSBO domain with the restart mechanism disc
     \label{fig:FSBOPerformance}
 \end{figure}
 
-We can see in Figure~\ref{fig:FSBOPerformance},  our implementation could not give us the state of the art results.
-Hence we used the FSBO results stored in the HPO-B benchmark instead for the comparison with the rest of the baselines.
+Figure~\ref{fig:FSBOPerformance} shows the rank graph of FSBO compared to the best performing models of random search, GP and DE surrogates.
+There is a slight difference in ranking graphs of previous surrogates because a few HPO optimizations were unsuccessful for the FSBO due to non-positive definite Matrix exceptions obtained during meta-training and fine-tuning (The GPytorch implementation threw this).
+As we can see,  our implementation could not give us state-of-the-art results for FSBO.
+Since these results are a correct yardstick to measure the ranking loss surrogate model, we used the results obtained by the FSBO implementation provided by Pineda et al. ~\cite{pineda2021hpob} in the rest of the thesis.
+
+
+Figure~\ref{fig:FSBOBestPerformance} compares the best performing FSBO surrogate against the performance of other baseline surrogates.
+As one can see from this figure, FSBO is an HPO model that outperforms the other HPO models both in the rank graph and the regret graph.
+Moreover,  FSBO always has a better rank at every evaluation step.
+This can be seen in the critical rank graphs illustrated in Figure~\ref{fig:FSBOBestPerformanceRank100}.
+Using these baseline results as a reference, we discuss how the ranking loss surrogate model compares to these methods in detail in the following sections.
 
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/FSBOBestPerformance}
-    \caption{Graphs showing best performance of FSBO}
+    \caption{Rank and regret graph of best performing of FSBO.}
     \label{fig:FSBOBestPerformance}
 \end{figure}
 
@@ -2401,16 +2410,9 @@ Hence we used the FSBO results stored in the HPO-B benchmark instead for the com
 \end{minipage}\par
 \vskip\floatsep% normal separation between figures
 \includegraphics[width=0.45\textwidth]{images/FSBOBestPerformanceRank100}
-    \caption{Ranking of all baselines at various evaluation steps}
+    \caption{Critical rank graphs of baselines at different evaluation steps.}
    \label{fig:FSBOBestPerformanceRank100}
 \end{figure}
-
-From Figure~\ref{fig:FSBOBestPerformance} it is evident that FSBO as a model vastly outperforms the other models both in the rank graph and the regret graph.
-Moreover,  FSBO is always in a better rank at every evaluation step.
-This can be seen in Figure~\ref{fig:FSBOBestPerformanceRank100}.
-We use the DE with 10 neural network ensemble because it was giving best results for DE.
-With the performance of the baselines set,  we now move to discuss in detail how our model compares to these methods.
-
 
 \section{Ranking Loss model results: Research question results}
 
