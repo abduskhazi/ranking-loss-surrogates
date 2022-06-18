@@ -2196,7 +2196,7 @@ Also known as Hypothesis.
 \chapter{Experiments and Results}
 
 In this chapter, we present the experiments we conducted and the results we obtained to some of the research questions that arose during the thesis.
-We first understand the structure of the (meta)data used for meta-training,  meta-validation,  and meta-testing.
+We first understand the structure of the metadata used for meta-training,  meta-validation,  and meta-testing.
 In the subsequent sections, we present the results obtained in detail.
 
 \subsubsection{Meta-Data}
@@ -2249,18 +2249,15 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \label{fig:metadataorganization}
 \end{figure}
 
-The metadata consists of a list of (hyper-parameter) search spaces.
-These are hyper-parameter search spaces of single ML models.
-In Figure~\ref{fig:metadataorganization}, \textbf{X} represents the set of HP configurations evaluated for a model for data set and
-\textbf{y} represents their respective evaluation results.
-The Bayesian optimization used in our thesis is started with different initial known HP configurations.
-One initial configuration called a seed in the metadata is provided by a set of values (or indices) in $\textbf{X}$ and $\textbf{y}$.
-A total of 5 seeds are provided for a search space and dataset combination.
+As shown in Figure~\ref{fig:metadataorganization}, the metadata consists of a list of HP search space ids. An HP search space id corresponds to a single ML model. Each search space further has multiple dataset ids.
+These dataset ids correspond to different training data used to train ML models. Each dataset id contains an \textbf{X}, \textbf{y} pair and 5 seeds. \textbf{X} represents a set of HP configurations and
+\textbf{y} represents their respective true evaluations. The Bayesian optimization used in our thesis starts with different initial known HP configurations. One initial configuration is called a seed. A seed gives a set of values (or indices in implementation) from the $\textbf{X}$,  $\textbf{y}$ pair.
 
-There are 2 types of HP optimization surrogates that are studied in this thesis - transfer learning surrogates
-and non-transfer learning surrogates.
-This benchmark can be used for analysing both types of models.
-However,  in order cross compare transfer and non-transfer techniques,  we only compare against \textbf{HPO-B-v3} test split as recommended in the HPO-B paper.
+We compare the results of ranking loss surrogates with transfer HPO surrogates and non-transfer HPO.
+HPO-B can be used for analyzing both types of surrogates.
+However, to cross-compare transfer and non-transfer HPO,  we only compare against \textbf{HPO-B-v3} test split as recommended by Pineda
+ et al. ~\cite{DBLP:journals/corr/abs-2106-06257}.
+
 
 \iffalse
 \subsection{HPO-B Dataset}
