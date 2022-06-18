@@ -2272,7 +2272,7 @@ To test the performance of ranking loss surrogates at different stages of develo
 We reused the Gaussian and Random surrogate implementations of HPO-B in the thesis.
 However, the Deep Ensemble and FSBO surrogates were implemented from scratch.
 
-In the given meta data if we take the set of all combinations in \textbf{HPO-B-v3} test split i.e \{Search Spaces $\times$ Metadata sets $\times$ Seeds\}, we get 403 HP optimizations.
+In the given meta data if we take the set of all combinations in \textbf{HPO-B-v3} test split i.e \{Search Spaces $\times$ Metadata sets $\times$ Seeds\}, we get 430 HP optimizations.
 We start with five initially known HP configurations given by the HPO-B seed in each optimization and run the evaluation cycle for 100 iterations.
 This evaluation cycle is discussed in Algorithm~\ref{alg:deepEnsembleFinetuning} albeit for deep ensembles.
 
@@ -2297,31 +2297,28 @@ The results of Deep Ensemble and FSBO baselines are discussed in this section.
 
 \subsubsection{Deep Ensembles}
 
-The deep ensembles we used contained 5 neural networks by default.  Each neural network contained 2 fully connected neural layers with 32 neurons each. 
-We considered the non-transfer case for deep ensembles first.
-Hence we did not do any meta training for this model.
-Each neural network was trained for a 1000 epochs with a learning rate of 0.02 at evaluation cycle.
-We used Adam as our optimizer.
+The deep ensembles we used contained five neural networks by default. Each neural network had two fully connected neural layers with 32 neurons each. We considered the non-transfer case for deep ensembles first. Hence we did not do any meta training for this model.
+We train each neural network for 1000 epochs with a learning rate of 0.02 at every evaluation step in an HPO optimization. We used Adam as our optimizer.
 
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/DEPerformance}
-    \caption{Graphs showing performance of Deep Ensembles}
+    \caption{Graphs showing performance of Deep Ensembles.}
     \label{fig:DEPerformance}
 \end{figure}
 
 Figure~\ref{fig:DEPerformance} shows the performance of various Deep Ensemble models.
-We use the best results obtained from the previous baselines for comparing how Deep ensembles fair in the HPO-B benchmark.
-In addition to plotting the rank graph,  we also plot the  average regret for every model.
-The average regret on y-axis is plotted in a log scale.
-In the graph,  DE\_M5 stands for Deep Ensembles with 5 neural networks.
-And a "rs" suffix in the legend stands for models which are restarted before every evaluation.
+We used the best results of Random and Gaussian surrogate baselines to compare how Deep ensembles fair in the HPO-B benchmark.
+In addition to plotting the rank graph,  we also plot the average regret for every model.
+In the average regret graph, the y-axis represents the regret on a log scale.
+In Figure~\ref{fig:DEPerformance},  DE\_M5 stands for Deep Ensembles with five neural networks, whereas DE\_M10 stands for Deep Ensembles with ten neural networks.
+An "rs" suffix in the legend denotes that the surrogates are reinitialized before fine-tuning at every evaluation step.
 
-In our study,  we studied the following main models of DE
+In this thesis, we studied the following main models of Deep Ensembles
 \begin{itemize}
-\item Fine tuning deep ensembles with no restart.
-\item DE using restart at every evaluation cycle.
-\item Increasing the number of neural networks in DE to 10.
+\item Deep Ensembles that fine-tune with no restarting.
+\item Deep Ensembles that fine-tune with restart at every evaluation step.
+\item Deep Ensembles with 5 and 10 neural networks.
 \end{itemize}
 
 We see that using DE as a surrogate without restarts does gives us bad results as compared to the model with the restarts.
