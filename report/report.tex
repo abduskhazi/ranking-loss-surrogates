@@ -1434,6 +1434,7 @@ Each neural network was trained for a 1000 epochs with a learning rate of 0.02.
 We do not use adversarial examples as proposed in the deep ensemble paper because it was giving bad results.
 
 \subsection{FSBO}
+\label{sec:FSBOBackground}
 Few Shot Bayesian Optimization (FSBO) is a transfer learning HPO method that utilizes a meta learnt surrogate for knowledge transfer mechanism.
 It reformulates the problem into few shot learning task.
 In the context of our problem,  this means meta learning thoroughly from the existing meta data and then adapting to the new task at evaluation cycle by fine tuning a few training epochs.
@@ -2362,18 +2363,20 @@ Hence DE will not be able to model discrete and semi-discrete HP search space tr
 
 \subsubsection{Few Shot Bayesian Optimization (FSBO)}
 
-The reason for the selection of FSBO as a baseline was that it was the state of the art in transfer HPO.
-During our implementation of FSBO,  due to the computational resources required for the optimization cycle,  we tried to use this model with only single search spaces.
-We found that using a model with 4 neural network layers with the same width of 32 as used in the Deep Ensemble is the best for the performance of the model.
-We used early stopping for doing better training as mentioned before.
-During the fine tuning we ran our model for 500 epochs with a learning rate of 0.03.
-We used Adam optimiser for both training and fine tuning.
-However,  we used cosine annealing on in the fine tuning phase.
+FSBO was selected as a baseline because it was the state-of-the-art baseline in the transfer HPO problem domain.
+During our implementation of FSBO, we found that an FSBO model with four neural network layers of 32 neurons each gave us the best performance.
+This architecture is similar to the Deep Ensemble architecture.
+The difference between the architectures is that FSBO has four network layers instead of 2.
+We used early stopping to get better training loss, as mentioned in Section~\ref{sec:FSBOBackground}.
+During the finetuning, we trained our model for 500 epochs with a learning rate of 0.03.
+We used Adam optimizer for both training and finetuning.
+The only significant difference between the training and finetuning phase was that we used cosine annealing in the finetuning phase. The reason for using cosine annealing has been discussed in Section~\ref{sec:rlfinetune}.
+Finally, we also do restarts for the FSBO domain with the restart mechanism discussed in Section~\ref{sec:FSBOBackground}.
 
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.5]{images/FSBOPerformance}
-    \caption{Rank graph of self implemented FSBO}
+    \caption{Rank graph showing performance of self implemented FSBO.}
     \label{fig:FSBOPerformance}
 \end{figure}
 
