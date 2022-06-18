@@ -2123,9 +2123,9 @@ roundnodey/.style={circle, draw=green!60, fill=black!5, very thick, minimum size
 squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
 ]
 %Nodes
-\node[roundnode]          (Xq)                                                     {$\textbf{X}_q$, $\textbf{y}_q$};
-\node[roundnode]          (Xs)                        [below=of Xq]     {$\textbf{X}_s$};
-\node[squarednode]      (DeepSet)              [right=of Xq]        {Deep Set};
+\node[roundnode]          (Xs)                                                     {$\textbf{X}_s$, $\textbf{y}_s$};
+\node[roundnode]          (Xq)                        [below=of Xs]     {$\textbf{X}_q$};
+\node[squarednode]      (DeepSet)              [right=of Xs]        {Deep Set};
 \node[squarednode]      (Concatenation)             [below=of DeepSet]        {Concatenation};
 \node[squarednode]      (DNN2)                      [right=of Concatenation]        {Basic Scorer$_2$};
 \node[squarednode]      (DNN1)                      [above=of DNN2]                    {Basic Scorer$_1$};
@@ -2133,14 +2133,14 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \node[roundnodey]        (y1)                             [right=of DNN1] {$\textbf{y}_1$};
 \node[roundnodey]        (y2)                             [right=of DNN2] {$\textbf{y}_2$};
 \node[roundnodey]        (y3)                             [right=of DNN3] {$\textbf{y}_3$};
-\node[squarednode]      (mean)                             [right=of y2] {$\mu$, $\sigma^2$};
-\node[roundnodey]        (mus)                             [right=of mean] {$\mu_s$};
-\node[roundnodey]        (sigmas)                             [below=of mus] {$\sigma^2_s$};
+\node[squarednode]      (mean)                             [right=of y2] {$Rank$};
+\node[roundnodey]        (mus)                             [right=of mean] {$\mu_r$};
+\node[roundnodey]        (sigmas)                             [below=of mus] {$\sigma^2_r$};
 
 %Lines
-\draw[->] (Xq.east) -- (DeepSet.west);
+\draw[->] (Xs.east) -- (DeepSet.west);
 \draw[->] (DeepSet.south) -- (Concatenation.north) node[midway] {Latent Output};
-\draw[->] (Xs.east) -- (Concatenation.west);
+\draw[->] (Xq.east) -- (Concatenation.west);
 \draw[->] (Concatenation.east) -- (DNN1.west);
 \draw[->] (Concatenation.east) -- (DNN2.west);
 \draw[->] (Concatenation.east) -- (DNN3.west);
@@ -2183,8 +2183,7 @@ In our data division we first select 20 ($X$, $y$) data points as a support set 
 Thereafter,  we select the query points from the remaining choices (again without replacement). The number of query points depends on the batch size (100 by default).
 During the meta training we do not sample the support and query points from all the given meta datasets.
 At each step within an epoch we select one meta data to sample these points as discussed in Section~\ref{sec:rlmetatraining}.
-The training of all the components in the model are carried out together (i.e. in the same back propagation step when using Pytorch).
-For the purpose of analysing the training accurately,  we however sample data from all the training and validation task to report the training and validation loss respectively.
+For the purpose of analysing the training progress accurately,  we however sample data from all the training and validation task to report the complete training and validation loss respectively.
 
 
 
