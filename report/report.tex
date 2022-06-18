@@ -2195,29 +2195,30 @@ Also known as Hypothesis.
 
 \chapter{Experiments and Results}
 
-In this chapter we present the experiments that we conducted and the results we obtained in order to answer the research questions already posed.
-We first understand the structure of the (meta)data used for meta-training,  meta-validation,  and meta testing.
-In the subsequent sections we present the results obtained in detail.
+In this chapter, we present the experiments we conducted and the results we obtained to some of the research questions that arose during the thesis.
+We first understand the structure of the (meta)data used for meta-training,  meta-validation,  and meta-testing.
+In the subsequent sections, we present the results obtained in detail.
 
 \subsubsection{Meta-Data}
 
-For comparing our proposed model with other HPO models we would have to run the Bayesian optimization used in our case (with our surrogate and with other surrogates) on a set of different machine learning models.
-Moreover,  the optimum within the HP search space may be different when the ML model is trained on different data sets.
-Hence, we further need to do multiple HP optimizations of a model each time using a different dataset.
-In addition to this, due to the stochastic nature of ML models as well as the surrogate models, 
-we would have to run the HPO multiple times for each dataset.
+To compare our proposed ranking loss surrogate with other HPO surrogates, we would have to run the Bayesian optimization (BO) on a set of different machine learning models.
+The BO would have to be run with the ranking loss surrogate and other surrogates.
+Moreover, the optimum within the HP search space is different when the ML model is trained on different data sets.
+In addition to this, due to the stochastic nature of ML models and the surrogate models, we would have to run the HPO multiple times for each dataset.
 
-As one can see,  this evaluation if done right from the training of the ML models is not feasible.
-To overcome this challenge,  we use the HPO-B~\cite{DBLP:journals/corr/abs-2106-06257} benchmarking in this thesis.
-Using this benchmark,  we do not need to train our ML models from scratch as the meta data contains evaluations of multiple HP configurations for different ML models and datasets.
-In the rest of the section we discuss about the organisation of the benchmarking meta data.
+As one can see,  this evaluation, if done right from the training of the ML models, is not feasible.
+To overcome this challenge, we use a meta dataset proposed by Pineda
+ et al. called HPO-B~\cite{DBLP:journals/corr/abs-2106-06257} to benchmark our results in the thesis.
+Using this benchmark, we do not need to train our ML models from scratch, as the metadata contains evaluations of multiple HP configurations for different ML models and datasets.
+In the rest of the section, we discuss the organization of the benchmarking metadata.
 
-
-HPO-B is a benchmark that can be used for doing black box HPO.
-It can be used for both transfer models and non transfer models.
-The meta data consists of a list of (hyper-parameter) search spaces.
-These are hyper parameter search spaces of single models.
-It is organised in a json format with the structure illustrated in Figure~\ref{fig:metadataorganization}.
+HPO-B is a benchmark that is used for doing black box HPO.
+Both transfer and non-transfer HPO surrogates can be studied using this benchmark.
+The meta data in HPO-B comes in 3 versions namely \textbf{HPO-B-v1},  \textbf{HPO-B-v2}, and \textbf{HPO-B-v3}.
+Of this \textbf{HPO-B-v3} contains distilled search spaces that have the most datasets. \textbf{HPO-B-v3} can be split into meta-training, meta-validation, and meta-test sets. 
+Using the meta-training dataset, one can meta-learn an HPO surrogate.
+Then the surrogate is evaluated and tested using the meta-validation and meta-test data, respectively.
+The metadata in any split (training, testing, or validation) is organized in a JSON format. Figure~\ref{fig:metadataorganization} shows an illustration of this format.
 
 \begin{figure}[htb]
 \centering
@@ -2244,22 +2245,17 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \draw[->] (ss1.east) -- (ds_.west);
 \draw[->] (ds2.east) -- (Xy.west);
 \end{tikzpicture}
-\caption{Structure of the meta data in the HPO-B benchmark}
+\caption{Structure of the metadata in the HPO-B benchmark.}
 \label{fig:metadataorganization}
 \end{figure}
-Where \textbf{X} represents the set of configurations for a evaluated for a model in a particular data set and
-\textbf{y} represents the evaluation results.
-The bayesian optimization used in our thesis can be started with different initial known HP configurations.
-One initial configuration, called a seed in the meta data, is provided by a set of values (or indices) in $\textbf{X}$ and $\textbf{y}$.
-There are a total of 5 seeds provided for a search space and dataset combination.
 
-The meta data in HPO-B comes in 3 versions namely \textbf{HPO-B-v1},  \textbf{HPO-B-v2}, and \textbf{HPO-B-v3}.
-Of this \textbf{HPO-B-v3} contains distlilled the search spaces that have the most datasets and can be split is split into train,  validation and test sets. 
-
-The meta data set in HPO-B is divided into test and train data.
-Using meta dataset,  one can learn meta learn a model using the training split.
-Then the model is evaluated in the testing split.
-This data splitting approach is used both in the baselines and proposed idea models.
+The metadata consists of a list of (hyper-parameter) search spaces.
+These are hyper-parameter search spaces of single ML models.
+In Figure~\ref{fig:metadataorganization}, \textbf{X} represents the set of HP configurations evaluated for a model for data set and
+\textbf{y} represents their respective evaluation results.
+The Bayesian optimization used in our thesis is started with different initial known HP configurations.
+One initial configuration called a seed in the metadata is provided by a set of values (or indices) in $\textbf{X}$ and $\textbf{y}$.
+A total of 5 seeds are provided for a search space and dataset combination.
 
 There are 2 types of HP optimization surrogates that are studied in this thesis - transfer learning surrogates
 and non-transfer learning surrogates.
