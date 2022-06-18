@@ -2267,29 +2267,31 @@ Due to out of scope nature of the continous case,  in our implementation we assu
 The implementation of observe\_and\_suggest functions differs based on the surrogate model used by our problem.
 \fi
 
-\section{Baseline Results}
+\subsubsection{Experimental Protocol}
+To test the performance of ranking loss surrogates at different stages of development, we used four main baseline methods - Random Search,  SMBO using a Gaussian surrogate, SMBO using Deep Ensembles, and FSBO.
+We reused the Gaussian and Random surrogate implementations of HPO-B in the thesis.
+However, the Deep Ensemble and FSBO surrogates were implemented from scratch.
 
-To test our proposed model,  we used 4 main baseline methods - Random Search,  SMBO using Gaussian surrogates,  SMBO using Deep Ensembles and FSBO.
-Library implementation of Random Search and GP surrogates were taken.
-Whereas the Deep Ensemble and FSBO papers were implemented in this thesis.
-The results of these baselines are discussed in this section.
-
-In the given meta data if we take the set of all combinations in \textbf{HPO-B-v3} test split i.e \{Search Spaces $\times$ Metadata sets $\times$ Seeds\},  we get 403 HP optimizations.
-In each optimization,  we start with 5 initial seeds given by HPO-B and run the evaluation cycle for 100 iterations.
+In the given meta data if we take the set of all combinations in \textbf{HPO-B-v3} test split i.e \{Search Spaces $\times$ Metadata sets $\times$ Seeds\}, we get 403 HP optimizations.
+We start with five initially known HP configurations given by the HPO-B seed in each optimization and run the evaluation cycle for 100 iterations.
 This evaluation cycle is discussed in Algorithm~\ref{alg:deepEnsembleFinetuning} albeit for deep ensembles.
 
-In the whole evaluation cycle,  an array of incumbent best (highest) HP evaluation based on the Metadata set is created.
-The incumbent array for every optimization cycle for a model is compared against other models to create a rank array for each model.
-For example,  if at step 23 the incumbent of model $a$ has a higher value than of model $b$,  then rank of model $a$ at step 23 is lower than model $b$ (When we consider lower rank to be better).
-The rank arrays of every optimization cycle is averaged to get the rank graph of a particular model.
-We present this \textbf{rank graph} as a primary form of comparison between the models in question.
+One optimization creates one array of incumbent best (highest) HP evaluations.
+This incumbent array for different models is compared against each other to create a rank array for each surrogate.
+For example, if at the evaluation step 23, the incumbent of surrogate $a$ has a higher value than of surrogate $b$, then the rank of model $a$ at step 23 is lower than model $b$ (if we consider lower rank to be better).
+We get a list of rank arrays for every surrogate if we do this for all optimizations.
+This rank array list is averaged to get a single averaged rank array.
+Plotting this averaged rank array gives us a rank graph of a surrogate.
+We use this \textbf{rank graph} to compare the different surrogates in this thesis.
+For example, Figure~\ref{fig:RsGpRankGraph} compares the rank graph of 2 baselines.
 
-For example Figure~\ref{fig:RsGpRankGraph} compares the rank graph of 2 baselines.
+\section{Baseline Results}
+The results of Deep Ensemble and FSBO baselines are discussed in this section.
 
 \begin{figure}[htb]
   \centering
     \includegraphics[scale=0.5]{images/RsGpRankGraph}
-    \caption{Rank Graph of RS and SMBO with GP surrogate}
+    \caption{Sample rank graphs of Random and Gaussian surrogates.}
     \label{fig:RsGpRankGraph}
 \end{figure}
 
