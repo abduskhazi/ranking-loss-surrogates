@@ -2444,14 +2444,40 @@ For example, learning rates during meta-training and fine-tuning are different.
 Similarly, each loss function may require a different learning rate to perform the best as the HP response surfaces change with the used loss function.
 Like in the best case of Deep Ensembles, we use ten neural networks in our ensemble. Each neural network has two 32-neuron layers.
 
-\subsection{Meta training}
-Training of the basic scoring model with the meta data obtained relatively smooth loss curves.
-Figure~\ref{fig:GoodLossCurve4796} shows one such loss curve obtained for the search space ID 4796 in the HPO-B meta dataset.
-However,  we did find search spaces that had bad loss curves.
-Figure~\ref{fig:NegativeLearning5860} shows example of one such loss curves.
-We can deduce in this figure that the validation task is different from the training task.
-Since the testing/evaluation task may be similar to the training task,  we did not do any early stopping of the model (during training) based on the validation losses.
+\subsection{Meta training results}
+In this section, we discuss the observations we made during the meta-training of the proposed model. The effect of finetuning on the optimization results is discussed in detail in Section~\ref{sec:EffectOfFineTuningResults}. Please note that this meta-training is required only for the transfer HPO case. For the non-transfer case, we directly do a finetuning with the evaluated HP configurations during the HP optimization.
+The two main architectures we study in this thesis are the Basic Scoring model and the Basic Scoring model with Deep Sets. 
 
+The training of the Basic Scoring Model (without Deep sets) obtained relatively smooth loss curves. This is illustrated using the loss curves of the search space with id "4796" in Figure~\ref{fig:loss4796BasicScoringModel}. The "input dim = 3" in the image title specifies that the dimensionality of this HP search space is 3. After adding deep sets to the model, the loss curves become jumpy. This is illustrated in Figure~\ref{fig:loss4796DeepSets} using the same search space. These jumpy loss curves are expected because adding deep sets increases the architecture's representation capacity (and the parameter space). A bigger parameter space results in more noisy gradients during the stochastic gradient descent. 
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/loss4796BasicScoringModel}
+\caption{Loss curves for the basic scoring model.}
+    \label{fig:loss4796BasicScoringModel}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/loss4796DeepSets}
+\caption{Loss curves for a model with deep sets.}
+    \label{fig:loss4796DeepSets}
+\end{minipage}
+\end{figure}
+
+The second thing we observed is that sometimes the validation loss gets significantly worse during the training. Figure~\ref{fig:NegativeTransferLearning} illustrates this sort of behavior. One reason for this behavior could be that the validation task is not similar to the training task.
+There is some negative knowledge transfer from the meta-training phase to the meta-validation phase. This type of learning is called Negative transfer learning and is discussed in detail in Section~\ref{sec:NegativeTransferLearning}.
+Due to the negative transfer learning issue, we could not employ an early stopping mechanism like in the case of FSBO baseline implementation for the ranking loss surrogates.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.40]{images/NegativeTransferLearning}
+    \caption{An instance of negative transfer learning.}
+    \label{fig:NegativeTransferLearning}
+\end{figure}
+
+
+
+\iffalse
 \begin{figure}[h]% [H] is so declass\'e!
 \centering
 \begin{minipage}{0.45\textwidth}
@@ -2466,11 +2492,6 @@ Since the testing/evaluation task may be similar to the training task,  we did n
 \end{minipage}
 \end{figure}
 
-With the trained basic scoring model,  the optimization runs can be done without any fine tuning.
-This is nothing but obtaining the relevance scores of the pending HP configurations using our basic scorer.
-Then evaluating the true HP objective function in the order given by their respective relevance scores.
-However,  a more robust mechanism is to fine tune the scoring model based on the known HP evaluations.
-Fine tuning for every evaluation step is restarted as discussed in Section~\ref{sec:restart}.
 
 \begin{figure}[h]
   \centering
@@ -2478,26 +2499,7 @@ Fine tuning for every evaluation step is restarted as discussed in Section~\ref{
     \caption{Benchmarking basic scoring model trained using ListMLE}
     \label{fig:RLEvaluationBasicScoring}
 \end{figure}
-
-From Figure~\ref{fig:RLEvaluationBasicScoring} one can see that the hypothesis regarding fine tune is correct.
-Fine tuning does help make the model get better results in the long run.
-One very interesting result we see is that without any fine tuning,  the basic scoring model trained with listMLE is very good in the first 5 evaluation steps.
-We this more closely in the critical graph in Figure~\ref{fig:RLEvaluationBasicScoringRank5}.
-
-The reason for this is that the scorer model learns to rank the best HP configuration found in the meta data.
-This corresponds to a person trying out the best configuration seen in his experience.
-On average this works very well hence the first configurations were good for the non fine tuned model.
-In the long run however,  there is more observed data that the model can rely on.
-This is only done when the model is fine tuned.
-This is the reason why the fine tuning scorer works better in the long run as compared to the non fine tuned model.
-
-\begin{figure}[h]
-  \centering
-    \includegraphics[scale=0.35]{images/RLEvaluationBasicScoringRank5}
-    \caption{Critical rank graph at evaluation step 5}
-    \label{fig:RLEvaluationBasicScoringRank5}
-\end{figure}
-
+\fi
 
 \subsection{Study of ranking losses}
 
@@ -2707,6 +2709,33 @@ This can be seen in Figure~\ref{fig:RLDeepSetWeightedRank25}.
 In this section, we evaluate our built model chronologically, first using the basic scorer model,  then making the model context-aware, and then adding uncertainty capability to the model.
 \fi
 
+\subsection{Study of the effect of Fine Tuning}
+\label{sec:EffectOfFineTuningResults}
+With the trained basic scoring model,  the optimization runs can be done without any fine tuning.
+This is nothing but obtaining the relevance scores of the pending HP configurations using our basic scorer.
+Then evaluating the true HP objective function in the order given by their respective relevance scores.
+However,  a more robust mechanism is to fine tune the scoring model based on the known HP evaluations.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.25]{images/RLEvaluationBasicScoring}
+    \caption{Benchmarking basic scoring model trained using ListMLE}
+    \label{fig:RLEvaluationBasicScoring}
+\end{figure}
+
+From Figure~\ref{fig:RLEvaluationBasicScoring} one can see that the hypothesis regarding fine tune is correct.
+Fine tuning does help make the model get better results in the long run.
+One very interesting result we see is that without any fine tuning,  the basic scoring model trained with listMLE is very good in the first 5 evaluation steps.
+We this more closely in the critical graph in Figure~\ref{fig:RLEvaluationBasicScoringRank5}.
+
+The reason for this is that the scorer model learns to rank the best HP configuration found in the meta data.
+This corresponds to a person trying out the best configuration seen in his experience.
+On average this works very well hence the first configurations were good for the non fine tuned model.
+In the long run however,  there is more observed data that the model can rely on.
+This is only done when the model is fine tuned.
+This is the reason why the fine tuning scorer works better in the long run as compared to the non fine tuned model.
+
+
 \subsection{Final ablation}
 
 In Figure~\ref{fig:FinalAblation} we show how each of the surrogates built in the previous sections compare against each other.
@@ -2802,6 +2831,7 @@ The search spaces that have less data need more uncertainty and vis versa.
 \end{itemize}
     
 \subsubsection{Negative transfer learning}
+\label{sec:NegativeTransferLearning}
 For some search spaces,  the validation errors of the ranking loss model did not reduce at all during its training.
 In fact the validation loss became worse.
 Figure~\ref{fig:NegativeLearning} shows an illustration of this for the search space id 5527.
@@ -2820,6 +2850,7 @@ In our case,  the ranking loss model with deep set is context aware and results 
 Hence the issues with negative transfer learning remains unsolved when using our model.
 One remedy for getting around this problem is to fine tune the model with a larger number of epochs.
 Nevertheless,  we cannot guarantee that the fine tuning will re-learn from the small amount observed data points during the optimization cycle.
+Note: Since the testing/evaluation task may be similar to the training task,  we did not do any early stopping.
 
 \iffalse
 \section{Evaluation}
