@@ -2711,29 +2711,25 @@ In this section, we evaluate our built model chronologically, first using the ba
 
 \subsection{Study of the effect of Fine Tuning}
 \label{sec:EffectOfFineTuningResults}
-With the trained basic scoring model,  the optimization runs can be done without any fine tuning.
-This is nothing but obtaining the relevance scores of the pending HP configurations using our basic scorer.
-Then evaluating the true HP objective function in the order given by their respective relevance scores.
-However,  a more robust mechanism is to fine tune the scoring model based on the known HP evaluations.
+There are two ways of using the meta-trained ranking loss surrogate model. One way is to use it directly without changing it in the optimization process. The other is to finetune it at every evaluation step of the optimization process. We have always used the latter in our ablation studies (or answers to research questions) until now.
+In this section, we will see how the performance changes when no finetuning is done during the optimization process.
+We take the best model so far to study how finetuning affects performance. Then we run the optimization process with and without finetuning and plot the ranking and regret graphs.
+
+If we do not use any finetuning, selecting the HP configurations for the evaluation process boils down to ranking the set of all unknown HP configurations. Then we select the ranked HP configurations one by one from this ranked list. Finetuning can be understood as a more sophisticated form of the optimization process in which the ranking loss surrogate tries to learn/understand the context from the known HP configurations. Figure~\ref{fig:FineTuningAblation} shows the graphs of models with and without finetuning.
 
 \begin{figure}[h]
   \centering
-    \includegraphics[scale=0.25]{images/RLEvaluationBasicScoring}
-    \caption{Benchmarking basic scoring model trained using ListMLE}
-    \label{fig:RLEvaluationBasicScoring}
+    \includegraphics[scale=0.25]{images/FineTuningAblation}
+    \caption{Studying how finetuning affects the optimization performance.}
+    \label{fig:FineTuningAblation}
 \end{figure}
 
-From Figure~\ref{fig:RLEvaluationBasicScoring} one can see that the hypothesis regarding fine tune is correct.
-Fine tuning does help make the model get better results in the long run.
-One very interesting result we see is that without any fine tuning,  the basic scoring model trained with listMLE is very good in the first 5 evaluation steps.
-We this more closely in the critical graph in Figure~\ref{fig:RLEvaluationBasicScoringRank5}.
-
-The reason for this is that the scorer model learns to rank the best HP configuration found in the meta data.
-This corresponds to a person trying out the best configuration seen in his experience.
-On average this works very well hence the first configurations were good for the non fine tuned model.
-In the long run however,  there is more observed data that the model can rely on.
-This is only done when the model is fine tuned.
-This is the reason why the fine tuning scorer works better in the long run as compared to the non fine tuned model.
+From Figure~\ref{fig:FineTuningAblation} one can see that finetuning does help make the model get better results in the long run.
+One fascinating result we see is that without any finetuning, the ranking loss surrogate shows good performance in the first evaluation steps.
+This is because the surrogate model learns the best HP configuration found in the training metadata during meta-training.
+Hence it selects these HP configurations in the first evaluation steps.
+It makes intuitive sense because this behavior is shown by experts who try out the best HP configuration seen in their experience in the first evaluations. On average, this strategy works very well; hence the first evaluations were good for the non-finetuned surrogate model.
+However, as the optimization steps proceed, the surrogate can condition its selection on more data. This conditioning is only done when the model is finetuned. Hence the finetuned surrogate works better in the long run.
 
 
 \subsection{Final ablation}
