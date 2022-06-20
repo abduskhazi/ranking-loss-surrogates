@@ -1654,19 +1654,17 @@ L_{mle} = -  \sum\limits_{j=1}^{k} \log \frac{\exp(\mu(\pi^*_j))}{ \sum\limits_{
 \end{equation}
 \fi
 
-\subsubsection{Acquisition function in the Ranking space}
-Throughout our study, we will use an elementary acquisition function for ranking loss surrogates. This acquisition function selects the HP configuration with the best average rank.
-The reason for this decision is because of the non-trivial properties of the ranking space.
+\subsection{Acquisition function in the Ranking space}
+When doing HP optimization using ranking loss surrogates, it is essential to note that the ranking of an HP configuration is relative.
+A configuration can have different ranks based on the batch in which it is located.
+The expected rank of a configuration is not defined in absolute terms. It is always conditioned on other configurations in the ranking batch.
+Due to this property, using the predicted uncertainty in the ranking space is tricky.
 
-For example incumbent of EI for rank is always one... always the best.
-Need for ranking support objects.
+Moreover, using well-defined acquisition functions like Expected Improvement (EI) is not trivial. EI requires us to maintain an incumbent evaluated value. The incumbent is the best-evaluated HP objective function's value in the output space. However, it is always 1 in the ranking space because the best possible rank in any ranking batch is always 1. Hence, if we used EI with ranking loss surrogates, it would be impossible to select the following HP configuration efficiently.
+It is also not possible to directly use the outputs of the ensemble. Each neural network in the ensemble outputs a separate score for any queried configuration, which may not be in a similar range.
 
-Note that the acquisition function needs to work in the ranking space rather than the scorers' output space.
-The ranking of an object is relative to the input data. This property makes the ranking of HP configurations fluid.
-Hence the expected rank of an HP configuration is not defined in absolute terms. It is conditioned on the other HP configurations used in the ranking process.
-Due to these intricacies of the ranking space, we believe a detailed study of the acquisition function in the ranking space is necessary. Such a study is out of scope for this thesis. Therefore, We leave the study of sophisticated acquisition functions in the ranking space for future research.
-
-One crucial point to remember in this ablation study is that the acquisition function used in the case of ranking losses is different compared to ordinary losses. The expected improvement acquisition function has no meaning for the ranking losses. Each neural network in the ensemble outputs a separate score for any queried HP configuration. The outputs may not be in the same range as the evaluation range of the HP configuration. For this reason, selecting the following best HP configuration is based on the best average rank of the HP configuration.
+Due to these intricacies, we believe a detailed study of the different acquisition functions in the ranking space is necessary. Such a study is out of scope for this thesis. Therefore, we leave this study for future research.
+Instead, throughout our thesis, we used an elementary acquisition function with ranking loss surrogates. This acquisition function selects the HP configuration with the best mean rank predicted by the ensemble of rankers.
 
 
 \iffalse
