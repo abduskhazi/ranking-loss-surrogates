@@ -1598,15 +1598,15 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 ]
 %Nodes
 \node[roundnode]          (X)                                           {$\textbf{X}$};
-\node[squarednode]      (DNN2)                      [right=of X]        {Deep Neural Network$_2$};
-\node[squarednode]      (DNN1)                      [above=of DNN2]                    {Deep Neural Network$_1$};
-\node[squarednode]      (DNN3)                      [below=of DNN2]                    {Deep Neural Network$_3$};
+\node[squarednode]      (DNN2)                      [right=of X]        {DNN$_2$};
+\node[squarednode]      (DNN1)                      [above=of DNN2]                    {DNN$_1$};
+\node[squarednode]      (DNN3)                      [below=of DNN2]                    {DNN$_3$};
 \node[roundnodey]        (y1)                             [right=of DNN1] {$\textbf{y}_1$};
 \node[roundnodey]        (y2)                             [right=of DNN2] {$\textbf{y}_2$};
 \node[roundnodey]        (y3)                             [right=of DNN3] {$\textbf{y}_3$};
-\node[squarednode]      (Rank1)                             [right=of y1] {$Rank_1$};
-\node[squarednode]      (Rank2)                             [right=of y2] {$Rank_2$};
-\node[squarednode]      (Rank3)                             [right=of y3] {$Rank_3$};
+\node[squarednode]      (Rank1)                             [right=of y1] {Rank$_1$};
+\node[squarednode]      (Rank2)                             [right=of y2] {Rank$_2$};
+\node[squarednode]      (Rank3)                             [right=of y3] {Rank$_3$};
 \node[squarednode]      (UncertaintyEstimation)                             [right=of Rank2] {Uncertainty Estimation};
 \node[roundnodey]        (mus)                             [right=of UncertaintyEstimation] {$\mu_r$};
 \node[roundnodey]        (sigmas)                             [below=of mus] {$\sigma^2_r$};
