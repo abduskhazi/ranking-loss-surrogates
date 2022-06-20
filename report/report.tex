@@ -2731,7 +2731,7 @@ Hence it selects these HP configurations in the first evaluation steps.
 It makes intuitive sense because this behavior is shown by experts who try out the best HP configuration seen in their experience in the first evaluations. On average, this strategy works very well; hence the first evaluations were good for the non-finetuned surrogate model.
 However, as the optimization steps proceed, the surrogate can condition its selection on more data. This conditioning is only done when the model is finetuned. Hence the finetuned surrogate works better in the long run.
 
-\subsection{Comparing results with SOAT models}
+\subsection{Comparing results with SOAT surrogates}
 One natural that arises after analyzing our proposed model is how it performs against the state-of-the-art HPO surrogates. We compare our results with the best-performing transfer and non-transfer HPO surrogates to answer this question.
 
 Figure~\ref{fig:NonTransferSOAT} compares the results with some prominent state-of-the-art non-transfer HPO surrogates. We see from this figure that the proposed model far outperforms these surrogates. This is natural because our model is a transfer model and has the advantage of getting meta-trained before being used in the optimization.
@@ -2768,21 +2768,14 @@ Figure~\ref{fig:TransferSOAT} however, compares the results with other state-of-
 \end{figure}
 
 \subsection{Final ablation}
-
-In Figure~\ref{fig:FinalAblation} we show how each of the surrogates built in the previous sections compare against each other.
-In this figure we see that the 2 main factors that improved our model were the use of a weighted loss and the use of uncertainty.
-One anomoly we see is that the addition of deep set itself seemed to give bad results.
-Nevertheless, we accept it to be better than just using the basic scoring model.
-Firstly because addition of the deep set improved the performance of the model in the first approximately 30 steps.
-This is crucial for a sequential process.
-Secondly,  because there is a possibility to reduce the probability of negative learning to occur because of the context encoded using  the deep sets.
-Also one can see that one standard deviation of both the basic scoring model and the deep set model are overlapping. 
-This signifies that their performance difference in the last ranks is not very huge.
+Finally, in this section, we show the ablation of all the different ranking loss surrogates that were used in the previous ablations. Figure~\ref{fig:FinalAblation} shows this ablation. In this figure, we can see that making the model a transfer model, weighting the ranking loss, and adding deep sets all significantly improved the proposed model's performance. 
+The biggest strength of the proposed model is that it is excellent in the initial 30-40 steps of the optimization process (compared to state-of-the-art HPO surrogates). This is crucial for a sequential process like SMBO because selecting a good HP configuration in a particular step affects the selection of subsequent HP configurations.
+The second strength of the model is that there is a possibility of reducing negative learning from occurring because of the context encoded using the deep sets.
 
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.20]{images/FinalAblation}
-    \caption{Ablation of all RL models}
+    \caption{Ablation of all ranking loss surrogate models.}
     \label{fig:FinalAblation}
 \end{figure}
 
