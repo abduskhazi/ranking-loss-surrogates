@@ -1578,8 +1578,16 @@ For further discussion on this please refer Appendix~\ref{chap:OutputRangeContro
 
 We know from Section~\ref{sec:hpoConstraints} that the evaluation of the target objective function in HPO is noisy.
 Hence it is essential for any surrogate that models this objective function to have the capability of estimating uncertainty.
+The uncertainty estimation becomes more critical in a sequential HPO algorithm like the SMBO.
+In the first steps of SMBO, we do not have enough data to build or finetune the surrogate.
+Using a surrogate without uncertainty in the initial steps may give wrong results with high confidence.
+This is especially not good in a sequential process because selecting subsequent HP configurations depends on the previously selected HP configurations.
+For this reason, a model with uncertainty (if estimated correctly) is superior to other models.
+
+
 We now integrate multiple basic rankers (or Deep Rankers) to build an ensemble of rankers.
 Using this ensemble, we can estimate uncertainty in the rank prediction.
+Figure~\ref{fig:proposeModelUncertainty} shows the architecture of the ensemble of basic rankers.
 
 \begin{figure}[htb]
 \centering
@@ -1624,7 +1632,7 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \label{fig:proposeModelUncertainty}
 \end{figure}
 
-Figure~\ref{fig:proposeModelUncertainty} shows the architecture of the ensemble of basic rankers.
+
 In Section~\ref{sec:uncertaintyDeepEnsembles}, uncertainty is estimated by calculating the mean and the variance of the DDN's output scores. This calculation of uncertainty is in the output space of the ensemble.
 In the case of ranking loss surrogates, uncertainty estimation is a  little different.
 As we are primarily interested in ranking the HP configurations, individual scores and their distributions have less meaning for us.
@@ -1635,17 +1643,6 @@ We first calculate the rank of each HP configuration in the batch as per the sco
 Using these ranks, we calculate the mean rank $\mu_r$ and variance in the rank $\sigma^2_r$.
 Any acquisition function that uses a ranking model needs to use this "ranking distribution" instead of the output distribution.
 
-To train this ensemble, we can employ two strategies:
-\begin{itemize}
-\item Train each network separately.
-\item Use the mean score of the entire architecture to train together.
-\end{itemize}
-A combined training method may make the training more efficient.
-However,  each network's output may affect the training of all other networks.
-Moreover, it is absolutely no issue if the outputs of separate DNNs are in different ranges. What matters is the relative rank within a batch.
-It is theoretically unnecessary to train the networks together.
-The combined training also reduces the variance in the ensemble, which is a disadvantage.
-Therefore we train each network separately.
 \iffalse
 After adding Deep Sets, we train all of them together due to the architectural requirement.
 \fi
@@ -1670,16 +1667,6 @@ Hence the expected rank of an HP configuration is not defined in absolute terms.
 Due to these intricacies of the ranking space, we believe a detailed study of the acquisition function in the ranking space is necessary. Such a study is out of scope for this thesis. Therefore, We leave the study of sophisticated acquisition functions in the ranking space for future research.
 
 One crucial point to remember in this ablation study is that the acquisition function used in the case of ranking losses is different compared to ordinary losses. The expected improvement acquisition function has no meaning for the ranking losses. Each neural network in the ensemble outputs a separate score for any queried HP configuration. The outputs may not be in the same range as the evaluation range of the HP configuration. For this reason, selecting the following best HP configuration is based on the best average rank of the HP configuration.
-
-\subsubsection{Uncertainty}
-In the first steps of the optimization cycle,  using uncertainty is very important.  This is because we do not have enough data to build or fine tune our surrogate model.
-Using a surrogate without uncertainty in the first steps may lead to an overconfident model that gives bad results.
-This especially not good because the evaluation cycle is a sequential process.
-The selection of the next point depends on the surrogate which has been fine-tuned with previously explored points.
-This is what makes the model with uncertainty (if estimated correctly) superior to other models.
-
-One thing interesting is that the average regret of the best model we propose is not very good as compared to even the Deep Ensemble baseline.
-Since the average regret gives a biased estimation of the results and the rank graph is a more accurate picture of the results,  we conclude here that the proposed ranking loss surrogate model is better than the Deep Ensemble baseline.
 
 
 \iffalse
@@ -1932,6 +1919,18 @@ This leads to different HP response surfaces in the same search space.
 Hence,  we obtain different meta data when the same model is optimized on different datasets (or tasks).
 The goal of training our model is to use different meta-data sets (or tasks) from a single search space to train our model.
 The idea is to learn all the common characteristics of the tasks and transfer this knowledge to the new task.
+
+To train this ensemble, we can employ two strategies:
+\begin{itemize}
+\item Train each network separately.
+\item Use the mean score of the entire architecture to train together.
+\end{itemize}
+A combined training method may make the training more efficient.
+However,  each network's output may affect the training of all other networks.
+Moreover, it is absolutely no issue if the outputs of separate DNNs are in different ranges. What matters is the relative rank within a batch.
+It is theoretically unnecessary to train the networks together.
+The combined training also reduces the variance in the ensemble, which is a disadvantage.
+Therefore we train each network separately.
 
 We use stochastic gradient descent to train our model.
 For this we need to sample a batch of data from the given meta data.
@@ -2717,9 +2716,12 @@ It makes intuitive sense because this behavior is shown by experts who try out t
 However, as the optimization steps proceed, the surrogate can condition its selection on more data. This conditioning is only done when the model is finetuned. Hence the finetuned surrogate works better in the long run.
 
 \subsection{Comparing results with SOAT surrogates}
-One natural that arises after analyzing our proposed model is how it performs against the state-of-the-art HPO surrogates. We compare our results with the best-performing transfer and non-transfer HPO surrogates to answer this question.
+After analyzing our proposed model, one natural question is how it performs against the state-of-the-art HPO surrogates. We compare our results with the best-performing transfer and non-transfer HPO surrogates to answer this question.
 
 Figure~\ref{fig:NonTransferSOAT} compares the results with some prominent state-of-the-art non-transfer HPO surrogates. We see from this figure that the proposed model far outperforms these surrogates. This is natural because our model is a transfer model and has the advantage of getting meta-trained before being used in the optimization.
+
+Interestingly, the average regret of the proposed model at the end of optimizations is not very good compared to non-transfer surrogates.
+Since the average regret gives a biased estimation of the results and the rank graph is a more accurate picture,  we conclude here that the proposed ranking loss surrogate model is better than the non-transfer surrogates.
 
 \begin{figure}[h]
   \centering
