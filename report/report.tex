@@ -1521,11 +1521,15 @@ We use SMBO as a reference HPO algorithm for our study.
 
 
 
-\section{Basic scoring model : Deep Neural Network}
+\section{Deep Ranker}
 \label{sec:BasicScoringModelDNN}
-In order to discuss the implementation details of ranking loss functions,  we need to first have a reference scoring model.
-Since we also want representational capacity to be high a fully connected neural network is used as a scorer to begin with.
-This is depicted in Figure~\ref{fig:basicScoringModel}.
+
+In order to discuss the implementation details of ranking loss functions,  we need to understand how a basic ranker works.
+A basic ranker consists of a Deep Neural Network that outputs real-valued numbers $\textbf{y}$ for a batch of inputs, say $\textbf{X}$.
+These scores are used to rank the batch of inputs, with the highest score getting the lowest rank.
+Our thesis assumes that a lower rank is better than a higher one.
+Figure~\ref{fig:basicScoringModel} depicts the architecture of a basic ranker.
+
 \begin{figure}[htb]
 \centering
 \begin{tikzpicture}[scale=0.75, transform shape,
@@ -1534,64 +1538,40 @@ roundnodey/.style={circle, draw=green!60, fill=black!5, very thick, minimum size
 squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
 ]
 %Nodes
-\node[roundnode]      (X)                             {$X$};
+\node[roundnode]      (X)                             {$\textbf{X}$};
 \node[squarednode]      (FC1)                      [right=of X]        {$FC_1$};
 \node[squarednode]      (FCmiddle)             [right=of FC1]        {...};
 \node[squarednode]      (FCn)                      [right=of FCmiddle]        {$FC_n$};
-\node[squarednode]      (RangeController)                      [right=of FCn]        {Range Controller};
-\node[roundnodey]      (y)                             [right=of RangeController] {$y$};
+\node[roundnodey]      (y)                             [right=of FCn] {$\textbf{y}$};
+\node[squarednode]      (Rank)                      [right=of y]        {Rank};
 
 %Lines
 \draw[->] (X.east) -- (FC1.west);
 \draw[->] (FC1.east) -- (FCmiddle.west);
 \draw[->] (FCmiddle.east) -- (FCn.west);
-\draw[->] (FCn.east) -- (RangeController.west);
-\draw[->] (RangeController.east) -- (y.west);
+\draw[->] (FCn.east) -- (y.west);
+\draw[->] (y.east) -- (Rank.west);
 \end{tikzpicture}
-\caption{Basic scoring model}
+\caption{Basic ranker.}
 \label{fig:basicScoringModel}
 \end{figure}
 
-As we can see this model is almost similar to the model used in the Deep Ensemble baseline implementation (Figure~\ref{fig:undividedarchitecture}).
+This DNN architecture is very similar to the DNNs used in the Deep Ensemble baseline implementation (Figure~\ref{fig:undividedarchitecture}).
 The difference between the 2 is that Figure~\ref{fig:undividedarchitecture} had 2 outputs whereas Figure~\ref{fig:basicScoringModel} has one output.
-In addition to this there is a very crucial "Range Controller" component added to our scoring model.
+In addition, there is one extra but crucial step of ranking the batch of inputs in the basic ranker.
 
-Lets say \{\textbf{X}, \textbf{y}\} be the training data used for training a generic machine learning model $m$.
-Most of the loss functions utilize the values present in \textbf{y} as a reference to train the model.
-After the training completes,  the range of the model $m$ is not vastly different from the the range of the observed ouputs \textbf{y}.
-This is not guaranteed when we use ranking loss functions.
-The only thing that matters for ranking loss functions is - if the input objects are sorted according to their the ground truth relevant scores they should always yield the same sorting order.
-Hence the scoring function $s$ learnt using our ranking loss function can have an arbitrary range.
-The only exception to this is the point loss function subset regression.
+Let  \{\textbf{X}, \textbf{y}\} be the training data used for training a generic machine learning model.
+Most loss functions utilize the values present in \textbf{y} as a reference for training the ML model.
+After the training completes, the range of the outputs of the learned ML model is not vastly different from the range of the actual outputs values.
+However, when we use a ranking loss function to train the ML model, we cannot guarantee this. This is because the ranking loss calculates the loss in the ranking space instead of the output space.
+The only thing that matters for ranking loss functions is that the objects should be ranked in the correct order.
+Hence the output range of the basic ranker can be arbitrary.
+The only exception is a point-loss function called Subset Regression.
+This is because subset regression directly learns the rank instead of using the output value $y$ to rank the batch of inputs.
 
-Take for example the loss function $L_{mle}$.  In our models,  we use the strictly positive increasing function $\exp$ as proposed in~\cite{listmlepaper}.
-Hence our $L_{mle}$ becomes 
-\begin{equation}\label{eq:overflowissue}
-L_{mle} = -  \sum\limits_{j=1}^{k} \log \frac{\exp(s(\pi^*_j))}{ \sum\limits_{t=j}^k \exp(s(\pi^*_k))}
-\end{equation}
-Even though theoretically the range of our scoring model $s$ does not need to be restricted,  we do have practical limitations due implementation constraints of floating point numbers used in computer software.
-Due to the exponentiation in our loss function,  if the range of $s$ is too high,  the values in equation~\ref{eq:overflowissue} may overflow.
-If the range is too small,  the values may underflow.
-In any case,  we are bound to get nan (Not A Number) exceptions in our implementations.
-We would get similar issues for the pair-wise loss function because we use $\exp$ for calculating the probability as shown in equation~\ref{eq:pairwiseprobability}.
+There may be occasions where the output range of the basic ranker needs to be controlled.
+For further discussion on this please refer Appendix~\ref{chap:OutputRangeControl}.
 
-For this reason we control the range of our scorer by passing the output of the deep neural network through a $\tanh$ function.
-If we would like to strictly limit the range of our function between $[-k,  k]$,  then we can pass the output of our scorer through the following function
-\begin{equation}\label{eq:tanhEquation}
-k * \tanh(\alpha * s(\textbf{X}))
-\end{equation}
-
-Where $\alpha$ is the smoothness factor which is inversely proportional to the smoothness of the $\tanh$ graph~\cite{tanhstackoverflowanswer}.
-Figure~\ref{fig:tanhGraph} shows how the to vary the smoothness and range of the output using $\alpha$ and $k$ respectively.
-
-\begin{figure}[htb]
-  \centering
-    \includegraphics[scale=0.5]{images/tanhGraph}
-    \caption{Effect of varying $k$ and $\alpha$ in equation~\ref{eq:tanhEquation}}
-    \label{fig:tanhGraph}
-\end{figure}
-
-We used $k=2$ and $\alpha=0.01$ for our scorer.
 
 \subsection{Uncertainty implementation}\label{sec:UncertaintyImplementation}
 
@@ -3001,10 +2981,51 @@ PLACKETT-LUCE DISTRIBUTIONS -> Very important to explain the rationale about usi
 
 
 \appendix
+\pagenumbering{roman}
+\chapter{Controlling the output range}
+\label{chap:OutputRangeControl}
+
+Lets take the listwise loss function $L_{mle}$ which is nothing by maximum log-likelihood estimation. 
+In our surrogate models, we use the strictly positive increasing function $\exp$ as proposed in~\cite{listmlepaper}.
+Hence our $L_{mle}$ becomes 
+\begin{equation}\label{eq:overflowissue}
+L_{mle} = -  \sum\limits_{j=1}^{k} \log \frac{\exp(s(\pi^*_j))}{ \sum\limits_{t=j}^k \exp(s(\pi^*_k))}
+\end{equation}
+
+Even though theoretically, the range of our basic ranker model does not need to be restricted, we have practical limitations due to implementation constraints of floating-point numbers.
+Due to the exponentiation in our loss function, if the range of our basic ranker is too high,  the values in equation~\ref{eq:overflowissue} may overflow.
+On the other hand, if the range is too small, they may underflow.
+In both these cases, we are bound to get NAN (Not A Number) exceptions when executing our implementations.
+We would also get similar issues for the pair-wise loss function because we use exponentiation for calculating the probability, as shown in equation~\ref{eq:pairwiseprobability}.
+One way to eliminate this issue is to use the log-sum-exp trick. This trick is used in the ListMLE implementation given by Pobrotyn
+ et. al. ~\cite{Pobrotyn2020ContextAwareLT} and we use this implementation in our thesis.
+
+However, if the output score is used anywhere other than ranking, we would need to control its range.
+We can do this by passing the output of the deep neural network through a $\tanh$ function.
+If we would like to strictly limit the range of our function between $[-k,  k]$,  then we can pass the output of our scorer through the following function
+\begin{equation}\label{eq:tanhEquation}
+k * \tanh(\alpha * s(\textbf{X}))
+\end{equation}
+
+Here $\alpha$ is the smoothness factor which is inversely proportional to the smoothness of the $\tanh$ graph~\cite{tanhstackoverflowanswer}.
+Figure~\ref{fig:tanhGraph} shows how to vary the smoothness and range of the output using $\alpha$ and $k$ respectively.
+\iffalse
+We used $k=2$ and $\alpha=0.01$ for our scorer.
+\fi
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.5]{images/tanhGraph}
+    \caption{Effect of varying $k$ and $\alpha$ in equation~\ref{eq:tanhEquation}.}
+    \label{fig:tanhGraph}
+\end{figure}
+
+
+\iffalse
 % \chapter*{Appendices}
 \chapter{More information}
-\pagenumbering{roman}
 This thesis was completed in the representation learning lab of Albert-Ludwig-Universität Freiburg.  (Figure~\ref{fig:UniLogo})
+
 
 \begin{figure}[htb]
   \centering
@@ -3013,5 +3034,6 @@ This thesis was completed in the representation learning lab of Albert-Ludwig-Un
     \label{fig:UniLogo}
 \end{figure}
 
-\end{document}
+\fi
 
+\end{document}
