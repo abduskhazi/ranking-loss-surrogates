@@ -1525,7 +1525,7 @@ We use SMBO as a reference HPO algorithm for our study.
 \label{sec:BasicScoringModelDNN}
 
 In order to discuss the implementation details of ranking loss functions,  we need to understand how a basic ranker works.
-A basic ranker consists of a Deep Neural Network that outputs real-valued numbers $\textbf{y}$ for a batch of inputs, say $\textbf{X}$.
+A basic ranker consists of a Deep Neural Network that outputs real-valued scores $\textbf{s}$ for a batch of inputs, say $\textbf{X}$.
 These scores are used to rank the batch of inputs, with the highest score getting the lowest rank.
 Our thesis assumes that a lower rank is better than a higher one.
 Figure~\ref{fig:basicScoringModel} depicts the architecture of a basic ranker.
@@ -1542,7 +1542,7 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \node[squarednode]      (FC1)                      [right=of X]        {$FC_1$};
 \node[squarednode]      (FCmiddle)             [right=of FC1]        {...};
 \node[squarednode]      (FCn)                      [right=of FCmiddle]        {$FC_n$};
-\node[roundnodey]      (y)                             [right=of FCn] {$\textbf{y}$};
+\node[roundnodey]      (y)                             [right=of FCn] {$\textbf{s}$};
 \node[squarednode]      (Rank)                      [right=of y]        {Rank};
 
 %Lines
@@ -1558,19 +1558,19 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 
 This DNN architecture is very similar to the DNNs used in the Deep Ensemble baseline implementation (Figure~\ref{fig:undividedarchitecture}).
 The difference between the 2 is that Figure~\ref{fig:undividedarchitecture} had 2 outputs whereas Figure~\ref{fig:basicScoringModel} has one output.
-In addition, there is one extra but crucial step of ranking the batch of inputs in the basic ranker.
-Since we use a Deep Neural Network to rank the inputs,  we may also refer to this architecture as a Deep Ranker.
+In addition, there is one extra but crucial step of ranking in the basic ranker.
+Since we use a Deep Neural Network to get the scores before ranking the inputs,  we may also refer to this architecture as a Deep Ranker.
 
 Let  \{\textbf{X}, \textbf{y}\} be the training data used for training a generic machine learning model.
 Most loss functions utilize the values present in \textbf{y} as a reference for training the ML model.
-After the training completes, the range of the outputs of the learned ML model is not vastly different from the range of the actual outputs values.
+After the training completes, the range of the outputs of the learned ML model is not vastly different from the range of the actual output values.
 However, when we use a ranking loss function to train the ML model, we cannot guarantee this. This is because the ranking loss calculates the loss in the ranking space instead of the output space.
 The only thing that matters for ranking loss functions is that the objects should be ranked in the correct order.
-Hence the output range of the basic ranker can be arbitrary.
+Hence the score range of the basic ranker can be arbitrary.
 The only exception is a point-loss function called Subset Regression.
-This is because subset regression directly learns the rank instead of using the output value $y$ to rank the batch of inputs.
+This is because subset regression directly learns the rank instead of using the output score $s$ to rank the batch of inputs.
 
-There may be occasions where the output range of the basic ranker needs to be controlled.
+There may be occasions where the score range of the basic ranker needs to be controlled.
 For further discussion on this please refer Appendix~\ref{chap:OutputRangeControl}.
 
 
@@ -1578,10 +1578,10 @@ For further discussion on this please refer Appendix~\ref{chap:OutputRangeContro
 
 We know from Section~\ref{sec:hpoConstraints} that the evaluation of the target objective function in HPO is noisy.
 Hence it is essential for any surrogate that models this objective function to have the capability of estimating uncertainty.
-The uncertainty estimation becomes more critical in a sequential HPO algorithm like the SMBO.
+The uncertainty estimation becomes more critical in a sequential HPO algorithm like SMBO.
 In the first steps of SMBO, we do not have enough data to build or finetune the surrogate.
 Using a surrogate without uncertainty in the initial steps may give wrong results with high confidence.
-This is especially not good in a sequential process because selecting subsequent HP configurations depends on the previously selected HP configurations.
+This is not good in a sequential process because selecting subsequent HP configurations depends on the previously selected HP configurations.
 For this reason, a model with uncertainty (if estimated correctly) is superior to other models.
 
 
@@ -1601,9 +1601,9 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \node[squarednode]      (DNN2)                      [right=of X]        {DNN$_2$};
 \node[squarednode]      (DNN1)                      [above=of DNN2]                    {DNN$_1$};
 \node[squarednode]      (DNN3)                      [below=of DNN2]                    {DNN$_3$};
-\node[roundnodey]        (y1)                             [right=of DNN1] {$\textbf{y}_1$};
-\node[roundnodey]        (y2)                             [right=of DNN2] {$\textbf{y}_2$};
-\node[roundnodey]        (y3)                             [right=of DNN3] {$\textbf{y}_3$};
+\node[roundnodey]        (y1)                             [right=of DNN1] {$\textbf{s}_1$};
+\node[roundnodey]        (y2)                             [right=of DNN2] {$\textbf{s}_2$};
+\node[roundnodey]        (y3)                             [right=of DNN3] {$\textbf{s}_3$};
 \node[squarednode]      (Rank1)                             [right=of y1] {Rank$_1$};
 \node[squarednode]      (Rank2)                             [right=of y2] {Rank$_2$};
 \node[squarednode]      (Rank3)                             [right=of y3] {Rank$_3$};
@@ -1639,9 +1639,9 @@ As we are primarily interested in ranking the HP configurations, individual scor
 Instead, we are concerned about the uncertainty in the predicted rank.
 In other words, we want to calculate the uncertainty in the rank space.
 
-We first calculate the rank of each HP configuration in the batch as per the scorers' output.
+We first calculate the rank of each HP configuration in the batch as per the rankers' output scores.
 Using these ranks, we calculate the mean rank $\mu_r$ and variance in the rank $\sigma^2_r$.
-Any acquisition function that uses a ranking model needs to use this "ranking distribution" instead of the output distribution.
+Any acquisition function that uses a ranking model needs to use this "ranking distribution" instead of the output score distribution.
 
 \iffalse
 After adding Deep Sets, we train all of them together due to the architectural requirement.
@@ -1661,10 +1661,10 @@ The expected rank of a configuration is not defined in absolute terms. It is alw
 Due to this property, using the predicted uncertainty in the ranking space is tricky.
 
 Moreover, using well-defined acquisition functions like Expected Improvement (EI) is not trivial. EI requires us to maintain an incumbent evaluated value. The incumbent is the best-evaluated HP objective function's value in the output space. However, it is always 1 in the ranking space because the best possible rank in any ranking batch is always 1. Hence, if we used EI with ranking loss surrogates, it would be impossible to select the following HP configuration efficiently.
-It is also not possible to directly use the outputs of the ensemble. Each neural network in the ensemble outputs a separate score for any queried configuration, which may not be in a similar range.
+It is also not possible to directly use the output scores of the ensemble. Each neural network in the ensemble gives separate scores for the input batch of configurations. These scores of each neural network may not be in the same range.
 
 Due to these intricacies, we believe a detailed study of the different acquisition functions in the ranking space is necessary. Such a study is out of scope for this thesis. Therefore, we leave this study for future research.
-Instead, throughout our thesis, we used an elementary acquisition function with ranking loss surrogates. This acquisition function selects the HP configuration with the best mean rank predicted by the ensemble of rankers.
+Instead, throughout our thesis, we use an elementary acquisition function with ranking loss surrogates. This acquisition function selects the HP configuration with the best mean rank predicted by the ensemble of rankers.
 
 
 \iffalse
@@ -3007,16 +3007,16 @@ PLACKETT-LUCE DISTRIBUTIONS -> Very important to explain the rationale about usi
 \chapter{Controlling the output range}
 \label{chap:OutputRangeControl}
 
-Lets take the listwise loss function $L_{mle}$ which is nothing by maximum log-likelihood estimation. 
-In our surrogate models, we use the strictly positive increasing function $\exp$ as proposed in~\cite{listmlepaper}.
-Hence our $L_{mle}$ becomes 
+Lets take the listwise loss function $L_{mle}$ which is nothing but maximum log-likelihood estimation. 
+In our surrogate models, we use the strictly positive increasing function $\exp$ as proposed by Fen et. al.~\cite{listmlepaper}.
+Hence, our $L_{mle}$ becomes 
 \begin{equation}\label{eq:overflowissue}
 L_{mle} = -  \sum\limits_{j=1}^{k} \log \frac{\exp(s(\pi^*_j))}{ \sum\limits_{t=j}^k \exp(s(\pi^*_k))}
 \end{equation}
 
-Even though theoretically, the range of our basic ranker model does not need to be restricted, we have practical limitations due to implementation constraints of floating-point numbers.
-Due to the exponentiation in our loss function, if the range of our basic ranker is too high,  the values in equation~\ref{eq:overflowissue} may overflow.
-On the other hand, if the range is too small, they may underflow.
+Even though theoretically, the score range does not need to be restricted, we have practical limitations due to implementation constraints of floating-point numbers.
+Due to the exponentiation in our loss function, if the score range is too high,  the values in equation~\ref{eq:overflowissue} may overflow.
+On the other hand, if it is too small, the values may underflow.
 In both these cases, we are bound to get NAN (Not A Number) exceptions when executing our implementations.
 We would also get similar issues for the pair-wise loss function because we use exponentiation for calculating the probability, as shown in equation~\ref{eq:pairwiseprobability}.
 One way to eliminate this issue is to use the log-sum-exp trick. This trick is used in the ListMLE implementation given by Pobrotyn
@@ -3024,7 +3024,7 @@ One way to eliminate this issue is to use the log-sum-exp trick. This trick is u
 
 However, if the output score is used anywhere other than ranking, we would need to control its range.
 We can do this by passing the output of the deep neural network through a $\tanh$ function.
-If we would like to strictly limit the range of our function between $[-k,  k]$,  then we can pass the output of our scorer through the following function
+If we would like to strictly limit the range of our function between $[-k,  k]$,  then we can pass the output score through the following function
 \begin{equation}\label{eq:tanhEquation}
 k * \tanh(\alpha * s(\textbf{X}))
 \end{equation}
