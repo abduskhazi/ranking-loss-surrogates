@@ -1699,7 +1699,7 @@ This reduction of the constant factor does not affect the loss because the stric
 \begin{algorithmic}[1]
     \Procedure{ListMLE}{$l_{predicted}$,  $l_{actual}$}
     \State $l_{predicted} \gets l_{predicted} - \max(l_{predicted})$
-    \State $l_{predicted} \gets \exp(l_{predicted})$
+    \State $l_{predicted} \gets \exp(l_{predicted})$   \Comment{For Numerical Stability}
     \State $sum \gets 0$
     \For{$i < k$} \Comment{$k$ is list size here}
         \State $sum \gets sum$ + \textsc{Top1LogProb}($l_{predicted}$,  $l_{actual}$)
@@ -1731,25 +1731,31 @@ The time complexity of removing an element from an array is O(n), where $n$ is t
 The removal operation is done for all list elements one by one resulting in the worst-case time complexity of $O(n^2)$.
 Even if we store the list in a data structure that stores its elements in a non-contiguous memory location (for example, a linked list), accessing the elements in the list would have $O(n)$ time complexity. This would also result in time complexity of $O(n^2)$.
 
-One way to get around this problem is to sort the lists before calculating the permutation probability.
-This implementation is done in the paper~\cite{Pobrotyn2020ContextAwareLT}.
-This makes the time complexity $O(n \log n)$
-We use this implementation due to its efficiency.
-Algorithm~\ref{alg:listMLESorted} depicts this.
-More precisely the ListMLE is first expanded to the following equation.
+One way to solve this problem is to sort the lists before calculating the permutation probability.
+This approach is followed by Pobrotyn
+ et. al~\cite{Pobrotyn2020ContextAwareLT} in their implementation.
+After sorting the lists, calculating the permutation probability can be done with linear time complexity. Since sorting has a time complexity of $O(n \log n)$, the worst-case complexity remains $O(n \log n)$.
+For this reason, we use the implementation given by Pobrotyn
+ et. al~\cite{Pobrotyn2020ContextAwareLT} in this thesis.
+Algorithm~\ref{alg:listMLESorted} depicts this approach.
+
+
+More precisely, the ListMLE loss is re-written in the following form:
 
 \begin{equation}\label{eq:sortedListMLEequation}
 L_{mle} = \sum\limits_{j=1}^{k} \left( \log \sum\limits_{t=j}^k \exp(s(\pi^*_k)) - \log \exp(s(\pi^*_j)) \right)
 \end{equation}
-Since the scores are sorted in the correct order we can re-write the equation as 
+
+Since the list values are sorted in the correct order, we can further synthesize the equation as:
+
 \begin{equation}\label{eq:sortedListMLEequation}
 L_{mle} = \sum\limits_{j=1}^{k} \left( \log \sum\limits_{t=j}^k \exp(s^*(k)) - \log \exp(s^*(j)) \right)
 \end{equation}
 
-Now $\sum\limits_{t=j}^k \exp(s^*(k))$ is nothing but the reverse cumulative sum where the first element is the sum of all elements and the next element is the sum of all elements starting from position 1 and so on.
-Let this be represented by $Q$.
-$\log \exp(s^*(j))$ can be directly written as $s^*(j)$ if natural logarithm is taken.
-Hence,  the equation that is implemented in Algorithm~\ref{alg:listMLESorted} is~\cite{Pobrotyn2020ContextAwareLT}.
+Now, $\sum\limits_{t=j}^k \exp(s^*(k))$ is nothing but the reverse cumulative sum which is the sum of all list values starting from position $j$.
+The reverse cumulative sum of all positions can be calculated and stored in linear time using iterative dynamic programming.
+The expression $\log \exp(s^*(j))$ can be directly written as $s^*(j)$ if we use a natural logorithm.
+Hence, if the reverse cumulative sum at position j is represented by $Q(j)$,  the equation implemented in Algorithm~\ref{alg:listMLESorted} is given by:
 \begin{equation}\label{eq:sortedListMLEequation}
 L_{mle} = \sum\limits_{j=1}^{k} \left( \log Q(j) - s^*(j) \right)
 \end{equation}
@@ -1757,14 +1763,14 @@ L_{mle} = \sum\limits_{j=1}^{k} \left( \log Q(j) - s^*(j) \right)
 \begin{algorithm}[h]
 \caption{Loss ListMLE Algorithm (sorted)}
 \label{alg:listMLESorted}
-\hspace*{\algorithmicindent} \textbf{Input} : $l_{predicted} \in \mathbb{R}^k$ \Comment{Relevance scores predicted by the scorer}\\
-\hspace*{\algorithmicindent} \textbf{Input} : $l_{actual} \in \mathbb{R}^k$ \Comment{Actual relevance scores}\\
+\hspace*{\algorithmicindent} \textbf{Input} : $l_{predicted} \in \mathbb{R}^k$ \Comment{Scores predicted by ranker}\\
+\hspace*{\algorithmicindent} \textbf{Input} : $l_{actual} \in \mathbb{R}^k$ \Comment{Actual scores}\\
 \hspace*{\algorithmicindent} \textbf{Output} : Loss $\in \mathbb{R}$
 \begin{algorithmic}[1]
 \Procedure{ListMLESorted}{$l_{predicted}$,  $l_{actual}$}
 \State $l_{actual}, $ IndexOrder $\gets$ \textsc{Sort}($l_{actual}$)
 \State $l_{predicted} \gets$ \textsc{SortWithIndexOrder}($l_{predicted}$,  IndexOrder)
-\State $l_{predicted} \gets l_{predicted} - \max(l_{predicted})$ \Comment{Numerical Stability}
+\State $l_{predicted} \gets l_{predicted} - \max(l_{predicted})$ \Comment{For Numerical Stability}
 \State $prob \gets 0$    
     \For{$i < k$}
         \State $prob \gets prob + \log Q[i] - l_{predicted}[j]$
