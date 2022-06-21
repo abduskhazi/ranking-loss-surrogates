@@ -1677,21 +1677,24 @@ By using the range controlling mechanism we both make the model numerically stab
 
 \subsection{ListMLE Implementation}
 
-To train the scorer the loss function ListMLE was implemented in python using the PyTorch~\cite{PyTorch} deep learning library.
-Algorithm~\ref{alg:listMLEAlgorithm} shows the steps used to obtain the loss scalar before back propagating it using the autograd functionality of PyTorch.
-Please note that the actual implementation is a little more sophisticated due to the use of multi dimensional tensors.
+This thesis implemented the listwise loss function ListMLE to train the rankers. The deep learning library PyTorch~\cite{PyTorch} was used for the implementation.
+Algorithm~\ref{alg:listMLEAlgorithm} shows the steps to obtain the real-valued loss given the actual output and the predicted output.
+After calculating this loss, it is backpropagated through the ranker using the Autograd functionality of PyTorch.
+Please note that the implementation is a little more sophisticated than this due to the use of multi-dimensional tensors.
 
-For numerical safety and accuracy the values of the predicted score reduced by a constant factor.  Here the constant factor is the biggest value of the list itself.
-This is possible because we are using $\exp$ as our strictly increasing function:
-$$
+Before calculating the loss, the predicted scores are reduced by a constant factor for numerical safety and accuracy. Here we use the max of the predicted scores as a constant factor. This can be seen in Step 2 of \textsc{ListMLE} procedure in Algorithm~\ref{alg:listMLEAlgorithm}.
+This reduction of the constant factor does not affect the loss because the strictly increasing positive function we use is exponentiation. This is illustrated in Equation~\ref{eq:ExpConstantFactor} using sample numbers $a_i \in  \mathbb{R}$.
+
+\begin{equation}
+\label{eq:ExpConstantFactor}
 \frac{e^{a_1}}{\sum\limits_{i} e^{a_i}} = \frac{e^{a_1 + k}}{\sum\limits_{i} e^{a_i + k}} 
-$$
+\end{equation}
 
 \begin{algorithm}[h]
 \caption{Loss ListMLE Algorithm}
 \label{alg:listMLEAlgorithm}
-\hspace*{\algorithmicindent} \textbf{Input} : $l_{predicted} \in \mathbb{R}^k$ \Comment{Relevance scores predicted by the scorer}\\
-\hspace*{\algorithmicindent} \textbf{Input} : $l_{actual} \in \mathbb{R}^k$ \Comment{Actual relevance scores}\\
+\hspace*{\algorithmicindent} \textbf{Input} : $l_{predicted} \in \mathbb{R}^k$ \Comment{Scores predicted by the ranker}\\
+\hspace*{\algorithmicindent} \textbf{Input} : $l_{actual} \in \mathbb{R}^k$ \Comment{Actual scores}\\
 \hspace*{\algorithmicindent} \textbf{Output} : Loss $\in \mathbb{R}$
 \begin{algorithmic}[1]
     \Procedure{ListMLE}{$l_{predicted}$,  $l_{actual}$}
@@ -1703,7 +1706,7 @@ $$
         \State $l_{predicted},  l_{actual} \gets $ \textsc{RemoveTop1}($l_{predicted}$,  $l_{actual}$)
         \State $i \gets i + 1$
     \EndFor
-    \State  Return $-1 * sum$
+    \State  Return $-1 * sum$     \Comment{Negating loss as we are doing gradient descent}
     \EndProcedure
      \Procedure{Top1LogProb}{$l_{predicted}$,  $l_{actual}$}
     \State $j \gets \textrm{argmax}(l_{actual})$
