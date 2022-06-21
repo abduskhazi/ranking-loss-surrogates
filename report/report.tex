@@ -1722,10 +1722,14 @@ This reduction of the constant factor does not affect the loss because the stric
 \end{algorithmic}
 \end{algorithm}
 
-It is very evident from the implementation of Algorithm~\ref{alg:listMLEAlgorithm} that it calculates the permutation probability of the objects in the list as described in Section~\ref{sec:listMLE}.
-However,  the algorithm is not efficient.
-This is because it modifies and removes elements in the lists.
-if lists are implemented as contigous elements (like arrays) the time complexity of running would be $O(n^2)$ where $n$ is the list size.
+Algorithm~\ref{alg:listMLEAlgorithm} calculates the permutation probability of the objects in the list as described in Section~\ref{sec:listMLE}.
+However, this implementation is not efficient.
+The algorithm modifies and removes elements in predicted and actual lists.
+
+Consider a case where the list elements are stored in a data structure that stores objects in contiguous memory locations (like an array).
+The time complexity of removing an element from an array is O(n), where $n$ is the list size.
+The removal operation is done for all list elements one by one resulting in the worst-case time complexity of $O(n^2)$.
+Even if we store the list in a data structure that stores its elements in a non-contiguous memory location (for example, a linked list), accessing the elements in the list would have $O(n)$ time complexity. This would also result in time complexity of $O(n^2)$.
 
 One way to get around this problem is to sort the lists before calculating the permutation probability.
 This implementation is done in the paper~\cite{Pobrotyn2020ContextAwareLT}.
@@ -1733,6 +1737,7 @@ This makes the time complexity $O(n \log n)$
 We use this implementation due to its efficiency.
 Algorithm~\ref{alg:listMLESorted} depicts this.
 More precisely the ListMLE is first expanded to the following equation.
+
 \begin{equation}\label{eq:sortedListMLEequation}
 L_{mle} = \sum\limits_{j=1}^{k} \left( \log \sum\limits_{t=j}^k \exp(s(\pi^*_k)) - \log \exp(s(\pi^*_j)) \right)
 \end{equation}
