@@ -1781,6 +1781,8 @@ L_{mle} = \sum\limits_{j=1}^{k} \left( \log Q(j) - s^*(j) \right)
 \end{algorithmic}
 \end{algorithm}
 
+To test this implementation, we did a case study to learn the inverse mapping of real-valued numbers in a given range.
+For more details on the case study, please refer to Appendix~\ref{chap:caseStudy}.
 
 \subsection{Weighted Loss}
 As discussed in Section~\ref{sec:positionEnhancedRanking},  the ranking problem we are have in HPO is not the general ranking problem.
@@ -1836,78 +1838,6 @@ Applying this to HPOB... (With or without query)
     First learning from first search space.
     Even with this the loss curves are very smooth if we use 2 * tanh(0.01 * x)
 \fi
-    
-\section{Case study with inverse mapping}
-
-In this case study,  we study how the learnt ranking function behaves when we use different parameters to train.
-For this a toy example of sorting in the descending order is considered.
-    
-The main problem that we try to study here is - Is it possible to train a ranking function using the ListMLE loss function such that it learns inverse mapping of points on a number line.
-Consider numbers sampled from the range $[k,  p]$ where $k,p > 0$ and  $k,p \in \mathbb{R}$.
-If we take 2 numbers $x_1, x_2 \in [k,  p]$,  we need to learn a mapping $s: x \mapsto \mathbb{R}$ such that $s(x_1) \leq s(x_2)$ when $x_1 \geq x_2$.
-Consequently we could sort the numbers based on the output of the scorer to obtain a descending sorted order.
-
-Consider a list $l = \{x_1, x_2, ...x_n\}$ where $x_i \in [1, 100]$.
-Let $s(x \mid \theta) \mapsto \mathbb{R}$ be our scoring function parametrised by $\theta$.
-Here, one list contains $n$ data points sampled from $[1, 100]$.
-Then the loss function we would use to learn our scorer is
-\begin{equation}
-\underset{\theta}{\rm argmin} \quad L_{mle}(s(l \mid \theta),  - k * l)
-\end{equation}
-where $k \in \mathbb{R}$.
-Note that second parameter of list wise loss function is scale invariant hence scaling the list has no effect on the loss output (Section~\ref{sec:listMLE}).
-
-%    #       Result -> Sorting possible provided the output range of the model not restricted
-%    #       For now we sample train/val data from the same distribution.
-  %  #   List of numbers to test with = {-1 to -100}
-%    #       Result -> This is not possible because the model will map this to extreme values as it
- %   #                 is not distribution dependent.
- %   #   Check the percentage of the lists in the correct sorted order.
-
-The validation data taken from 3 different ranges
-\begin{itemize}
-\item Same range as the training data $[1, 100]$
-\item Completely different range as seen by the scorer during training i.e $[-100, -1]$
-\item Hybrid range i.e $[-50, 50]$
-\end{itemize} 
-
-To evaluate our scorer,  we first sample the validation data from the above ranges,
-We then check the percentage of the lists that are correctly sorted during our testing time.
-We used the same values of $k$ and $\alpha$ as used in the basic scoring model.
-During training a batch size of 100 lists was used.
-We try sort 1000 lists according to the learnt scorer's results.
-The accuracy gives the fraction of the lists that were sorted in 1000 lists.
-We report the average of 5 runs in the Table~\ref{table:caseStudyResults}.
-
-\begin{table} [h!]
-\centering
-\resizebox{\linewidth}{!} {
-\begin{tabular}{ | c | c | c | c | c | c | }
-\hline
-\textbf{Training Epochs} & \textbf{List size} & \textbf{In-range Acc.} & \textbf{Out-range Acc.} & \textbf{Hybrid Acc.} \\ [0.5 ex]
-\hline \hline
-1000 & 3 & 0.99 & 0.27 & 0.40\\
-100 & 3  & 0.77 & 0.29 & 0.11\\
-100 & 30  & 0.80 & 0.79 & 0.46\\
-100 & 100  & 0.99 & 0.0 & 0.39\\
-1000 & 100  & 1.0 & 0.71 & 0.48\\
-\hline
-\end{tabular}
-}
-\caption{Sorting Accuracies at test time}
-\label {table:caseStudyResults}
-\end{table}
-
-We find from the tabulated results that it is important to completely learn the function by running a higher number of epochs.
-To comprehensively learn the scoring function,  it is crucial to have a larger list size.
-This will make our scorer model work well when the input is from the same distribution seen during training.
-Moreover,  it also gives reasonable when the input comes from the distribution edge (i.e from a location close to the distribution).
-These are good properties to have in any machine learning model.
-
-The loss function is not weighted in this toy example because sorting requires that each data point be on its correct location.
-Therefore,  our problem is not a direct generalization of this toy example.
-Moreover the input domain in the toy example is quite simple as compared to the real world problems.
-Nevertheless,  we do take these results into account to decide on the list size for training our proposed ranking surrogate model.
 
 \section{Method training and optimization}
 
@@ -3041,6 +2971,80 @@ We used $k=2$ and $\alpha=0.01$ for our scorer.
     \caption{Effect of varying $k$ and $\alpha$ in equation~\ref{eq:tanhEquation}.}
     \label{fig:tanhGraph}
 \end{figure}
+
+
+\chapter{Case study with inverse mapping}
+\label{chap:caseStudy}
+
+In this case study,  we study how the learnt ranking function behaves when we use different parameters to train.
+For this a toy example of sorting in the descending order is considered.
+    
+The main problem that we try to study here is - Is it possible to train a ranking function using the ListMLE loss function such that it learns inverse mapping of points on a number line.
+Consider numbers sampled from the range $[k,  p]$ where $k,p > 0$ and  $k,p \in \mathbb{R}$.
+If we take 2 numbers $x_1, x_2 \in [k,  p]$,  we need to learn a mapping $s: x \mapsto \mathbb{R}$ such that $s(x_1) \leq s(x_2)$ when $x_1 \geq x_2$.
+Consequently we could sort the numbers based on the output of the scorer to obtain a descending sorted order.
+
+Consider a list $l = \{x_1, x_2, ...x_n\}$ where $x_i \in [1, 100]$.
+Let $s(x \mid \theta) \mapsto \mathbb{R}$ be our scoring function parametrised by $\theta$.
+Here, one list contains $n$ data points sampled from $[1, 100]$.
+Then the loss function we would use to learn our scorer is
+\begin{equation}
+\underset{\theta}{\rm argmin} \quad L_{mle}(s(l \mid \theta),  - k * l)
+\end{equation}
+where $k \in \mathbb{R}$.
+Note that second parameter of list wise loss function is scale invariant hence scaling the list has no effect on the loss output (Section~\ref{sec:listMLE}).
+
+%    #       Result -> Sorting possible provided the output range of the model not restricted
+%    #       For now we sample train/val data from the same distribution.
+  %  #   List of numbers to test with = {-1 to -100}
+%    #       Result -> This is not possible because the model will map this to extreme values as it
+ %   #                 is not distribution dependent.
+ %   #   Check the percentage of the lists in the correct sorted order.
+
+The validation data taken from 3 different ranges
+\begin{itemize}
+\item Same range as the training data $[1, 100]$
+\item Completely different range as seen by the scorer during training i.e $[-100, -1]$
+\item Hybrid range i.e $[-50, 50]$
+\end{itemize} 
+
+To evaluate our scorer,  we first sample the validation data from the above ranges,
+We then check the percentage of the lists that are correctly sorted during our testing time.
+We used the same values of $k$ and $\alpha$ as used in the basic scoring model.
+During training a batch size of 100 lists was used.
+We try sort 1000 lists according to the learnt scorer's results.
+The accuracy gives the fraction of the lists that were sorted in 1000 lists.
+We report the average of 5 runs in the Table~\ref{table:caseStudyResults}.
+
+\begin{table} [h!]
+\centering
+\resizebox{\linewidth}{!} {
+\begin{tabular}{ | c | c | c | c | c | c | }
+\hline
+\textbf{Training Epochs} & \textbf{List size} & \textbf{In-range Acc.} & \textbf{Out-range Acc.} & \textbf{Hybrid Acc.} \\ [0.5 ex]
+\hline \hline
+1000 & 3 & 0.99 & 0.27 & 0.40\\
+100 & 3  & 0.77 & 0.29 & 0.11\\
+100 & 30  & 0.80 & 0.79 & 0.46\\
+100 & 100  & 0.99 & 0.0 & 0.39\\
+1000 & 100  & 1.0 & 0.71 & 0.48\\
+\hline
+\end{tabular}
+}
+\caption{Sorting Accuracies at test time}
+\label {table:caseStudyResults}
+\end{table}
+
+We find from the tabulated results that it is important to completely learn the function by running a higher number of epochs.
+To comprehensively learn the scoring function,  it is crucial to have a larger list size.
+This will make our scorer model work well when the input is from the same distribution seen during training.
+Moreover,  it also gives reasonable when the input comes from the distribution edge (i.e from a location close to the distribution).
+These are good properties to have in any machine learning model.
+
+The loss function is not weighted in this toy example because sorting requires that each data point be on its correct location.
+Therefore,  our problem is not a direct generalization of this toy example.
+Moreover the input domain in the toy example is quite simple as compared to the real world problems.
+Nevertheless,  we do take these results into account to decide on the list size for training our proposed ranking surrogate model.
 
 
 \iffalse
