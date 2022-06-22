@@ -2973,18 +2973,16 @@ We used $k=2$ and $\alpha=0.01$ for our scorer.
 \end{figure}
 
 
-\chapter{Case study with inverse mapping}
+\chapter{Case study: Inverse mapping}
 \label{chap:caseStudy}
 
-In this case study,  we study how the learnt ranking function behaves when we use different parameters to train.
-For this a toy example of sorting in the descending order is considered.
-    
-The main problem that we try to study here is - Is it possible to train a ranking function using the ListMLE loss function such that it learns inverse mapping of points on a number line.
+This case study examines how well an ML model performs if trained using the ListMLE loss function. For this, we consider a toy problem of sorting a list of real numbers in descending order. The main problem that we try to study here is - Is it possible to train a model using the ListMLE loss function such that it learns inverse mapping of points on a number line.
+
 Consider numbers sampled from the range $[k,  p]$ where $k,p > 0$ and  $k,p \in \mathbb{R}$.
 If we take 2 numbers $x_1, x_2 \in [k,  p]$,  we need to learn a mapping $s: x \mapsto \mathbb{R}$ such that $s(x_1) \leq s(x_2)$ when $x_1 \geq x_2$.
-Consequently we could sort the numbers based on the output of the scorer to obtain a descending sorted order.
+Consequently, we could sort the numbers based on the output score of the model to obtain a descending sorted order.
 
-Consider a list $l = \{x_1, x_2, ...x_n\}$ where $x_i \in [1, 100]$.
+Consider a list $l = \{x_1, x_2, ..., x_n\}$ where $x_i \in [1, 100]$.
 Let $s(x \mid \theta) \mapsto \mathbb{R}$ be our scoring function parametrised by $\theta$.
 Here, one list contains $n$ data points sampled from $[1, 100]$.
 Then the loss function we would use to learn our scorer is
@@ -2992,22 +2990,23 @@ Then the loss function we would use to learn our scorer is
 \underset{\theta}{\rm argmin} \quad L_{mle}(s(l \mid \theta),  - k * l)
 \end{equation}
 where $k \in \mathbb{R}$.
-Note that second parameter of list wise loss function is scale invariant hence scaling the list has no effect on the loss output (Section~\ref{sec:listMLE}).
+Note that the second parameter of list wise loss function is scale-invariant; hence scaling the list does not affect the loss output (Section~\ref{sec:listMLE}).
+To keep the output score in a defined range, we utilized the range controlling mechanism discussed in Appendex~\ref{chap:chap:OutputRangeControl}.
 
-%    #       Result -> Sorting possible provided the output range of the model not restricted
-%    #       For now we sample train/val data from the same distribution.
+We sample the testing data from the following ranges to evaluate our learned model:
+\begin{itemize}
+\item The Same range as seen during training i.e $[1, 100]$.
+\item A completely different range as seen during training i.e $[-100, -1]$.
+\item A hybrid range i.e $[-50, 50]$.
+\end{itemize} 
+
+%    #       Result -> Sorting is possible provided the output range of the model is not restricted
+%    #       For now, we sample train/Val data from the same distribution.
   %  #   List of numbers to test with = {-1 to -100}
 %    #       Result -> This is not possible because the model will map this to extreme values as it
  %   #                 is not distribution dependent.
  %   #   Check the percentage of the lists in the correct sorted order.
-
-The validation data taken from 3 different ranges
-\begin{itemize}
-\item Same range as the training data $[1, 100]$
-\item Completely different range as seen by the scorer during training i.e $[-100, -1]$
-\item Hybrid range i.e $[-50, 50]$
-\end{itemize} 
-
+ 
 To evaluate our scorer,  we first sample the validation data from the above ranges,
 We then check the percentage of the lists that are correctly sorted during our testing time.
 We used the same values of $k$ and $\alpha$ as used in the basic scoring model.
