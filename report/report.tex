@@ -1989,45 +1989,44 @@ The brown dot in the figure depicts the stubborn local minimum.
 
 If we reload and retrain our model afresh, the probability of reaching a good local minimum is higher. For example, during training for the blue curve, the surrogate model can start from a value $x > 10$. This would enable it to reach a better local minimum than a model that does not restart finetuning.
 The number of ways to reach a good local minimum would increase exponentially with the increase in the dimensions of the HP search space.
-Hence, restarting the training (from the saved model in our case) should improve our finetuned surrogate model.
+Hence, restarting the training (from the saved surrogate model in our case) should improve our finetuned surrogate model.
 
 Because of these reasons,  we use the restart mechanism during the finetuning of our ranking loss surrogate (and baseline implementations).
 This makes the surrogate more robust.
 
 \subsubsection{Using cosine annealing}
 
-We plotted the fine tuning loss curves of our model
-We found that these loss curves were very jittery.
-We noticed the same behaviour when fine tuning FSBO model.
-Figure~\ref{fig:jitteryFTLoss} shows the fine tuning loss for one of the search spaces.
+When we plotted the finetuning loss curves of our model, we found that these loss curves were very jittery.
+We noticed the same behavior when finetuning the FSBO model.
+Figure~\ref{fig:jitteryFTLoss} shows the finetuning loss for one of the search spaces.
 
 \begin{figure}[htb]
   \centering
     \includegraphics[scale=0.45]{images/jitteryFTLoss}
-    \caption{Figure showing jittery loss function curve}
+    \caption{Figure showing jittery loss function curve.}
     \label{fig:jitteryFTLoss}
 \end{figure}
 
-We hypothesise that these jittery losses are because the learning rate is not suitable with the response curve's curvature at the targeted local minima.
-One solution to this is to use a smaller learning rate.
-However,  the fine tuning using smaller learning rate will take a long time.
+We hypothesize that these jittery losses are because the learning rate is unsuitable for the response curve's curvature at the targeted local minima.
+One solution to this is to use a lower learning rate.
+However,  finetuning using a lower learning rate will take a long time to converge.
 The solution we proposed and utilized was using cosine annealing.
 
-There are couple of advantages of using cosine annealing.
-First the initial learning rate is kept high in order to give the optimizer time to get to an area close to the local minima if it has not done so.
-Thereafter,  the learning rate declines quickly to the target small learning rate.
-This helps the model to get deep into the local minima and hence the possibility of the optimization to jump out of the local minima is very less.
+There are a couple of advantages of using cosine annealing.
+First, the initial learning rate is kept high to give the optimizer time to get to an area close to the local minima if it has not done so.
+After that, the learning rate declines quickly to a small value.
+This helps the model get deep into the local minimum; hence, the probability of the optimization jumping out of the local minimum is very low.
 
 \begin{figure}[htb]
   \centering
     \includegraphics[scale=0.45]{images/goodFTLoss}
-    \caption{Figure showing a loss curve obtained by using cosine annealing}
+    \caption{Figure showing a loss curve obtained by using cosine annealing.}
     \label{fig:goodFTLoss}
 \end{figure}
 
-Figure~\ref{fig:goodFTLoss} shows a fine tuning loss curve obtained using cosine annealing.
-Even though this strategy may not be a perfect one,  it reduces the possible problems that could prop us when using a constant learning rate.
-During training,  however,  we use a constant learning rate as can use the validation loss as a reference for over fitting or under fitting.
+Figure~\ref{fig:goodFTLoss} shows a finetuning loss curve obtained using cosine annealing.
+This strategy reduces the problems that could prop us when using a constant learning rate. However, we realized at the later stage of the thesis that cosine annealing could not be used extensively while finetuning the proposed model due to the issue of negative transfer learning.
+During training, on the other hand, we use a constant learning rate as we can use the validation loss as a reference for overfitting or underfitting.
 
 \section{Ranking Surrogate Model}
 
