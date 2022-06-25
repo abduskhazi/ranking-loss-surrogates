@@ -1887,7 +1887,7 @@ After the meta-training, every model is saved to a persistent location (e.g., ha
 \label{alg:RLSMetaTraining}
 \hspace*{\algorithmicindent} \textbf{Input} : $epochs \in \mathbb{I}$ \\
  \hspace*{\algorithmicindent} \textbf{Input} : $X_{train}$,  $y_{train}$  \Comment{Meta data used to train from all Search Spaces.} \\
-\hspace*{\algorithmicindent} \textbf{Input} : $s_{\theta}$ \Comment{Surrogate to train}
+\hspace*{\algorithmicindent} \textbf{Input} : $s_{\theta}$ \Comment{Surrogate to train (parameterized by $\theta$)}
 \begin{algorithmic}[1]
 \Procedure{MetaTrain}{$s_{\theta}$,  $X_{train}$,  $y_{train}$, $epochs$}
     \For{$i < epochs$}
@@ -2030,20 +2030,20 @@ During training, on the other hand, we use a constant learning rate as we can us
 
 \section{Ranking Surrogate Model}
 
-After explaining the learning mechanism,  we now turn to 2 important components that are used in our method.
-The first is Deep Set to make our model context aware.
-The second is the use of uncertainty for improving the output of the model.
+After explaining the learning mechanism, we now turn to the last critical component that is used in the proposed method.
+This is the addition of Deep Sets to the architecture to make our model context-aware.
+Context-aware means that the surrogate model conditions its outputs based on the available HP configurations (or support configurations).
+This helps the surrogate distinguish between different tasks.
+We first discuss the surrogate architecture after the addition of Deep Sets, and after that, we explain how meta-training is done for this surrogate.
 
 \subsection{Using Deep Sets to build context aware models}\label{sec:DeepSetWithModel}
 
 We have already discussed the fundamental ideas of using deep sets in  ~\ref{sec:DeepSets}.
-In this section we discuss about how to add deep sets in the ranking loss surrogate model architecture and then how to train the same.
-
-The basic idea is to precondition our scoring function $s_{\theta}$ on known evaluations of the target HP space.
+The basic idea is to precondition the surrogate function $s_{\theta}$ on known evaluations of the target HP response surface.
 These known evaluations act as a support for the scoring function.
 Hence they are subscripted as "s" in the equation.
-We then query the scoring function to get the relevant scores of new $\textbf{X}$ which are subscripted as "q" in the equation.
-The scoring function hence becomes:
+We then query the surrogate to get the relevant ranks of new $\textbf{X}$ which are subscripted as "q" in the equation.
+The surrogate represents a function of the form:
 $$
 s_{\theta}(\textbf{X}_{q} | \textbf{X}_{s}, \textbf{y}_{s})
 $$
@@ -2060,14 +2060,17 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \node[roundnode]          (Xq)                        [below=of Xs]     {$\textbf{X}_q$};
 \node[squarednode]      (DeepSet)              [right=of Xs]        {Deep Set};
 \node[squarednode]      (Concatenation)             [below=of DeepSet]        {Concatenation};
-\node[squarednode]      (DNN2)                      [right=of Concatenation]        {Basic Scorer$_2$};
-\node[squarednode]      (DNN1)                      [above=of DNN2]                    {Basic Scorer$_1$};
-\node[squarednode]      (DNN3)                      [below=of DNN2]                    {Basic Scorer$_3$};
-\node[roundnodey]        (y1)                             [right=of DNN1] {$\textbf{y}_1$};
-\node[roundnodey]        (y2)                             [right=of DNN2] {$\textbf{y}_2$};
-\node[roundnodey]        (y3)                             [right=of DNN3] {$\textbf{y}_3$};
-\node[squarednode]      (mean)                             [right=of y2] {$Rank$};
-\node[roundnodey]        (mus)                             [right=of mean] {$\mu_r$};
+\node[squarednode]      (DNN2)                      [right=of Concatenation]        {DNN$_2$};
+\node[squarednode]      (DNN1)                      [above=of DNN2]                    {DNN$_1$};
+\node[squarednode]      (DNN3)                      [below=of DNN2]                    {DNN$_3$};
+\node[roundnodey]        (s1)                             [right=of DNN1] {$\textbf{s}_1$};
+\node[roundnodey]        (s2)                             [right=of DNN2] {$\textbf{s}_2$};
+\node[roundnodey]        (s3)                             [right=of DNN3] {$\textbf{s}_3$};
+\node[squarednode]      (rank2)                             [right=of s2] {Rank$_2$};
+\node[squarednode]      (rank3)                             [below=of rank2] {Rank$_3$};
+\node[squarednode]      (rank1)                             [above=of rank2] {Rank$_1$};
+\node[squarednode]      (uncertainty)                             [right=of rank2] {Uncertainty};
+\node[roundnodey]        (mus)                             [right=of uncertainty] {$\mu_r$};
 \node[roundnodey]        (sigmas)                             [below=of mus] {$\sigma^2_r$};
 
 %Lines
@@ -2077,14 +2080,17 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \draw[->] (Concatenation.east) -- (DNN1.west);
 \draw[->] (Concatenation.east) -- (DNN2.west);
 \draw[->] (Concatenation.east) -- (DNN3.west);
-\draw[->] (DNN1.east) -- (y1.west);
-\draw[->] (DNN2.east) -- (y2.west);
-\draw[->] (DNN3.east) -- (y3.west);
-\draw[->] (y1.east) -- (mean.west);
-\draw[->] (y2.east) -- (mean.west);
-\draw[->] (y3.east) -- (mean.west);
-\draw[->] (mean.east) -- (mus.west);
-\draw[->] (mean.east) -- (sigmas.west);
+\draw[->] (DNN1.east) -- (s1.west);
+\draw[->] (DNN2.east) -- (s2.west);
+\draw[->] (DNN3.east) -- (s3.west);
+\draw[->] (s1.east) -- (rank1.west);
+\draw[->] (s2.east) -- (rank2.west);
+\draw[->] (s3.east) -- (rank3.west);
+\draw[->] (rank1.east) -- (uncertainty.west);
+\draw[->] (rank2.east) -- (uncertainty.west);
+\draw[->] (rank3.east) -- (uncertainty.west);
+\draw[->] (uncertainty.east) -- (mus.west);
+\draw[->] (uncertainty.east) -- (sigmas.west);
 
 \end{tikzpicture}
 \caption{Skeleton of the proposed model with Deep Sets.}
