@@ -1837,63 +1837,57 @@ Applying this to HPOB... (With or without query)
 
 \section{Method training and optimization}
 
-The proposed method in this thesis, "Ranking loss surrogate" is a transfer HPO model.
-For this reason its working principle is similar to that of FSBO model.
-Like FSBO we use surrogate learning as a knowledge transfer mechanism.
-Hence the 2 main parts of using our optimization process are
+The proposed method in this thesis, "Ranking loss surrogate," is a transfer HPO solution.
+For this reason, its working principle is similar to that of the FSBO baseline model.
+Hence, the two main parts of using the optimization process are
 \begin{itemize}
-\item Meta learning the ranking loss surrogate
-\item Using the trained surrogate in the evaluation cycle (with or without fine tuning).
+\item Meta-learning the ranking loss surrogate.
+\item Using the trained surrogate in the optimization cycle (with or without finetuning).
 \end{itemize}
 
 \subsection{Meta training the surrogate}\label{sec:rlmetatraining}
 
-The space of hyper parameter configurations in which we are trying to get an optimum during any HPO is called HP search space.
-This search space is different for different machine learning models.
-Hence we need to train different ranking loss surrogate models for different search spaces.
+To understand the meta-training of the proposed surrogate, we need to understand the search space in question. The space of hyper parameter configurations in which we try to get an optimum during any HPO is called HP search space.
+This search space is different for different ML models.
+Hence we need to meta-train different ranking loss surrogates for different HP search spaces.
+However, the same ML model can be used to fit different data sets or tasks.
+We get different HP response surfaces in the same search space if we train the ML model for a different dataset.
+Hence we obtain different metadata for the same search space, each for a particular dataset used during the training.
+The goal of meta-training the surrogate is to use different metadata sets (or tasks) from a single search space to learn all the typical characteristics and transfer this knowledge to a new task.
 
-The same machine learning model,  however,  can be used to fit different data sets or tasks.
-This leads to different HP response surfaces in the same search space.
-Hence,  we obtain different meta data when the same model is optimized on different datasets (or tasks).
-The goal of training our model is to use different meta-data sets (or tasks) from a single search space to train our model.
-The idea is to learn all the common characteristics of the tasks and transfer this knowledge to the new task.
-
-To train this ensemble, we can employ two strategies:
+After understanding the goal of meta-training, we need to define its mechanism. Since we use an ensemble of Deep Neural Networks as a surrogate in our proposed idea, we can employ two strategies for meta-training:
 \begin{itemize}
-\item Train each network separately.
-\item Use the mean score of the entire architecture to train together.
+\item Meta-train each network separately.
+\item Use the mean rank of the entire architecture to train the networks together.
 \end{itemize}
-A combined training method may make the training more efficient.
-However,  each network's output may affect the training of all other networks.
-Moreover, it is absolutely no issue if the outputs of separate DNNs are in different ranges. What matters is the relative rank within a batch.
-It is theoretically unnecessary to train the networks together.
-The combined training also reduces the variance in the ensemble, which is a disadvantage.
+A combined meta-training method is more efficient than meta-training each neural network separately.
+However, it is theoretically unnecessary to do this.
+Moreover, the combined meta-training also reduces the variance in the ensemble. This is because we must tie up each neural network's losses before backpropagating the loss through the networks. This reduces the independence of the networks in the ensemble, which is a disadvantage.
 Therefore we train each network separately.
 
-We use stochastic gradient descent to train our model.
-For this we need to sample a batch of data from the given meta data.
-There are 2 ways to do this:
+We use stochastic gradient descent to meta-train every network.
+To do this, we must sample a batch of data from various metadata in a search space.
+There are two ways to accomplish this:
 \begin{itemize}
-\item Double sampling: First sample the task then sample the meta data within the task.
-\item Sample meta data from all tasks.
+\item Double sampling: Sample the task, then sample the metadata within the task.
+\item Sample metadata from all tasks together.
 \end{itemize}
 
-We use the first method of sampling our data.
-This is because due to higher level of sampling,  we have obtain good regularization,
-faster training and a possibility to use a lower learning rate.
-We use Adam optimizer with a learning rate of 0.001 for our model.
-We do our training for 5000 epochs and in each epoch we take 100 steps in which each step does 1 double sampling.
-While sampling data points from within a meta data set, we sample without replacement.
-We use the number of lists (batch size) as 100 and the size of each list also 100.
-Algorithm~\ref{alg:RLSMetaTraining} illustrates us a brief skeleton of our meta training procedure.
-After the training,  every model is saved on to a persistent location (e.g. hard disk) so that it can be load when necessary.
+We use the first method of sampling.
+The reason for doing this is due to have a higher level of randomness in the sampling process. If we use a double sampling mechanism, there is also a good regularization and a possibility to use a lower learning rate due to a higher number of gradient descent steps in the meta-training process.
+We use Adam as our surrogate's optimizer with a learning rate of 0.001.
+We do the meta-training for 5000 epochs, and in each epoch, we take 100 steps in which each step does one double sampling.
+While sampling data points from within a metadata set, we sample without replacement.
+We use the number of lists (batch size) as 100 and the size of each list also as 100.
+Algorithm~\ref{alg:RLSMetaTraining} illustrates to us a brief skeleton of the meta-training procedure.
+After the meta-training, every model is saved to a persistent location (e.g., hard disk) so that it can be loaded when necessary.
 
 \begin{algorithm}[h]
-\caption{Ranking Loss surrogate meta training}
+\caption{Ranking Loss surrogate Meta-training}
 \label{alg:RLSMetaTraining}
 \hspace*{\algorithmicindent} \textbf{Input} : $epochs \in \mathbb{I}$ \\
- \hspace*{\algorithmicindent} \textbf{Input} : $X_{train}$,  $y_{train}$  \Comment{Meta data used to train} \\
-\hspace*{\algorithmicindent} \textbf{Input} : $s_{\theta}$ \Comment{Model to train}
+ \hspace*{\algorithmicindent} \textbf{Input} : $X_{train}$,  $y_{train}$  \Comment{Meta data used to train from all Search Spaces.} \\
+\hspace*{\algorithmicindent} \textbf{Input} : $s_{\theta}$ \Comment{Surrogate to train}
 \begin{algorithmic}[1]
 \Procedure{MetaTrain}{$s_{\theta}$,  $X_{train}$,  $y_{train}$, $epochs$}
     \For{$i < epochs$}
