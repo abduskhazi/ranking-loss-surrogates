@@ -1027,7 +1027,7 @@ L_{\texttt{list-wise}} : s_1(\mathbb{A}) \times s_2(\mathbb{A}) ...  s_{n}(\math
 In the following sections, we analyze the loss functions studied in this thesis.
 As list-wise loss functions are more advantageous conceptually than others, we discuss them in more detail.
 
-\section{Point Wise Loss Function: Subset Regression}
+\section{Pointwise Loss Function: Subset Regression}
 
 We take the subset regression loss function proposed by Cossock et al. ~\cite{subsetregressionpaper} as a reference for analyzing point-wise loss functions.
 We reused the implementation written by Pobrotyn et al. ~\cite{Pobrotyn2020ContextAwareLT} for our analysis.
@@ -1056,37 +1056,47 @@ As we can see, the loss function does not directly make the scoring
 function learn the output regression value.
 This property is shared across all ranking loss functions.
 
-\section{Loss function pairwise: RankNet}
+\section{Pairwise Loss function : RankNet}
 
-To analyse how pair-wise loss functions are helpful for the HPO problem,
-we study one pairwise loss function namely RankNet~\cite{ranknetpaper}.
-We reused the implementation written by Pobrotyn et. al.~\cite{Pobrotyn2020ContextAwareLT} for our analysis.
+To analyze how pairwise loss functions are helpful for the HPO problem,
+we study the RankNet loss function proposed by Burges
+ et al ~\cite{ranknetpaper}.
+We reused the implementation written by Pobrotyn et al. ~\cite{Pobrotyn2020ContextAwareLT} for our analysis.
 
-As we know from table~\ref{tab:dataformat} we are always given a set of values and their corresponding ground truths to train from.
-Hence, we have $\{a_1, a_2, a_3..., a_n\}$ inputs and $\{y_1, y_2, y_3..., y_n\}$ ground truths.
+As we know from table~\ref{tab:dataformat} we are always given a set of values and their corresponding relevance scores to train.
+Hence, we have $\{a_1, a_2, a_3..., a_n\}$ as inputs and $\{y_1, y_2, y_3..., y_n\}$ as their corresponding relevance scores.
 As the $L_{\texttt{pair-wise}}$ takes only pairs of values we obtain first the scores of all objects to get $\{s(a_1), s(a_2), s(a_3)..., s(a_n)\}$.
-Then,  we form pairs of inputs to the loss function.
-After forming the pairs, one instance of the loss function is of the form$\{s(a_1), s(a_2), y_1, y_2\}$.
+Then,  we form all possible pairs of inputs to the loss function from the given scores of objects.
+For example,  after forming the pairs, one instance of the loss function is of the form $\{s(a_1), s(a_2), y_1, y_2\}$.
 
-For the loss function,  the order of the objects in the pair is not relevant.
-So,  instead of taking 2 pairs containing the same objects (but in different order) and their ground truth values,  only 1 pair is taken such that $s(a_1) - s(a_2) > 0$.
-This makes the implementation easier.
 Let the actual probability of $a_1 \succ a_2$ is given by $P^*$,  and the predicted value of the same is given by $P$.
 Then the pairwise loss is nothing but the cross entropy loss given by
 \begin{equation}
 L_{\texttt{RankNet}} = \texttt{C.E.Loss} = -P^*\log P - (1 - P^*)\log(1-P)
 \end{equation}
 
-To calculate the predicted probability the following function was used
+Where,
+
+\begin{equation}
+  P^*(a_1 \succ a_2) =
+    \begin{cases}
+      1 & y_1 \geq y_2 \\
+      0 & \text{otherwise}
+    \end{cases}       
+\end{equation}
+
 \begin{equation}
 \label{eq:pairwiseprobability}
 P(a_1 \succ a_2) = \frac{e^{s(a_1) - s(a_2)}}{1 + e^{s(a_1) - s(a_2)} }
 \end{equation}
 
-We have also seen that the pair-wise loss function only tries to classify the input objects.
-This means we only need to know if one object is better than the other from the ground truth values.
-Hence a binary cross entry loss function is used instead of a general one in the implementation.
-So $P^* \in \{0, 1\}$ in our case.
+
+The pairwise loss function only tries to classify the input objects.
+This means we only need to know from relevance scores if one object is better than the other.
+Hence a binary cross-entropy loss function is used instead of a general one in the implementation.
+For the loss function, the order of the objects in the pair is irrelevant.
+So,  instead of taking two pairs containing the same objects (but in a different order), only one pair is taken such that $s(a_1) - s(a_2) > 0$.
+This makes the implementation easier.
 
 \section{Loss function list-wise: ListNet}
 
