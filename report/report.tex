@@ -1785,52 +1785,48 @@ To test this implementation, we did a case study to learn the inverse mapping of
 For more details on the case study, please refer to Appendix~\ref{chap:caseStudy}.
 
 \subsection{Weighted Loss}
-As discussed in Section~\ref{sec:positionEnhancedRanking},  the ranking problem we are have in HPO is not the general ranking problem.
+As discussed in Section~\ref{sec:positionEnhancedRanking},  the ranking problem we have in the HPO domain is not the general ranking problem.
 It is more important for our ranking function to order the top part of the list than the bottom part.
-This is evident from Algorithm~\ref{alg:deepEnsembleFinetuning} where at every optimization cycle we are only concerned about selecting the best available configuration for true evaluation.
-Keeping this constraint in mind,  we need to have a weighting strategy such that
-$$
-c(j) \propto \frac{1}{j}
-$$
-where $j$ is the ranking of the object and $c(i)$ specifies its weight.
+This constraint is evident from Algorithm~\ref{alg:deepEnsembleFinetuning} where we are only concerned about selecting the best available configuration for evaluating the HPO objective function at every optimization cycle.
+Keeping this constraint in mind,  we need to use a weighting function $c(j)$ such that$ c(j) \propto \frac{1}{j} $.
+Here, $j$ is the ranking of the object.
 
-In this section we discuss about some strategies to do this weighting for our problem.
-The concept of biased ranking loss is discussed in the paper, "Top-Rank Enhanced List wise Optimization for Statistical Machine Translation" by  Chen et. al~\cite{TRLWO}.
-Here Chen et. al proposes a position based weighting of the ranking function such that:
+This section discusses some strategies to do this weighting for our problem.
+The concept of biased ranking loss is discussed in "Top-Rank Enhanced List wise Optimization for Statistical Machine Translation" by  Chen et al. ~\cite{TRLWO}.
+Chen et. al propose a position based weighting of the ranking function such that:
 \begin{equation}
 w_j = \frac{k - j + 1}{\Sigma_{t=1}^k t}
 \end{equation}
 where $w_j$ represents weight of the object at position $j$ in the ordered list.
 This strategy decreases the weights linearly across the ranks.
-The issue with this weighting is that it takes the weight of an object in the middle of the list to be $0.5$ times the weight of the object at the top of the list.
-This however is not what we want for our case.
-We need a sharper decrease in weights across the ranks.
 
-We could use 2 simple strategies of weighting for our problem
+Linear weighting has an issue. It makes the weight of the middle object in the list $0.5$ times the weight of the object at the top.
+This, however, is not what we want for our case.
+We need a sharper decrease in weights across the ranks.
+We could use 2 alternative strategies of weighting the ordered list
 \begin{itemize}
-\item Inverse linear weighting given by $w_j = \frac{1}{j}$
-\item Inverse logarithmic weighting given by $w_j = \frac{1}{\log (j+1)}$
+\item Inverse linear weighting given by $w_j = \frac{1}{j}$.
+\item Inverse logarithmic weighting given by $w_j = \frac{1}{\log (j+1)}$.
 \end{itemize}
 
 \begin{figure}[htb]
   \centering
     \includegraphics[scale=0.65]{images/weightingfunctions}
-    \caption{Different Weighting Functions}
+    \caption{Different Weighting Functions.}
     \label{fig:weightingfunctions}
 \end{figure}
 
 Figure~\ref{fig:weightingfunctions} shows all 3 weighting strategies.
 In the case of inverse linear strategy,  we see that the weight becomes extremely small after only a few ranks in the list.
-This has an unwanted consequence for our problem.
+It has an unwanted consequence for our problem.
 Because the weights of objects at the end of the list are too small,  the ranking function may not learn to rank optimally.
+On the other hand, inverse log weighting is the most suitable because it neither completely ignores the objects at the end of the list nor gives them too high an importance.
+The weights at the bottom of the list are very similar, which is what we want - all objects at the tail of the list are equally "unimportant" in our case.
 
-The inverse log weighting was found to be most suitable because it neither completely ignores the objects at the end of the list nor does it given them too high an importance.
-In fact,  the weights of the rest of list are very similar which is what we want - all objects at the tail of the list are equally "unimportant" in our case.
-
-Another advantage of using inverse weighting is that we can employ parallelism to enhance our HPO during the optimization cycle.
-For example,  at every step the top $n$ configurations can be selected,  and all of them can be tried for optimization.
-This overcomes any uncertainties that may occur while ranking the top part of the list. 
-The parallelism is less effective when using the weighting proposed by Chen et al.
+Another advantage of using inverse weighting is that we can employ parallelism to enhance the HPO during the optimization cycle.
+For example, the top $n$ configurations can be selected at every step,  and they can be tried in parallel for optimization.
+This overcomes any uncertainties that may occur while ranking in the top part of the list. 
+The parallelism is ineffective when using the inverse linear weighting or weighting proposed by Chen et al.
 
 
 \iffalse
