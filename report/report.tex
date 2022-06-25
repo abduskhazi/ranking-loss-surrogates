@@ -2097,32 +2097,37 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \label{fig:proposeModelDeepSets}
 \end{figure}
 
-The  architecture of the scoring function $s_{\theta}$ with deep sets is given in Figure~\ref{fig:proposeModelDeepSets}.
-For the complete architecture of the Deep Set node please refer~\ref{fig:DeepSetArchitecture}.
-We keep the node abstract for simplicity.\
+The  architecture of the surrogate $s_{\theta}$ with deep sets is given in Figure~\ref{fig:proposeModelDeepSets}.
+For the complete architecture of the Deep Set node, please refer~\ref{fig:DeepSetArchitecture}.
+We keep the node abstract for simplicity.
 
-First the data points in the query set $\textbf{X}_q$, $\textbf{y}_q$ are passed through the deep set to get the Latent Output.
-Each $X$, $y$ are concatenated to get a single vector for input into the deep set.
-We obtain a latent output from the deep set.
-This latent output is then concatenated with the query data points.
-The concatenated result is passed through a Deep Neural Network to finally get the desired relevance scores.
+To rank a batch of query HP configurations $\textbf{X}_q$, first, the data points in the support set $\textbf{X}_s$, $\textbf{y}_s$ are passed through the deep-set.
+Each $X_s^i$, $y_s^i$ are concatenated to get a single vector for input into the deep set to obtain a vector $X_s^i : y_s^i$.
+This concatenation is passed through the Deep-set, we obtain the latent output $O_l$.
+Please note that there is a single latent output from the deep set and all the support HP configuration points need to be input to it in one shot.
+
+It can be argued that we could use the concatenation $X_s^i : rank(y_s^i)$ instead of directly using the actual value of the objective function. This is a way to concatenate a value from the ranking space instead of the output space. However there are two significant issues with this approach. First, the size of the support set is undefined; hence the range of the ranks can vary drastically. Second, we already know that values in the ranking space are relative. So even if we use the same number of support set elements, the same HP configuration can have different ranks in different support batches. Hence we believe a deeper study of the ranking space is required before it can be employed in the concatenation.
+
+After obtaining the latent output $O_l$ from the deep-set,  it is concatenated with the query data points.
+The concatenated result is passed through a Deep Neural Network to get their respective scores and, subsequently, their ranks.
 For example if there is a batch of queries given by $\{X_{q_1},  X_{q_2},  X_{q_3} ...\}$,  and the latent output is given by $O_l$ then the concatenation yields
 $$
 \{O_l:X_{q_1},  O_l:X_{q_2},  O_l:X_{q_3} ...\}
 $$
-where ":" represents concatenation of 2 vectors.
+The whole batch of these concatenated vectors is then ranked using the rest of the architecture.
 
 \subsubsection{Meta training}
 
-Using the above given scoring function during the evaluation cycle is very straightforward.
-We use the known data points as a support set and the target data points to evaluate as the query set.
-During meta training,  however,  we have to divide the training data into support set and query set.
+Using the architecture with a deep-set during the HP optimization is very straightforward.
+We can use the known HP configurations as a support set, and the queried HP configurations as the query set.
+During meta-training,  however,  we have to divide the data into support and query sets.
 
-In our data division we first select 20 ($X$, $y$) data points as a support set randomly without replacement.
-Thereafter,  we select the query points from the remaining choices (again without replacement). The number of query points depends on the batch size (100 by default).
-During the meta training we do not sample the support and query points from all the given meta datasets.
-At each step within an epoch we select one meta data to sample these points as discussed in Section~\ref{sec:rlmetatraining}.
-For the purpose of analysing the training progress accurately,  we however sample data from all the training and validation task to report the complete training and validation loss respectively.
+In the meta-training, we randomly select 20\% of the batch size as a support set. The sampling is done without replacement.
+For example, if the batch size is 100, we select 20 HP configurations as a support set.
+Afterward,  we select the query points from the remaining choices (again without replacement). The number of query points depends on the batch size. If the batch size is 100, we will select 80 HP configurations randomly without replacement.
+We do not simultaneously sample the support and query points from all the given meta datasets.
+As already discussed in Section~\ref{sec:rlmetatraining}, we do a double sampling where we first select one meta-data in a search space. From the selected meta-data, we sample the support and query HP configurations.
+We sample data from all the training and validation tasks as separate batches to calculate the average training and validation loss.
 
 
 
