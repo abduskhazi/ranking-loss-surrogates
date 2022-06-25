@@ -1928,54 +1928,52 @@ Subsequently, we talk about the cosine annealing used during finetuning.
 
 \subsubsection{Requirement of restarting training}\label{sec:restart}
 
-During the implementation of deep ensembles,  we found that the model performs much better in the HPO evaluation cycle when we train it from scratch at every step (acquisition step).
-This is counter intuitive because an already trained model should converge to a local optima quickly.
-One of the reasons for this performance anomaly is that the model gets biased towards the points that are observed in the starting steps of the optimisation cycle.
+During the implementation of deep ensembles, we found that the model performs much better in the HPO evaluation cycle when we train it from scratch at every optimization step (acquisition step). This is shown in Section~\ref{sec:baselineResults}.
+This result is counterintuitive because an already trained model should quickly converge to a local optimum.
+One of the reasons for this performance anomaly is that the model gets biased towards the points observed in the starting steps of the optimization cycle.
 Lets say we have 2 models 
 \begin{itemize}
 \item $\textrm{m}_{\textrm{restart}}$ which always restarts training at every acquisition step.
-\item $\textrm{m}_{\textrm{reuse}}$ which trains the model trained in the previous optimization steps.
+\item $\textrm{m}_{\textrm{reuse}}$ which continues to train the model trained in the previous optimization steps.
 \end{itemize}
+Let the models be finetuned for 100 epochs at each step.
+Let there be just one seen HP configuration at the beginning of the optimization.
+The figures~\ref{fig:bias25},~\ref{fig:bias50},  and ~\ref{fig:bias100} show the number of times each observed HP configuration is used for training the model at the 25th, 50th and 100th optimization step by the $\textrm{m}_{\textrm{reuse}}$ model.
 
 \begin{figure}[h]% [H] is so declass\'e!
 \centering
 \begin{minipage}{0.45\textwidth}
 \includegraphics[width=\textwidth]{images/bias25}
-\caption{Bias at 25th optimization cycle}
+\caption{Bias at $25^{th}$ optimization cycle.}
     \label{fig:bias25}
 \end{minipage}\hfill
 \begin{minipage}{0.45\textwidth}
 \includegraphics[width=\textwidth]{images/bias50}
-\caption{Bias at 50th optimization cycle}
+\caption{Bias at $50^{th}$ optimization cycle.}
     \label{fig:bias50}
 \end{minipage}\par
 \vskip\floatsep% normal separation between figures
 \includegraphics[width=0.45\textwidth]{images/bias100}
-\caption{Bias at 100th optimization cycle}
+\caption{Bias at $100^{th}$ optimization cycle.}
     \label{fig:bias100}
 \end{figure}
 
+We in figures~\ref{fig:bias25},~\ref{fig:bias50},  and ~\ref{fig:bias100} that the number of times a data point is used during the training is biased with the first data point being used much more than the last.
+Generally, all the data is used during finetuning due to data scarcity.
+Hence,  in our example, the number of times an HP configuration is used scales with the number of epochs trained.
+The usage bias is not intended because all observed HP configurations should be treated equally in any training or finetuning step.
+When we use $\textrm{m}_{\textrm{restart}}$ every known HP configuration is used only 100 times for finetuning at every evaluation step.
+Hence it is better to restart the model before finetuning.
 
-Let the models be fine tuned for 100 epochs at each step.
-Let there be just 1 seen HP configuration to start with.
-The figures~\ref{fig:bias25},~\ref{fig:bias50},  and ~\ref{fig:bias100} show the number of times each observed HP configuration is used for training the model at the 25th, 50th and 100th optimization cycle step by the $\textrm{m}_{\textrm{reuse}}$ model.
-
-Generally all the data is used during fine tuning due to data scarcity.
-Hence,  in our example the number of times an HP configuration is used scales with the number of epochs trained.
-The heavy bias that is present in the figures is actually not intended.
-This is because all observations should be treated equally in any training/fine-tuning step.
-When we use $\textrm{m}_{\textrm{restart}}$ every known HP configuration is used only 100 times at every evaluation step.
-Hence it is better to restart the model before fine tuning.
-
-The second reason for restarting is that the model may get stuck at a stubborn local minima at any fine tuning step $n$ where $1 <= n <= 100$ in our case.
-Coming out of this local minima may require the response surface to change very drastically.
-The response will change like this only when the training data distribution significantly changes.
-This is not possible in the sequential process of SMBO because at every step only 1 new HP configuration is added to the known HP configurations.
+The second reason for restarting is that the surrogate model may get stuck at a stubborn local minimum at any finetuning step $n$, where $1 <= n <= 100$ in our case.
+Coming out of this local minimum may require the response surface to change drastically.
+The response surface will change drastically only when the training data distribution changes significantly.
+This is not possible in the sequential process of SMBO because, at every step, only one new HP configuration is added to the known HP configurations.
 
 \begin{figure}[htb]
   \centering
     \includegraphics[scale=0.45]{images/localMinima}
-    \caption{Figure showing changes in response surfaces and a stubborn local minima}
+    \caption{Figure showing changes in response surfaces and a stubborn local minimum.}
     \label{fig:localMinima}
 \end{figure}
 
@@ -1984,17 +1982,17 @@ Consider the red curve.
 It represents the HP response surface for $k$ known data points.
 When we add $(k+1)^{th}$ data point,  most of the response surface remains the same.
 Only part of it changes.
-This is represented by the blue response surface.
-If our model is already trained for the red curve,  it becomes extremely difficult for it to come out of local minima because of the minimal changes in the response surface.
-We call this minima a stubborn local minima.
-This is depicted by the brown dot in the figure.
+The blue curve represents the response surface for $(k+1)$ data points.
+If our model is already trained for the red curve,  it becomes challenging for it to come out of the local minimum because of the minimal changes in the response surface.
+We call this such a minimum, a stubborn local minimum.
+The brown dot in the figure depicts the stubborn local minimum.
 
-If however,  we reload and retrain our model from the beginning there is more chance of it reaching the good local optima in the blue curve if it descends from the other direction.
-The number of ways to reach a good local minima increases exponentially with the increase in the HP search space dimensions.
-Hence, restarting the training (from the saved model in our case) should improve our fine tuned model.
+If we reload and retrain our model afresh, the probability of reaching a good local minimum is higher. For example, during training for the blue curve, the surrogate model can start from a value $x > 10$. This would enable it to reach a better local minimum than a model that does not restart finetuning.
+The number of ways to reach a good local minimum would increase exponentially with the increase in the dimensions of the HP search space.
+Hence, restarting the training (from the saved model in our case) should improve our finetuned surrogate model.
 
-Because of these reasons,  we use the restart mechanism during the fine tuning of our ranking loss model (and also baseline implementations).
-This makes the model more robust.
+Because of these reasons,  we use the restart mechanism during the finetuning of our ranking loss surrogate (and baseline implementations).
+This makes the surrogate more robust.
 
 \subsubsection{Using cosine annealing}
 
@@ -2222,6 +2220,7 @@ We use this \textbf{rank graph} to compare the different surrogates in this thes
 For example, Figure~\ref{fig:RsGpRankGraph} compares the rank graph of 2 baselines.
 
 \section{Baseline Results}
+\label{sec:baselineResults}
 The results of Deep Ensemble and FSBO baselines are discussed in this section.
 
 \begin{figure}[htb]
