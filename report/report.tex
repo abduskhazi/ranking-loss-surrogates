@@ -1098,68 +1098,69 @@ For the loss function, the order of the objects in the pair is irrelevant.
 So,  instead of taking two pairs containing the same objects (but in a different order), only one pair is taken such that $s(a_1) - s(a_2) > 0$.
 This makes the implementation easier.
 
-\section{Loss function list-wise: ListNet}
+\section{Listwise Loss function: ListMLE}
 
-In this section we try to intuitively explain the ListNet idea proposed in~\cite{listwisebetter}.
-Our objective is to learn the scoring function $s$ such that it returns scores that are similar in relevance/order when compared to the ground truth scores.
-That is to say
+In this thesis, we used the listwise loss function called ListMLE for our analysis. To understand ListMLE in-depth, we first talk about a listwise loss function called ListNET, which is its predecessor. After this, we will define and analyze the ListMLE loss function itself.
+
+\subsection{ListNET}
+The ListNet idea was proposed by Cao et al. ~\cite{listwisebetter}. In this section, We intuitively explain the mathematical equations that define this loss function.
+
+Our objective is to learn the scoring function $s$ such that it returns scores that are similar in relevance (or) order when compared to the ground truth scores.
+Let us assume we learn the scoring function $s$ such that
 $$
 y_3 < y_{12} < y_1 \implies s(a_3) < s(a_{12}) < s(a_1)
 $$
-This would make the ranking of the objects equal to the ranking obtained by using the ground truth values.
+The ranking of objects is obtained by sorting them based on their respective scores. Here, sorting the objects based on the scores returned by $s$ would return the same ranking compared to the ranking obtained by sorting the objects using the ground truth values.
 Note that we do not need to get the exact ground truth scores.
-This increases the number of acceptable functions that can be learnt by increasing the target function space.
-This makes it easier to learn the scoring function.
+This increases the target function space, and more than one function gives the correct results.
+A bigger target function space makes learning a suitable scoring function easier.
+Another notable point is that the sort functionality is non-differentiable; hence it is not a part of the ranking loss function.
 
-Ranking is obtained by sorting the objects based on their respective scores.
-Note that the sort functionality is non differentiable hence it is not a 
-part of the ranking loss function.
-Our loss function needs to be constructed using the following 2 lists:
+Our loss function needs to be constructed using the following two lists:
 \begin{itemize}
 \item List of scores given by scoring function $s$.
-\item List of scores given to us by ground truth.
+\item List of scores given to us by the ground truth.
 \end{itemize}
+If the loss function returns a distance between the two given lists, learning the function $s$ amounts to reducing this distance. Hence finding an optimum is to find the minimum distance between the two lists by changing the parameters of the scoring function $s$.
 
-The loss function must find some sort of a distance between the 2 given lists.
-It then can reduce the distance by changing the parameters of the scoring function.
-
-In ListNet,  a probabilistic approach is taken so as to account for any uncertainties in the ground truth values.
-Consider selecting an object from the input set with a probability
+In ListNET, a probabilistic approach is adopted to calculate the distance between the two lists. This accounts for any uncertainties in the ground truth values.
+The probability of selecting an object from the input set is given by
 \begin{equation}
-P = \frac{s(a)}{\Sigma_i s(a_i)} \;\;\; \forall i \in \{1, 2, 3, ...,  |\mathbb{P}|\}
+\label{eq:basicProbEquation}
+P = \frac{s(a)}{\Sigma_i s(a_i)} \;\;\; \forall i \in \{1, 2, 3, ...,  n\}
 \end{equation}
-
-This make intuitive sense because the probability of selecting an object should be higher if it more relenvant and vise-versa.
-Note that the score of any object by the scoring function can negative as well.
+where $n$ is the list size.
+Equation~\ref{eq:basicProbEquation} makes intuitive sense because the probability of selecting an object should be higher if it is more relevant and vise-versa.
+Note that the score of any object given by the scoring function can also be negative.
 Therefore the score is passed through a strictly positive and increasing function $\phi$.
 This changes the probability to
 \begin{equation}\label{eq:objselection}
-P = \frac{\phi(s(a))}{\Sigma_i \phi(s(a_i))} \;\;\; \forall i \in \{1, 2, 3, ...,  |\mathbb{P}|\}
+P = \frac{\phi(s(a))}{\Sigma_i \phi(s(a_i))} \;\;\; \forall i \in \{1, 2, 3, ...,  n\}
 \end{equation}
 
-Equation~\ref{eq:objselection} is also referred to as top 1 probability of an object in~\cite{listwisebetter}.
+Equation~\ref{eq:objselection} is also referred to as top 1 probability of an object by Cao et al. ~\cite{listwisebetter}.
 This is because this gives the probability of ranking the object first when we are calculating the permutation probability of given list.
 
-The proposed way to find the distance between 2 lists in ListNet is
-\begin{itemize}
+The proposed method to find the distance between 2 lists in ListNet is
+\begin{enumerate}
 \item Find the top 1 probabilities of each object using the scores given by the scoring function.
-\item Using the ground truth values,  find similar top 1 probabilities.
-\item The cross entropy between the 2 entities gives us the "distance" between the 2 lists.
-\end{itemize}
+\item Using the ground truth values, find similar top 1 probabilities.
+\item Since the list of top 1 probabilities forms a probability distribution, the cross-entropy between the two top 1 probability lists is taken as the "distance" metric.
+\end{enumerate}
 
 Let $P_{s(a)}$ represent the top 1 probability of an object using the scores given by the scoring function.
-Similarly,   let $P_y$ represent the top 1 probability using its ground truth value.
+Similarly,  let $P_y$ represent the top 1 probability using its ground truth value.
 The cross entropy used as a loss in ListNet is given by
 \begin{equation}
 L(\textbf{y},  {s(\textbf{a})}) = - \Sigma_i P_{s(a_i)} \log P_{y_i}
 \end{equation}
-Where $\textbf{y}$ and $s(\textbf{a})$ represent the ground truth values and the scores given by the scoring function.
+Where $1 \leq i \leq n; i \in \mathbb{I}^+$ and $\textbf{y}$ \& $s(\textbf{a})$ represent the ground truth values and the scores given by the scoring function respectively.
 
 \iffalse
 
 \fi
 
-\section{Loss function: ListMLE}\label{sec:listMLE}
+\subsection{ListMLE}\label{sec:listMLE}
 
 ListMLE loss stands for, "List Maximum Likelihood Estimation" loss.
 It is another type of list loss function that is similar to listNet.
