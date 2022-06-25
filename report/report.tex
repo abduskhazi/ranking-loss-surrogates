@@ -1906,22 +1906,25 @@ After the meta-training, every model is saved to a persistent location (e.g., ha
 
 
 \subsection{Fine tuning}\label{sec:rlfinetune}
-Fine tuning is the second major part of the optimization process.
-This may be considered optional for transfer HPO models like ours.
-However,  we found that it improved the HPO evaluation cycle performance.
+Finetuning is the second major part of the optimization process.
+It may be considered optional for transfer HPO surrogates like ours.
+However, we found that it gave improved results.
 
-We take the SMBO optimization of Deep Ensembles in Algorithm~\ref{alg:deepEnsembleFinetuning} as an example to understand the fine tuning process.
-In this algorithm,  at every evaluation cycle the deep ensembles are retrained with the seen evaluations of the true HPO objective function.
-We need to modify Algorithm~\ref{alg:deepEnsembleFinetuning} by replacing Deep Ensemble training with the fine tuning of our model.
-The fine tuning  process is exactly similar to the \textsc{MetaTrain} procedure in Algorithm~\ref{alg:RLSMetaTraining}.
-The only difference is that we use seen evaluations instead of meta training data for training.
-To avoid duplication,  we do not re-write the complete algorithm again.
-We do fine tuning for 300 epochs.
+We take the SMBO optimization of Deep Ensembles in Algorithm~\ref{alg:deepEnsembleFinetuning} as an example to understand the finetuning process.
+In this algorithm, the deep ensembles are retrained at every optimization step with the seen evaluations of the true HPO objective function.
+We need to modify Algorithm~\ref{alg:deepEnsembleFinetuning} by replacing Deep Ensemble training with the finetuning of our model.
+To avoid duplication, we do not rewrite the complete algorithm again.
+
+The finetuning process is similar to the \textsc{MetaTrain} procedure in Algorithm~\ref{alg:RLSMetaTraining}.
+The difference is that we use seen evaluations instead of the train split of meta-data. Moreover, sampling is not required during the finetuning process as we use all of the available data.
+We do finetuning for 1000 epochs.
 The number of epochs can be varied based on the computation resources available.
 
-Like FSBO,  at every evaluation cycle,  the model is reloaded from the saved state before being fine tuned.
-In the next section we discuss why this restart is required.
-Subsequently we talk about the use of cosine annealing used during fine tuning.
+We have to reload the saved surrogate at every optimization step to use the ranking loss surrogate as a transfer HPO method. This is similar to how FSBO is used.
+However, if we initialize it randomly instead of loading the saved surrogate, the surrogate can be used as a non-transfer HPO method.
+Nevertheless, there is a requirement to start the finetuning process afresh. In the next section, we discuss why this restart is required.
+Subsequently, we talk about the cosine annealing used during finetuning.
+
 
 \subsubsection{Requirement of restarting training}\label{sec:restart}
 
