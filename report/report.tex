@@ -941,11 +941,11 @@ only fine tune best fit is not giving good results. Investigation in progress.
 \chapter{Background}
 \label{chap:Background}
 
-In this chapter, we discuss in detail the fundamental concepts one must grasp to understand the thesis work. We have already talked about the concept of ranking in Section~\ref{sec:ranklearning}.
+In this chapter, we discuss the fundamental concepts one must grasp to understand the thesis work. We have already talked about the concept of ranking in Section~\ref{sec:ranklearning}.
 In this chapter, we take the next step to define the ranking loss functions abstractly.
 After that, we discuss the concrete loss functions studied in this thesis.
 We also talk about how uncertainty is modeled using Deep Neural Network Ensembles.
-Lastly,  we discuss the details of the baseline implementations of Deep Ensembles and FSBO that we did in this thesis.
+Lastly,  we discuss the details of the baselines - Deep Ensembles and FSBO that we studied in this thesis.
 
 \section{Ranking Loss functions: Definition}
 
@@ -983,42 +983,49 @@ Consider data in the format shown in table~\ref{tab:dataformat} is given to us.
   ... & $\{...\}$ & $\{...\}$ \\
   \bottomrule
 \end{tabular}
-\caption{Data format used to train the scoring function.}
+\caption{Data used to train a scoring function.}
 \label {tab:dataformat}
 \end{table}
-Let each data point $a_i$ be a sample/element from the set $\mathbb{A}$.
-Each $y_i$ represents the ground truth preference score of objects belonging to a set $\mathbb{Y}$.
-These preference scores of objects are relative to the objects within $\mathbb{A}$.
-Let $s$ be the scoring function to be learnt.
-Hence, the declaration of $s$ is given by
+
+Let each data point $a_i$ be a sample/element from the set $\mathbb{A}$ and let $y_i$ be their respective ground truth preferences.
+Normally the ground truth scores are given as real-valued numbers. Hence we assume that $y_i \in \mathbb{R}$.
+These preference scores are relative to the objects within $\mathbb{A}$.
+This means that the preference scores of two objects $a_i$ and $b_i$ belonging to 2 different sets $\mathbb{A}$ and $\mathbb{B}$ cannot be compared.
+The declaration of a function $s$ that maps objects in $\mathbb{A}$ to a real-valued score is given by:
 $$
 s : \mathbb{A} \mapsto \mathbb{R}
 $$
 
-The signature of the loss function depends on the type of loss we use.
-This is because the learning instance is of a different type in point-wise, pair-wise and list-wise losses.
-For point-wise loss functions,  each instance learning instance is a single object the loss function and its ground truth.  Its format hence can be defined as:
+The goal is to learn the function $s$ to predict the relevance score of any new object sampled from the set $\mathbb{A}$.
+We need a loss function to use machine learning techniques to learn $s$.
+If this loss function uses the concept of ranking, it is called a ranking loss function.
+If we parameterize function $s$ with $\theta$, we can use typical optimization techniques like gradient descent to obtain an optimum $\theta^*$ by minimizing the loss function. 
+Hence, our goal is obtaining the function $s_{\theta^*}$.
+
+There are various types of ranking loss functions. The type of ranking loss defines its signature, i.e., what type of input it takes.
+This is because the learning instance (or an input instance) to a loss function is different for different ranking types.
+The output of any loss function studied in this thesis remains a scalar irrespective of its type.
+
+We already know from Section~\ref{sec:ranklearning} that ranking losses can be either point-wise, pair-wise, or list-wise.
+For point-wise loss functions, each learning instance is a single object.
+Its format hence can be defined as:
 \begin{equation}
 L_{\texttt{point-wise}} : s(\mathbb{A}) \times \mathbb{Y} \mapsto \mathbb{R}
 \end{equation}
 
-Similarly,   the pair-wise loss function has each instance as a pair of objects and their corresponding ground truths.  Its format can hence be defined as:
-
+Similarly,  the pair-wise loss function has each instance as a pair of objects and their corresponding ground truths. Its format can hence be defined as:
 \begin{equation}
 L_{\texttt{pair-wise}} : s_1(\mathbb{A}) \times s_2(\mathbb{A}) \times \mathbb{Y}_1 \times \mathbb{Y}_2 \mapsto \mathbb{R}
 \end{equation}
 
-For list-wise losses,  one learning instance is a set of objects their corresponding ground truths.
-If we take any set $\mathbb{P}$ such that $\mathbb{P} \subseteq \mathbb{A}$,  the declaration of the list wise loss $L$ is hence given by
+One learning instance for list-wise losses is a set of objects with corresponding ground truths.
+If we take any set $\mathbb{P}$ such that $\mathbb{P} \subseteq \mathbb{A}$,  the declaration of the list-wise loss is hence given by
 \begin{equation}
 L_{\texttt{list-wise}} : s_1(\mathbb{A}) \times s_2(\mathbb{A}) ...  s_{|\mathbb{A}|}(\mathbb{A}) \times \mathbb{Y}_1 \times \mathbb{Y}_2 \times ...  \mathbb{Y}_{|\mathbb{A}|} \mapsto \mathbb{R}
 \end{equation}
 
-We consider the ground truth values to be $\mathbb{R}$ for our analysis of all loss functions.
-We have real valued ground truths in our data sets as well.
-
-In the next sections we analyse the loss functions that we we studied in this thesis.
-As list-wise loss functions are more advantageous conceptually than others we discuss them in more detail.
+In the following sections, we analyze the loss functions studied in this thesis.
+As list-wise loss functions are more advantageous conceptually than others, we discuss them in more detail.
 
 \section{Loss function Point Wise: Subset Regression}
 
@@ -1887,13 +1894,13 @@ After the meta-training, every model is saved to a persistent location (e.g., ha
 \label{alg:RLSMetaTraining}
 \hspace*{\algorithmicindent} \textbf{Input} : $epochs \in \mathbb{I}$ \\
  \hspace*{\algorithmicindent} \textbf{Input} : $X_{train}$,  $y_{train}$  \Comment{Meta data used to train from all Search Spaces.} \\
-\hspace*{\algorithmicindent} \textbf{Input} : $s_{\theta}$ \Comment{Surrogate to train (parameterized by $\theta$)}
+\hspace*{\algorithmicindent} \textbf{Input} : $m_{\theta}$ \Comment{Surrogate model to train (parameterized by $\theta$)}
 \begin{algorithmic}[1]
-\Procedure{MetaTrain}{$s_{\theta}$,  $X_{train}$,  $y_{train}$, $epochs$}
+\Procedure{MetaTrain}{$m_{\theta}$,  $X_{train}$,  $y_{train}$, $epochs$}
     \For{$i < epochs$}
             \For{$j < 100$}
                 \State $B_{X}, B_{y} \gets$ \textsc{DoubleSample}($X_{train}$) \Comment{Get the training batch}
-                \State $y_{pred} \gets s_{\theta}(B_{X})$
+                \State $y_{pred} \gets m_{\theta}(B_{X})$
                 \State $\textrm{loss} \gets L_{mle}(y_{pred},  B_{y}) $
                 \State $g \gets \frac{\partial \textrm{loss}}{\partial \theta}$ \Comment{$g$ stands for gradient}
                 \State Use $g$ to update $\theta$ using the Adam optimizer
