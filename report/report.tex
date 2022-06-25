@@ -1019,21 +1019,23 @@ L_{\texttt{pair-wise}} : s_1(\mathbb{A}) \times s_2(\mathbb{A}) \times \mathbb{Y
 \end{equation}
 
 One learning instance for list-wise losses is a set of objects with corresponding ground truths.
-If we take any set $\mathbb{P}$ such that $\mathbb{P} \subseteq \mathbb{A}$,  the declaration of the list-wise loss is hence given by
+If we take any positive integer $n \leq |\mathbb{A}|$,  the declaration of the list-wise loss is given by
 \begin{equation}
-L_{\texttt{list-wise}} : s_1(\mathbb{A}) \times s_2(\mathbb{A}) ...  s_{|\mathbb{A}|}(\mathbb{A}) \times \mathbb{Y}_1 \times \mathbb{Y}_2 \times ...  \mathbb{Y}_{|\mathbb{A}|} \mapsto \mathbb{R}
+L_{\texttt{list-wise}} : s_1(\mathbb{A}) \times s_2(\mathbb{A}) ...  s_{n}(\mathbb{A}) \times \mathbb{Y}_1 \times \mathbb{Y}_2 \times ...  \mathbb{Y}_{n} \mapsto \mathbb{R}
 \end{equation}
 
 In the following sections, we analyze the loss functions studied in this thesis.
 As list-wise loss functions are more advantageous conceptually than others, we discuss them in more detail.
 
-\section{Loss function Point Wise: Subset Regression}
+\section{Point Wise Loss Function: Subset Regression}
 
-For analysing point-wise loss functions,  we take the subset regression loss function proposed by Cossock et. al. ~\cite{subsetregressionpaper} as a reference.
-We reused the implementation written by Pobrotyn et. al.~\cite{Pobrotyn2020ContextAwareLT} for our analysis.
+We take the subset regression loss function proposed by Cossock et al. ~\cite{subsetregressionpaper} as a reference for analyzing point-wise loss functions.
+We reused the implementation written by Pobrotyn et al. ~\cite{Pobrotyn2020ContextAwareLT} for our analysis.
 
-This loss function is very similar to the Root Mean Squared Error loss function.
-Given a batch containing $a_i$ and their corresponding ground truth values $y_i$ where $0 \leq i \leq N$,  the loss function is of the form
+
+The basic idea of subset regression is to learn the rank of the objects directly and not have an extra step of using the output scores to determine the rank of objects.
+The subset regression loss function is similar to the RMSE (Root Mean Squared Error) loss function.
+Given a batch of size $N$ containing objects $a_i$ and their corresponding ground truth values $y_i$ such that $0 \leq i \leq N$,  the loss function is of the form
 \begin{equation}
 L_{\texttt{SubsetRegression}} = \frac{1}{N} \sum\limits_{i=1}^{N} (s(a_i) - \texttt{level}(y_i))^2
 \end{equation}
@@ -1041,18 +1043,18 @@ L_{\texttt{SubsetRegression}} = \frac{1}{N} \sum\limits_{i=1}^{N} (s(a_i) - \tex
 The $\texttt{level}$ is given by the rank of $y_i$ in the current batch.
 For example,  consider we have 3 ground truth values $\{y_1 = 0.8, y_2 = 0.9, y_3 = 0.1\}$.
 If we consider that a higher $y$ value is better and a lower rank/level is better then 
-$\texttt{level}(y_1) = 2,  \texttt{level}(y_2) = 1,  \texttt{level}(y_3) = 3$
+$\texttt{level}(y_1) = 2,  \texttt{level}(y_2) = 1,  \texttt{level}(y_3) = 3$.
 
-To keep the implementation such that the score value is in the same given range as the regression value,  Pobrotyn et. al.~\cite{Pobrotyn2020ContextAwareLT} use a slightly modified version of the loss function which is conceptually the same.
+To keep the implementation such that the score value is in the same given range as the regression value,  Pobrotyn et al. ~\cite{Pobrotyn2020ContextAwareLT} use a slightly modified version of the loss function, which is conceptually the same.
 This loss function is given by
 \begin{equation}
 L_{\texttt{SubsetRegression}} = \frac{1}{N} \sum\limits_{i=1}^{N} (\texttt{distinct\_levels} * s(a_i) - y_i)^2
 \end{equation}
-Where,  $\texttt{distinct\_levels}$ is the total number of distinct ground truth values in the given batch.
 
-As you can see the loss function does not directly make the scoring
+Where $\texttt{distinct\_levels}$ is the total number of distinct ground truth values in the given batch.
+As we can see, the loss function does not directly make the scoring
 function learn the output regression value.
-This property is common across all ranking loss functions.
+This property is shared across all ranking loss functions.
 
 \section{Loss function pairwise: RankNet}
 
