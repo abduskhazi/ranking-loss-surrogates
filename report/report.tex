@@ -2657,7 +2657,7 @@ Hence it selects these HP configurations in the first evaluation steps.
 It makes intuitive sense because this behavior is shown by experts who try out the best HP configuration seen in their experience in the first evaluations. On average, this strategy works very well; hence the first evaluations were good for the non-finetuned surrogate model.
 However, as the optimization steps proceed, the surrogate can condition its selection on more data. This conditioning is only done when the model is finetuned. Hence the finetuned surrogate works better in the long run.
 
-\subsection{Comparing results with SOAT surrogates}
+\subsection{Comparing results with SOTA surrogates}
 After analyzing our proposed model, one natural question is how it performs against the state-of-the-art HPO surrogates. We compare our results with the best-performing transfer and non-transfer HPO surrogates to answer this question.
 
 Figure~\ref{fig:NonTransferSOAT} compares the results with some prominent state-of-the-art non-transfer HPO surrogates. We see from this figure that the proposed model far outperforms these surrogates. This is natural because our model is a transfer model and has the advantage of getting meta-trained before being used in the optimization.
@@ -2991,36 +2991,29 @@ Then the loss function we would use to learn our scorer is
 \end{equation}
 where $k \in \mathbb{R}$.
 Note that the second parameter of list wise loss function is scale-invariant; hence scaling the list does not affect the loss output (Section~\ref{sec:listMLE}).
-To keep the output score in a defined range, we utilized the range controlling mechanism discussed in Appendex~\ref{chap:chap:OutputRangeControl}.
+To keep the output score in a defined range, we utilized the range controlling mechanism discussed in Appendex~\ref{chap:OutputRangeControl}.
 
 We sample the testing data from the following ranges to evaluate our learned model:
 \begin{itemize}
-\item The Same range as seen during training i.e $[1, 100]$.
-\item A completely different range as seen during training i.e $[-100, -1]$.
-\item A hybrid range i.e $[-50, 50]$.
+\item \textbf{In range}: The Same range as seen during training i.e $[1, 100]$.
+\item \textbf{Out of range}: A completely different range as seen during training i.e $[-100, -1]$.
+\item \textbf{Hybrid Range}: A range that is partially seen and partially unseen i.e $[-50, 50]$.
 \end{itemize} 
-
-%    #       Result -> Sorting is possible provided the output range of the model is not restricted
-%    #       For now, we sample train/Val data from the same distribution.
-  %  #   List of numbers to test with = {-1 to -100}
-%    #       Result -> This is not possible because the model will map this to extreme values as it
- %   #                 is not distribution dependent.
- %   #   Check the percentage of the lists in the correct sorted order.
  
-To evaluate our scorer,  we first sample the validation data from the above ranges,
-We then check the percentage of the lists that are correctly sorted during our testing time.
-We used the same values of $k$ and $\alpha$ as used in the basic scoring model.
-During training a batch size of 100 lists was used.
-We try sort 1000 lists according to the learnt scorer's results.
-The accuracy gives the fraction of the lists that were sorted in 1000 lists.
-We report the average of 5 runs in the Table~\ref{table:caseStudyResults}.
+During training, a batch size of 100 lists was used. The training was done with values sampled inside the $[1, 100]$ range.
+For testing, we sample data from inside, outside, and hybrid ranges.
+A batch of 1000 lists was sampled for testing.
+We sort these lists according to their respective scores output by our learned model.
+After that, we check the percentage of the correctly sorted lists.
+This accuracy of our model is the fraction of 1000 lists that were sorted.
+We report the average of 5 runs in Table~\ref{table:caseStudyResults}.
 
 \begin{table} [h!]
 \centering
 \resizebox{\linewidth}{!} {
 \begin{tabular}{ | c | c | c | c | c | c | }
 \hline
-\textbf{Training Epochs} & \textbf{List size} & \textbf{In-range Acc.} & \textbf{Out-range Acc.} & \textbf{Hybrid Acc.} \\ [0.5 ex]
+\textbf{Training Epochs} & \textbf{List size} & \textbf{In-range Acc.} & \textbf{Out-of-range Acc.} & \textbf{Hybrid-range Acc.} \\ [0.5 ex]
 \hline \hline
 1000 & 3 & 0.99 & 0.27 & 0.40\\
 100 & 3  & 0.77 & 0.29 & 0.11\\
@@ -3030,21 +3023,28 @@ We report the average of 5 runs in the Table~\ref{table:caseStudyResults}.
 \hline
 \end{tabular}
 }
-\caption{Sorting Accuracies at test time}
+\caption{Learned model Accuracies.}
 \label {table:caseStudyResults}
 \end{table}
 
-We find from the tabulated results that it is important to completely learn the function by running a higher number of epochs.
-To comprehensively learn the scoring function,  it is crucial to have a larger list size.
-This will make our scorer model work well when the input is from the same distribution seen during training.
-Moreover,  it also gives reasonable when the input comes from the distribution edge (i.e from a location close to the distribution).
+We find from the tabulated results that training the model by running a higher number of epochs is vital.
+Moreover, bigger list size is crucial to comprehensively learning the objective function.
+The larger list size will make our model work well when the input is from the same distribution seen during training.
+Moreover,  it also performs well when the input comes from a hybrid range.
 These are good properties to have in any machine learning model.
 
-The loss function is not weighted in this toy example because sorting requires that each data point be on its correct location.
+The loss function is not weighted in this toy example because sorting requires each data point to be in its correct location.
 Therefore,  our problem is not a direct generalization of this toy example.
-Moreover the input domain in the toy example is quite simple as compared to the real world problems.
-Nevertheless,  we do take these results into account to decide on the list size for training our proposed ranking surrogate model.
+Moreover, the toy example's input domain is relatively simple compared to real-world problems.
+Nevertheless,  we take these results into account to decide on the list size for training our proposed ranking surrogate model.
 
+
+%    #       Result -> Sorting is possible provided the output range of the model is not restricted
+%    #       For now, we sample train/Val data from the same distribution.
+  %  #   List of numbers to test with = {-1 to -100}
+%    #       Result -> This is not possible because the model will map this to extreme values as it
+ %   #                 is not distribution dependent.
+ %   #   Check the percentage of the lists in the correct sorted order.
 
 \iffalse
 % \chapter*{Appendices}
