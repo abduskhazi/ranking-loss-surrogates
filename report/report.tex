@@ -1162,15 +1162,14 @@ Where $1 \leq i \leq n; i \in \mathbb{I}^+$ and $\textbf{y}$ \& $s(\textbf{a})$ 
 
 \subsection{ListMLE}\label{sec:listMLE}
 
-ListMLE loss stands for, "List Maximum Likelihood Estimation" loss.
-It is another type of list loss function that is similar to listNet.
-As in ListNet,  the probability of selecting an object from the list is taken the same as given in equation~\ref{eq:objselection}.
-However,  the final loss used in MLE is not cross entropy.
-Rather it maximizes a likelihood estimation as the name suggests.
+The ListMLE loss stands for "List Maximum Likelihood Estimation" loss.
+As in ListNet, the probability of selecting an object from the list is the same as given in equation~\ref{eq:objselection}.
+However,  the final loss used in ListMLE is not cross-entropy.
+Instead, it maximizes a likelihood estimation, as the name suggests.
 
 Let $\pi$ define any permutation of a list.
-The probability of a permutation is nothing but the probability of selecting one document after another without replacement.
-In our case the permutation probability of selecting 1 permutation using the selection probabilities given by equation~\ref{eq:objselection}  is~\cite{listwisebetter}
+The probability of a permutation is nothing but the probability of selecting objects from the list without replacement.
+In our case, the permutation probability of selecting one permutation using the selection probabilities given by equation~\ref{eq:objselection}  is
 \begin{equation}\label{eq:firstMLEequation}
 P_{\pi} = \prod\limits_{j=1}^{k} \frac{\phi(s(\pi_j))}{ \sum\limits_{t=j}^k \phi(s(\pi_k))}
 \end{equation}
@@ -1181,8 +1180,8 @@ Applying log to the above equation gives us
 \log P_{\pi} = \sum\limits_{j=1}^{k} \log \frac{\phi(s(\pi_j))}{ \sum\limits_{t=j}^k \phi(s(\pi_k))}
 \end{equation}
 
-However,  the question remains which permutation to use?
-The best permutation for the given set of objects would be according to the true scores of the objects.
+However, the question remains which permutation to use?
+The best permutation for the given set of objects would be according to the actual relevance scores of the objects.
 More precisely,  it would be the objects ordered in the descending order of their relevance scores.
 Let this permutation be represented by $\pi^*$.
 Hence our probability equation becomes
@@ -1190,29 +1189,29 @@ Hence our probability equation becomes
 \log P_{\pi^*} = \sum\limits_{j=1}^{k} \log \frac{\phi(s(\pi^*_j))}{ \sum\limits_{t=j}^k \phi(s(\pi^*_k))}
 \end{equation}
 
-ListMLE maximizes this probability.
-Since most we generally minimize the objective function,  the loss function of ListMLE is given by
+The ListMLE loss function maximizes this probability.
+Since we generally minimize the objective function, the loss function is given by
 \begin{equation}
 L_{mle} = - \log P_{\pi^*}
 \end{equation}
-Expanding the right hand side of the equation gives us the final loss function that has to be minimised by any algorithm that uses ListMLE
-
+Expanding the right-hand side of the equation gives us the final loss function that must be minimized.
+This is the general form of the loss function proposed by Xia et al. ~\cite{listmlepaper}.
 \begin{equation}
 L_{mle} = -  \sum\limits_{j=1}^{k} \log \frac{\phi(s(\pi^*_j))}{ \sum\limits_{t=j}^k \phi(s(\pi^*_k))}
 \end{equation}
 
 
-Notice that in the calculation of the loss, the true score values of the objects are unused.
-Which means that the actual scores of the objects do not matter.
-The only constraint is that the scores must have the values that give the same permutation.
-Even uneven scaling of the actual scores does not affect the output as long as the constraint is maintained.
+Notice that the objects' ground truth score values are unused in the loss calculation.
+This means that the absolute predicted scores of the objects do not matter.
+The only constraint is that the scores must have the correct relative values and that using these values to sort the list should result in the correct ordering of objects.
+Even non-linearly scaling the actual scores does not affect the output as long as the constraint is maintained.
 
-In the case of ListNet,  however,  the true scores do matter.
-The probability of selecting objects according to their true scores is used.
+In the case of ListNet,  however,  the actual scores do matter.
+The probability of selecting objects depends on their ground truth scores.
 Hence the result is invariant only to linear scaling.
+This advantage makes the ListMLE loss function superior to the ListNet loss. The ListMLE function has a larger target function space, making convergence easier during optimization.
+Because of this advantage, we use ListMLE as a list loss function in our thesis.
 
-This advantage makes listMLE loss function superior to the ListNet as it makes the target space of functions bigger and hence the convergence can be quicker.
-Because of this advantage we use ListMLE as a list loss function in our thesis.
 
 \section{Position Enhanced Ranking}\label{sec:positionEnhancedRanking}
 
