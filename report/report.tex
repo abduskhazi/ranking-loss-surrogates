@@ -1328,7 +1328,7 @@ Algorithm~\ref{alg:deepEnsembleFinetuning} shows how they were used in the SMBO 
 In Algorithm~\ref{alg:deepEnsembleFinetuning}  each time a new or best HP configuration is selected and evaluated,  an HP optimization step (or optimization cycle) completes.
 In the rest of this report,  we refer to this as an optimization step.
 
-\begin{algorithm}[H]
+\begin{algorithm}[htb]
 \caption{SMBO with Deep Ensemble surrogate}
 \label{alg:deepEnsembleFinetuning}
 \begin{algorithmic}
@@ -1372,7 +1372,7 @@ This makes DE surrogates scalable.
 One question that remains to be answered is what sort of architecture our neural networks use.
 For this, two architectures were analyzed - an undivided neural network as shown in Figure~\ref{fig:undividedarchitecture} and a neural network divided at its tail as shown in Figure~\ref{fig:dividedarchitecture}.
 
-\begin{figure}[htb]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[scale=0.75, transform shape,
 roundnode/.style={circle, draw=brown!60, fill=black!5, very thick, minimum size=7mm},
@@ -1398,7 +1398,7 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \label{fig:undividedarchitecture}
 \end{figure}
 
-\begin{figure}[htb]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[scale=0.75, transform shape,
 roundnode/.style={circle, draw=brown!60, fill=black!5, very thick, minimum size=7mm},
