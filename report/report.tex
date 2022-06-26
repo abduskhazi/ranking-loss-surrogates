@@ -1433,55 +1433,45 @@ The ranking loss surrogate uses an undivided architecture similar to an architec
 
 \subsection{FSBO}
 \label{sec:FSBOBackground}
-Few Shot Bayesian Optimization (FSBO) is a transfer learning HPO method that utilizes a meta learnt surrogate for knowledge transfer mechanism.
-It reformulates the problem into few shot learning task.
-In the context of our problem,  this means meta learning thoroughly from the existing meta data and then adapting to the new task at evaluation cycle by fine tuning a few training epochs.
-Therefore the following 2 steps are required to be done in a chronological order
-\begin{itemize}
+Few Shot Bayesian Optimization (FSBO) is a transfer HPO method that utilizes meta-learned surrogates for the knowledge transfer mechanism.
+It reformulates the HPO problem into a few-shot learning task.
+In FSBO, the surrogate meta-learns common characteristics of some given tasks by training on their respective metadata. After that, it adapts to the target task during HP optimization by finetuning for a few training epochs using the known HP configurations and their evaluations.
+Therefore, the following two steps are required to be done in chronological order:
+\begin{enumerate}
 \item Meta training - For knowledge transfer.
-\item Fine tuning - For few shot learning.
-\end{itemize}
+\item Finetuning - For few-shot learning.
+\end{enumerate}
 
-For the purpose of knowledge transfer, the authors make use of a deep kernel surrogate proposed in by wilson et al~\cite{pmlr-v51-wilson16}.
-Here,  a neural network is used to transform points in the HP search space to a latent space.
-Kernels are then applied to this latent space in a Guassinan process to obtain a probabilistic evaluation.
-The deep kernel kernel can be represented as~\cite{fsbopaper}
+The authors of the FSBO paper (Wistuba et al.~\cite{fsbopaper}) make use of a deep kernel surrogate proposed by Wilson et al.~\cite{pmlr-v51-wilson16}.
+Here, a neural network transforms points in the HP search space into a latent space.
+Kernels are then applied to this latent space in a Gaussian process to obtain a probabilistic evaluation.
+The deep kernel can is represented as:~\cite{fsbopaper}
 $$
 k(\phi(\textbf{x}, \textbf{w})  ,   \phi(\textbf{x'}, \textbf{w}) |  \mathbf{\theta})
 $$
-Where $\textbf{x}$ and $\textbf{x'}$ are HP inputs in the original search space,
-$\mathbf{\theta}$ and $\textbf{w}$ are parameters of kernel $k$ and the neural network $\phi$.
+where $\textbf{x}$ and $\textbf{x'}$ are configurations in the original HP search space. $\mathbf{\theta}$ and $\textbf{w}$ are parameters of kernel $k$ and the neural network $\phi$ respectively.
 We used the implementation of deep kernels provided by Patacchiola et al.~\cite{patacchiola2020bayesian} in this thesis.
 
-During the meta training step, we train our surrogate by learning the parameters $\mathbf{\theta}$ and $\textbf{w}$.
-A New FSBO model and consequently new surrogate parameters have to be learnt for every new search space.
-This is the case even if the input dimensions are of the search space domain are the same.
-This is because every HP search space represents different machine learning model and hence has a different HP response surface.
-During training we first used an RBF kernel and then used a matern $\frac{5}{2}$ kernel.
+During meta-training, we train our surrogate by learning the parameters $\mathbf{\theta}$ and $\textbf{w}$.
+We used the Matern $\frac{5}{2}$ kernel in our implementation.
 A fully connected neural network was used to obtain the latent space representation.
+A New FSBO model and, consequently, new surrogate parameters must be learned for every new search space.
+This is the case even if the input dimensions of the HP search space are the same.
+This is because every HP search space represents a different ML model.
 
-If an assumption is made that the knowledge from the meta data is enough to predict the best HP configuration across all future dataset,  the fine tuning step may be skipped.
-However,  this is rarely the case as there are always variations in new dataset (Even though the model being optimised is the same).
-Therefore,  the hyper parameter response surface would also be different.
+If an assumption is made that the knowledge from the metadata is enough to predict the best HP configuration for all future tasks, the finetuning step may be skipped.
+However,  this is rarely the case. There are always variations in the new tasks.
+Therefore, finetuning was used with the FSBO model in every HP optimization procedure.
 
-The optimization algorithm in the case of FSBO is similar to Algorithm~\ref{alg:deepEnsembleFinetuning} with a minor change.
-The acquisition function used in this model is also expected improvement.
-The concept of restarting the fine tuning each time is also proposed in the FSBO paper~\cite{fsbopaper}.
-The difference here is that at each evaluation step,  the stored model is loaded anew and fine tuned before using it for predicting the best model.
-The restart happens from the meta trained FSBO model and not from a randomly initialized model as in the case of Deep Ensembles.
+The optimization algorithm in the case of FSBO is similar to Algorithm~\ref{alg:deepEnsembleFinetuning}.
+The acquisition function used in this model is also Expected Improvement.
+The FSBO implementation also uses restarting the finetuning before each HPO optimization step.
+However, the meta-trained FSBO surrogate is loaded anew instead of randomly initializing it, as in the case of DE surrogates.
 
-In our implementation,  Adam optimizer was used in both the training and fine tuning steps.
-Note,  however,  that the learning rate of the kernel parameters and the neural network parameters were identical.
-The learning rate used for meta-training was 0.0001 and that used for fine tuning was 0.03 different.
-We utilized cosine annealing during the fine tuning cycle.
-The rationale for using this is discussed in detailed in chapter 4.
-
-We used early stopping mechanism for meta training because we wanted to avoid huge computation costs and over fitting of the model during training.
-We took advantage of the split of meta-validation data to do the early stopping.
-We saved the best model in our implementation and if the validation loss went greater than lowest validation loss.
-The training was stopped if the training error was consistently higher than the validation error for a set number of epochs.
-In our case it was 10 epochs but this is easily configurable.
-
+We used an early stopping mechanism for meta-training to avoid substantial computation costs and overfitting of the surrogate.
+We took advantage of the split of meta-training and meta-validation data to do this early stopping.
+The training was stopped if the training error was consistently higher than the validation error for a set number of epochs (we used ten epochs in our case).
+ 
 \iffalse
 \subsubsection{Implementation issues}
 After completing the own implementation,  we found that the results obtained were not in par with the paper.
@@ -1740,13 +1730,13 @@ Algorithm~\ref{alg:listMLESorted} depicts this approach.
 
 More precisely, the ListMLE loss is re-written in the following form:
 
-\begin{equation}\label{eq:sortedListMLEequation}
+\begin{equation}
 L_{mle} = \sum\limits_{j=1}^{k} \left( \log \sum\limits_{t=j}^k \exp(s(\pi^*_k)) - \log \exp(s(\pi^*_j)) \right)
 \end{equation}
 
 Since the list values are sorted in the correct order, we can further synthesize the equation as:
 
-\begin{equation}\label{eq:sortedListMLEequation}
+\begin{equation}
 L_{mle} = \sum\limits_{j=1}^{k} \left( \log \sum\limits_{t=j}^k \exp(s^*(k)) - \log \exp(s^*(j)) \right)
 \end{equation}
 
@@ -2313,9 +2303,11 @@ During our implementation of FSBO, we found that an FSBO model with four neural 
 This architecture is similar to the Deep Ensemble architecture.
 The difference between the architectures is that FSBO has four network layers instead of 2.
 We used early stopping to get better training loss, as mentioned in Section~\ref{sec:FSBOBackground}.
-During the finetuning, we trained our model for 500 epochs with a learning rate of 0.03.
+The learning rate used for meta-training was 0.0001, and that used for finetuning was 0.03.
+We finetuned our model for 500 epochs.
+The learning rates of the kernel parameters and the neural network parameters were kept identical.
 We used Adam optimizer for both training and finetuning.
-The only significant difference between the training and finetuning phase was that we used cosine annealing in the finetuning phase. The reason for using cosine annealing has been discussed in Section~\ref{sec:rlfinetune}.
+However, during the finetuning phase, we used a cosine annealing schedular. The reason for using cosine annealing has been discussed in Section~\ref{sec:rlfinetune}.
 Finally, we also do restarts for the FSBO domain with the restart mechanism discussed in Section~\ref{sec:FSBOBackground}.
 
 \begin{figure}[h]
