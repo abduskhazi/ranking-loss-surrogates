@@ -1300,28 +1300,24 @@ To integrate these two concepts, one must do a thorough theoretical analysis whi
 
 \section{Baselines}
 
-In this thesis,  2 HPO techniques were implemented before studying the proposed model - Deep Ensembles and Few Shot Bayesian Optimization (FSBO).
-Deep Ensembles were used as surrogates in the SMBO optimization.
-They were studied with with 2 main objectives in mind.
-First to study how uncertainty is estimated using Deep Neural Networks using the approach proposed by~\cite{DeepEnsemblePaper}.
-This was a pre-requisite to implement the uncertainty in our proposed model as we use deep neural networks as a scorer in our model. 
-Second to understand how a non transfer technique like GP would work for our given problem.
-Note,  it is also possible to make the Deep Ensemble surrogate a transfer technique by meta training it before using it in the optimization cycle.
+In this thesis,  2 HPO techniques were implemented before studying the proposed model - Deep Ensembles (proposed by Lakshminarayana et al.~\cite{DeepEnsemblePaper}) and Few Shot Bayesian Optimization (FSBO).
+
+Deep Ensembles (DE) were studied with two main objectives in mind.
+First, to study how uncertainty is estimated using Deep Neural Networks.
+This was a prerequisite to understanding how to implement uncertainty in our proposed model as we use deep neural networks as a scorer in our model. 
+The second objective was to understand how a non-transfer technique would work for the HP optimization problem.
+It is also possible to make the Deep Ensemble surrogate a transfer technique by meta-training it before using it in the HP optimization. However, we did not do this in our thesis.
 
 The second technique implemented was FSBO.
-We choose this because as this gave the state of the art results on the HPO-B benchmark that we use.
-(The benchmark is discussed in the later chapters).
-Studying FSBO also gave us an idea on how to implement the transfer mechanism in our proposed model.
-In addition to this we used Random search and GP as standard baselines for result comparison.
+We chose this because this gave the state-of-the-art results on the HPO-B benchmark. The HPO-B benchmark is discussed later in Chapter~\ref{chap:HPOBExplanation}.
+Studying FSBO also gave us an idea of implementing the transfer HPO mechanism in our proposed ranking loss surrogate model.
+In addition, we used Random search and GP as standard baselines for result comparison.
 
-Both these FSBO and DE have built in capability for uncertainty estimation.
-Hence we have to use an acquisition function during the optimization cycle of SMBO.
-Expected improvement was used in all models that deal with uncertainty.
-This is to maintain consistency in results across all the models.
-Further more it also has advantages on other acquisition function~\cite{Jones1998}.
-
-
-The following 2 sections discuss the implementation details of the baselines methods used in our thesis.
+Both these FSBO and DE baselines have built-in capability for uncertainty estimation.
+Hence we use an acquisition function called Expected Improvement when using these baselines in the SMBO algorithm.
+This is because it uses uncertainty to its advantage to suggest the best HP configurations.
+Furthermore, it has advantages over other acquisition functions ~\cite{Jones1998}.
+The following two sections discuss the details of the baselines methods used in our thesis.
 
 \subsection{Deep Ensemble}
 
@@ -2143,13 +2139,13 @@ Also known as Hypothesis.
 \fi
 
 \chapter{Experiments and Results}
+\label{chap:HPOBExplanation}
 
 In this chapter, we present the experiments we conducted and the results we obtained to some of the research questions that arose during the thesis.
 We first understand the structure of the metadata used for meta-training,  meta-validation,  and meta-testing.
 In the subsequent sections, we present the results obtained in detail.
 
 \subsubsection{Meta-Data}
-
 To compare our proposed ranking loss surrogate with other HPO surrogates, we would have to run the Bayesian optimization (BO) on a set of different machine learning models.
 The BO would have to be run with the ranking loss surrogate and other surrogates.
 Moreover, the optimum within the HP search space is different when the ML model is trained on different data sets.
