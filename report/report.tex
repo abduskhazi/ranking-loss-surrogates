@@ -137,6 +137,7 @@ The proposed idea in this thesis is called \textbf{Hyperparamter Optimization us
 The results obtained using this model are compared against the state-of-the-art results obtained using models like FSBO,  RGPE,  TAF, and others. 
 
 \section{Hyper Parameter Optimization}
+\label{sec:HPODefinition}
 To find out the best hyper-parameter for any machine learning model $m$, we must first quantify a given hyper-parameter configuration $\textbf{x}$ by a real-valued number $v \in \mathbb{R}$.
 If we define that
 $$
@@ -199,18 +200,17 @@ This sections contains the overview of the paper and how the thesis report is or
 
 \chapter{Related Work}\label{chap:relatedWork}
 
-In this chapter,  we first define the hyper-parameter optimization problem concretely.
-Then, we discuss the approaches already used to do the HP optimization.
-Subsequently, we discuss some essential concepts that the thesis uses to build the proposed model.
-
+This chapter discusses the concepts already found in previous literature relevant to the HPO problem. It can be divided into three parts.
+In the first part, we describe different classifications of HPO solutions. These include Blackbox HPO, Online HPO, Multi-fidelity HPO, and Transfer Learning HPO. Classifying the HPO solutions based on these criteria helps us quickly identify their advantages and drawbacks. However, it is essential to note that these classifications are not exclusive to one another. 
+The second part is dedicated to Bayesian Optimization, a method that can be used for the HPO problem. We discuss in detail Bayesian optimization as this is what we use in the proposed model. We also discuss the various components of Bayesian Optimization, namely surrogates, acquisition functions, and losses.
+In the final part of this chapter, we discuss how to use sets to inject context into an ML model.
 
 
 \section{Black-box HPO}
-In this approach the HPO objective function $f$ in equation~\ref{eq:hpoobjectivefunc}
+In a Black-Box HPO solution, the objective function $f$ in equation~\ref{eq:hpoobjectivefunc}
 is treated as a blackbox.
 The problem is generalized to finding a global optimum of $f$.
 Some straightforward black-box HPO methods include Manual Search,  Grid Search, and Random Search.
-The Bayesian optimization technique gives us a more sophisticated mechanism to deal with this problem. 
 
 Manual Search in the HPO search space is feasible when we have expert knowledge of the problem and the given model. 
 The idea is to select configurations step by step by observing the results obtained so we do not waste computation time evaluating similar configurations through intuition.
@@ -233,11 +233,11 @@ Hence this approach becomes intractability for large search spaces.
 
 One issue with the Grid Search approach is that we assume that all dimensions in the HPO search space are equally important. It is not the case in many HPO problems. The Grid layout in Figure~\ref{fig:rshpofig}(left) illustrates this. For example, the learning rate in deep neural networks is much more important than many other parameters. If dimension $p$ is the most important in the search space, then it makes sense to evaluate more values of $p$. Random Search helps us solve this problem. 
 The Random layout in Figure~\ref{fig:rshpofig}(right) illustrates this. 
-Hence Random Search can be used as a trivial baseline for comparing other HPO models.
+Hence Random Search can be used as a trivial baseline for comparing HPO solutions.
 
 One advantage of these methods is that there are no restrictions on the HPO search spaces. Hence, they are suitable for any HPO problem at hand.
 On the other hand, these methods are non-probabilistic.
-Hence they cannot deal with noisy evaluations of the HPO configuration well.
+Hence they cannot deal with noisy evaluations of the HPO configurations well.
 Moreover, these methods are computationally expensive. The reason is that they do not use surrogate evaluators and train and evaluate the whole model.
 Also, these search methods give us optimal HPO configurations only by chance.
 
