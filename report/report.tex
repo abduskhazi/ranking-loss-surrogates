@@ -1324,7 +1324,9 @@ The following two sections discuss the details of the baselines methods used in 
 As previously mentioned, Deep Ensembles were implemented as non-transfer HPO surrogates.
 Hence, there was no meta-training done for them.
 Consequently, the usage of DE as a surrogate was quite similar to that of Gaussian processes.
-Algorithm~\ref{alg:deepEnsembleFinetuning} shows how they were used in the SMBO process. Pineda et al. ~\cite{pineda2021hpob} implemented the infrastructure for manipulating HP configurations. We used this infrastructure to test both the baseline and the proposed surrogates with their respective acquisition functions.
+Algorithm~\ref{alg:deepEnsembleFinetuning} shows how they were used in the SMBO process. Pineda et al. ~\cite{pineda2021hpob} implemented the infrastructure for manipulating HP configurations. We used this infrastructure to test the baseline and the proposed surrogates with their respective acquisition functions.
+In Algorithm~\ref{alg:deepEnsembleFinetuning}  each time a new or best HP configuration is selected and evaluated,  an HP optimization step (or optimization cycle) completes.
+In the rest of this report,  we refer to this as an optimization step.
 
 \begin{algorithm}[H]
 \caption{SMBO with Deep Ensemble surrogate}
@@ -1351,7 +1353,7 @@ Algorithm~\ref{alg:deepEnsembleFinetuning} shows how they were used in the SMBO 
 \end{algorithm}
 
 We use similar procedures like Algorithm~\ref{alg:deepEnsembleFinetuning} for other models, i.e., FSBO and the proposed Ranking Loss surrogate model.
-The only difference is that the surrogate and its training step differ with different methods.
+The only difference is that the surrogate and its training differ with different methods.
 
 A few points are worth noting here.
 First, the algorithm evaluates a set of discrete HP configurations in the HP search space.
