@@ -690,4 +690,62 @@ doi = {10.1162/jmlr.2003.4.6.933}
   year = 2005
 }
 
+@inproceedings{tstpaper,
+author = {Wistuba, Martin and Schilling, Nicolas and Schmidt-Thieme, Lars},
+title = {Two-Stage Transfer Surrogate Model For\'{z}Automatic Hyperparameter Optimization},
+year = {2016},
+isbn = {9783319461274},
+publisher = {Springer-Verlag},
+address = {Berlin, Heidelberg},
+url = {https://doi.org/10.1007/978-3-319-46128-1_13},
+doi = {10.1007/978-3-319-46128-1_13},
+abstract = {The choice of hyperparameters and the selection of algorithms is a crucial part in machine learning. Bayesian optimization methods have been used very successfully to tune hyperparameters automatically, in many cases even being able to outperform the human expert. Recently, these techniques have been massively improved by using meta-knowledge. The idea is to use knowledge of the performance of an algorithm on given other data sets to automatically accelerate the hyperparameter optimization for a new data set.In this work we present a model that transfers this knowledge in two stages. At the first stage, the function that maps hyperparameter configurations to hold-out validation performances is approximated for previously seen data sets. At the second stage, these approximations are combined to rank the hyperparameter configurations for a new data set. In extensive experiments on the problem of hyperparameter optimization as well as the problem of combined algorithm selection and hyperparameter optimization, we are outperforming the state of the art methods. The software related to this paper is available at https://github.com/wistuba/TST.},
+booktitle = {European Conference on Machine Learning and Knowledge Discovery in Databases - Volume 9851},
+pages = {199–214},
+numpages = {16},
+keywords = {Meta-learning, Transfer learning, Hyperparameter optimization},
+location = {Riva del Garda, Italy},
+series = {ECML PKDD 2016}
+}
 
+@article{Wistuba2017ScalableGP,
+  title={Scalable Gaussian process-based transfer surrogates for hyperparameter optimization},
+  author={Martin Wistuba and Nicolas Schilling and Lars Schmidt-Thieme},
+  journal={Machine Learning},
+  year={2017},
+  volume={107},
+  pages={43-78}
+}
+
+
+@InProceedings{dngopaper,
+  title = 	 {Scalable Bayesian Optimization Using Deep Neural Networks},
+  author = 	 {Snoek, Jasper and Rippel, Oren and Swersky, Kevin and Kiros, Ryan and Satish, Nadathur and Sundaram, Narayanan and Patwary, Mostofa and Prabhat, Mr and Adams, Ryan},
+  booktitle = 	 {Proceedings of the 32nd International Conference on Machine Learning},
+  pages = 	 {2171--2180},
+  year = 	 {2015},
+  editor = 	 {Bach, Francis and Blei, David},
+  volume = 	 {37},
+  series = 	 {Proceedings of Machine Learning Research},
+  address = 	 {Lille, France},
+  month = 	 {07--09 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {http://proceedings.mlr.press/v37/snoek15.pdf},
+  url = 	 {https://proceedings.mlr.press/v37/snoek15.html},
+  abstract = 	 {Bayesian optimization is an effective methodology for the global optimization of functions with expensive evaluations. It relies on querying a distribution over functions defined by a relatively cheap surrogate model. An accurate model for this distribution over functions is critical to the effectiveness of the approach, and is typically fit using Gaussian processes (GPs). However, since GPs scale cubically with the number of observations, it has been challenging to handle objectives whose optimization requires many evaluations, and as such, massively parallelizing the optimization. In this work, we explore the use of neural networks as an alternative to GPs to model distributions over functions. We show that performing adaptive basis function regression with a neural network as the parametric form performs competitively with state-of-the-art GP-based approaches, but scales linearly with the number of data rather than cubically. This allows us to achieve a previously intractable degree of parallelism, which we apply to large scale hyperparameter optimization, rapidly finding competitive models on benchmark object recognition tasks using convolutional networks, and image caption generation using neural language models.}
+}
+
+@inproceedings{bohamiannpaper,
+author = {Springenberg, Jost Tobias and Klein, Aaron and Falkner, Stefan and Hutter, Frank},
+title = {Bayesian Optimization with Robust Bayesian Neural Networks},
+year = {2016},
+isbn = {9781510838819},
+publisher = {Curran Associates Inc.},
+address = {Red Hook, NY, USA},
+abstract = {Bayesian optimization is a prominent method for optimizing expensive-to-evaluate black-box functions that is widely applied to tuning the hyperparameters of machine learning algorithms. Despite its successes, the prototypical Bayesian optimization approach - using Gaussian process models - does not scale well to either many hyperparameters or many function evaluations. Attacking this lack of scalability and flexibility is thus one of the key challenges of the field. We present a general approach for using flexible parametric models (neural networks) for Bayesian optimization, staying as close to a truly Bayesian treatment as possible. We obtain scalability through stochastic gradient Hamiltonian Monte Carlo, whose robustness we improve via a scale adaptation. Experiments including multi-task Bayesian optimization with 21 tasks, parallel optimization of deep neural networks and deep reinforcement learning show the power and flexibility of this approach.},
+booktitle = {Proceedings of the 30th International Conference on Neural Information Processing Systems},
+pages = {4141–4149},
+numpages = {9},
+location = {Barcelona, Spain},
+series = {NIPS'16}
+}
