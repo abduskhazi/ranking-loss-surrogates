@@ -253,9 +253,9 @@ A similar approach is used by Maclaurin et al.~\cite{hypergradient}. They use a 
 
 
 \section{Multi-fidelity HPO}
-If we treat our HPO objective function $f$ as a black box function,  we would need to evaluate equation~\ref{eq:hpoobjectivefunc} fully.
+If we treat our HPO objective function $f$ as a black box function, we would need to evaluate equation~\ref{eq:hpoobjectivefunc} fully.
 This evaluation is prohibitively expensive as evaluating a single HP configuration may take days~\cite{hutter2019automated}.
-Multi-fidelity hyper parameter optimization tries to solve this problem by evaluating the HP candidates on cheap functions $f_{approx}$ that approximate the objective function $f$.
+Multi-fidelity hyperparameter optimization tries to solve this problem by evaluating the HP candidates on cheap functions $f_{approx}$ that approximate the objective function $f$.
 
 Here, $f_{approx}$  is called fidelity as it reproduces the actual objective function to some degree.
 For example, a fidelity could be an evaluation of the HP configuration on only a subset of data, the evaluation of the HP on downscaled image data, or learning only for a few epochs.
@@ -263,13 +263,13 @@ The idea is to trade-off between the performance of the approximate function and
 Since we do not do the actual evaluation of HP configuration using $f$, it is an approximate optimization technique.
 
 The technique does not belong to the black box HPO domain.
-It can be understood very clearly if we consider the "few epochs" fidelity.
+It can be understood if we consider the "few epochs" fidelity.
 The optimization algorithm looks into the training process and learns the objective function to exit it earlier.
 It thus gets feedback from within the "black box" of the HPO objective function.
 
 This technique is named multi-fidelity because it may use different fidelities within the optimization process to get the best HP configuration.
-While using successive having technique~\cite{successivehalving} for HPO, one can start with a given "budget fidelity," for example - a defined number of epochs or a defined amount of training time.
-The budget doubles at each step of the optimization process, and we eliminate the worst-performing HP configurations for the next step.
+An example of the multi-fidelity technique is successive halving, described by Jamieson et al.~\cite{successivehalving}. While using successive halving, one can start with a given "budget fidelity," for example - a defined number of epochs or a defined amount of training time.
+The budget doubles at each step of the optimization process, and we eliminate the 50\% of the worst-performing HP configurations for each step.
 Hence it uses "multiple" fidelities during the optimization process.
 
 
