@@ -136,20 +136,6 @@ This thesis studies various existing approaches to HPO and proposes a new idea f
 The proposed idea in this thesis is called \textbf{Hyperparamter Optimization using Ranking Loss Surrogates}. 
 The results obtained using this model are compared against the state-of-the-art results obtained using models like FSBO,  RGPE,  TAF, and others. 
 
-\label{ProblemOverviewlabel}
-\section{Objective}
-The aim is to study ranking loss surrogates in the context of Hyperparameter optimization.
-
-\section{Overview}
-This sections contains the overview of the paper and how the thesis report is organised.
-
-
-\chapter{Related Work}\label{chap:relatedWork}
-
-In this chapter,  we first define the hyper-parameter optimization problem concretely.
-Then, we discuss the approaches already used to do the HP optimization.
-Subsequently, we discuss some essential concepts that the thesis uses to build the proposed model.
-
 \section{Hyper Parameter Optimization}
 To find out the best hyper-parameter for any machine learning model $m$, we must first quantify a given hyper-parameter configuration $\textbf{x}$ by a real-valued number $v \in \mathbb{R}$.
 If we define that
@@ -203,7 +189,23 @@ To deal with the constraints of HPO problems, researchers have used different st
 Some of the more prominent approaches are Black-Box HPO, 
 Multi-fidelity HPO and Online HPO.
 
-\subsection{Black-box HPO}
+\label{ProblemOverviewlabel}
+\section{Objective}
+The aim is to study ranking loss surrogates in the context of Hyperparameter optimization.
+
+\section{Overview}
+This sections contains the overview of the paper and how the thesis report is organised.
+
+
+\chapter{Related Work}\label{chap:relatedWork}
+
+In this chapter,  we first define the hyper-parameter optimization problem concretely.
+Then, we discuss the approaches already used to do the HP optimization.
+Subsequently, we discuss some essential concepts that the thesis uses to build the proposed model.
+
+
+
+\section{Black-box HPO}
 In this approach the HPO objective function $f$ in equation~\ref{eq:hpoobjectivefunc}
 is treated as a blackbox.
 The problem is generalized to finding a global optimum of $f$.
@@ -277,7 +279,7 @@ The following functions are some of the most prominent acquisition functions fou
  \textbf{Expected Improvement} acquisition function is used all around the thesis to make a fair comparison of the models and algorithms.
 
 
-\subsection{Online HPO}
+\section{Online HPO}
 Traditionally, the objective function $f$ is fully evaluated to select a new HP configuration.
 In the most general sense, this can be applied to both discrete and continuous HP search spaces.
 Some advanced methods have proposed even gradient-based HP optimization.
@@ -293,7 +295,7 @@ For example,  Baydin et al.~\cite{onlineLearningRateUpdate} propose the online l
 In other times all parameters may be learned. Luketina et al. ~\cite{gradientbasedHPOtuning} describe this example by proposing the interleaved updating of training parameters and hyperparameters.
 
 
-\subsection{Multi-fidelity HPO}
+\section{Multi-fidelity HPO}
 If we treat our HPO objective function $f$ as a black box function,  we would need to evaluate equation~\ref{eq:hpoobjectivefunc} fully.
 This evaluation is prohibitively expensive as evaluating a single HP configuration may take days~\cite{hutter2019automated}.
 Multi-fidelity hyper parameter optimization tries to solve this problem by evaluating the HP candidates on cheap functions $f_{approx}$ that approximate the objective function $f$.
@@ -2722,6 +2724,15 @@ Next with DKT (Benchmark this)
 Next show the best results obtained by architecture.
 \fi
 
+
+
+\chapter{Conclusion}
+
+The ranking loss surrogate model proposed in this thesis has a few limitations and gaps which need to be researched and implemented. 
+As the scope of this thesis was limited we could not explore many research directions.
+In this section we mention some of the topics that could be interesting to take up in any further research in this area.
+Thereafter we conclude our thesis.
+
 \section{Advantages and Limitations}
 \label{sec:advantagesAndLimitations}
 
@@ -2831,13 +2842,6 @@ show results of independent training and training with output restriction
 what about training independently,   this requires normalization. 
 as explained by sebastian.
 \fi
-
-\chapter{Conclusion}
-
-The ranking loss surrogate model proposed in this thesis has a few limitations and gaps which need to be researched and implemented. 
-As the scope of this thesis was limited we could not explore many research directions.
-In this section we mention some of the topics that could be interesting to take up in any further research in this area.
-Thereafter we conclude our thesis.
 
 \section{Further research work}
 
