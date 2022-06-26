@@ -242,19 +242,14 @@ Moreover, these methods are computationally expensive. The reason is that they d
 Also, these search methods give us optimal HPO configurations only by chance.
 
 \section{Online HPO}
-Traditionally, the objective function $f$ is fully evaluated to select a new HP configuration.
-In the most general sense, this can be applied to both discrete and continuous HP search spaces.
-Some advanced methods have proposed even gradient-based HP optimization.
+The idea of an online HPO approach is that it tries to evaluate and update the HP configuration during the ML model's training. That is to say, the model's parameters and the hyper-parameters are updated jointly.
+If the hyper-parameters and the model parameters are learned disjointly in an HPO solution, such a solution is called an offline HPO.
 
-For example,  Maclaurin et al.~\cite{hypergradient} proposed a relatively cheap method to obtain hyper gradients, i.e., gradients of hyper parameters for the whole objective function $f$.
-Further,  Franceschi et al.~\cite{HPOAsBilevelOptimization} formulated the whole HPO problem as a bi level optimization problem~\cite{hutterneuripstutorial}.
+Online HPO can be used to learn a single hyperparameter or all the hyperparameters. 
+For example,  Baydin et al.~\cite{onlineLearningRateUpdate} propose the online learning of only the learning rate. They target this hyper parameter because it is the single most important one. On the other hand, Luketina et al. ~\cite{gradientbasedHPOtuning} propose the interleaved updating of all the hyperparameters with the ML model's parameters.
 
-In all these methods, as the hyper and model parameters are learned disjointly, they can be referred to as offline HPO.
-The idea of online HPO is that it tries to evaluate and update the HP configuration during the model's training.
-
-Sometimes only a single hyperparameter is learned online.
-For example,  Baydin et al.~\cite{onlineLearningRateUpdate} propose the online learning of the learning rate. They target this hyper parameter because it is the single most important one.
-In other times all parameters may be learned. Luketina et al. ~\cite{gradientbasedHPOtuning} describe this example by proposing the interleaved updating of training parameters and hyperparameters.
+An example of offline HPO is the solution proposed by Franceschi et al.~\cite{HPOAsBilevelOptimization}. They formulate the whole HPO problem as a bi-level optimization problem~\cite{hutterneuripstutorial}.
+A similar approach is used by Maclaurin et al.~\cite{hypergradient}. They use a relatively cheap method to obtain hyper gradients, i.e., gradients of hyper parameters for the whole objective function $f$. They use these gradients to update the hyperparameters, similar to any gradient-based optimization method. Notice that we must completely optimize the ML parameters in both these cases to update the hyperparameters once. This property of disjoint updating of the parameters and hyperparameters makes these approaches offline.
 
 
 \section{Multi-fidelity HPO}
