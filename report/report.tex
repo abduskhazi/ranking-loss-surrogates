@@ -1239,78 +1239,64 @@ Note that it is also possible to use the weighting in the ListNet case as ListNE
 
 Deep Neural Networks (DNNs) are machine learning models with very high representational capacity~\cite{Goodfellow-et-al-2016}.
 Due to this property,  one can use them as surrogates for HPO objective functions.
-But the issue is that DNNs do not quantify uncertainty trivially.
-In fact the results can be seen as overconfident.
-If used in any HPO optimization algorithm as surrogate,  such overconfident wrong predictions cause a lot of computational overhead by predicting inefficient HP configurations.
-
-We are discussing in detail this concept because we use deep neural networks as a scoring function in our proposed ranking loss surrogate model.
-Uncertainty estimation qualities of a surrogate have high importances especially if they are used in techniques like SBMO.
-As the proposed model is studied as a surrogate in the SMBO technique,  we need to study how to model uncertainty efficiently using the underlying DNN architecture.
+However, the issue is that DNNs do not quantify uncertainty trivially.
+They predict results overconfidently, and the results may be wrong.
+If any HPO optimization algorithm used a DNN as a surrogate,  its overconfident wrong predictions could cause much computational overhead by predicting inefficient HP configurations.
+This becomes even more crucial in an optimization technique like SMBO because one inefficient configuration selection might have a cascading effect of selecting further inefficient configurations.
+As DNNs are used as scoring functions in our proposed method, and we use the SMBO algorithm for the HP optimization, we must study how to model uncertainty efficiently using them.
 
 In the current literature,  uncertainty quantification methods using deep neural networks can be broadly classified into the following methods:
 \begin{itemize}
 \item Bayesian Neural networks~\cite{Goan-2020}.
-\item Ensemble Approach using monte carlo drop out~\cite{JMLR:v15:srivastava14a}.
-\item Ensemble approach using multiple neural networks.
+\item Ensemble Approach using Monte Carlo drop out~\cite{JMLR:v15:srivastava14a}.
+\item Ensemble approaches using multiple neural networks.
 \end{itemize}
 
-In Bayesian neural network(BNN),  a prior over weights and biases is specified during the initialization of the BNN.
-Given the data,  a posterior predictive distribution is calculated for all the parameters of the network (Weights and Biases).
-One issue with this approach is that BNNs are very complex and difficult to train. 
+In a Bayesian neural network(BNN), a prior over the network parameters (Weights and Biases) is specified during the initialization of the BNN.
+Given the data,  a posterior predictive distribution is calculated for all the network parameters.
+One issue with this approach is that BNNs are very complex and challenging to train. 
 
-Monte Carlo drop out is a regularization technique used during the training of neural networks.
+Monte Carlo dropout is a regularization technique used during the training of DNNs.
 With a certain probability,  connections between neurons are dropped.
-Using this technique one obtains possibly $2^N$ neural networks where $N$ is the number of connections
-in the artificial neural network.
-We can get an ensemble of high capacity models for free.
-It is normally only used during training to obtain regularization.
-
-However,  if one uses Monte Carlo dropout during the evaluation,  we can get multiple results from the same input using this approach.
-Given input $x$ and output $y = \textrm{NN}(x)$.  If we have $m$ neural networks obtained using Monte Carlo dropout,  we get $\{y_1, y_2... y_m\}$ outputs,  we can obtain the mean and variance of 
+Using this dropping mechanism, one could obtain possibly $2^N$ neural networks where $N$ is the number of connections in the neural network.
+We thus get an ensemble of high-capacity models for free.
+If we drop the connections during training, our model can be regularized well.
+However, using Monte Carlo dropout during the evaluation,  we can get multiple results from the same input.
+Lets say we are given an input $x$,  we can obtain an output $y = \textrm{DNN}(x)$.  If we have $m$ neural networks obtained using Monte Carlo dropout,  we get $\{y_1, y_2... y_m\}$ outputs.  We can calculate the mean and variance of the outputs by using the following equations
 \begin{equation}\label{eq:simpleDNNensemble}
-y_\textrm{mean} = \frac{\Sigma y}{m}  \;\;\;\;\;  y_\textrm{variance} =\frac{\Sigma(y - y_{mean})^2}{m-1}
+y_\textrm{mean} = \frac{ \sum\limits_{i=1}^{m} y_i}{m}  \;\;\;\;\;  y_\textrm{variance} =\frac{ \sum\limits_{i=1}^{m} (y_i - y_{mean})^2}{m-1}
 \end{equation}
-Please note that the $m-1$ in the denominator is due to Bessel’s Correction~\cite{besselcorrection} to reduce the bias in estimation.
+Please note that the $m-1$ in the denominator is due to Bessel's Correction~\cite{besselcorrection} to reduce the bias in estimation.
 
+In an ensemble of multiple neural networks, we have separate neural networks instead of using a mechanism to get new neural networks from one network (like in the case of Monte Carlo).
+These neural networks are trained separately or together, depending on the architecture of the ensemble.
+If we have $m$ separate neural networks, we would have $m$ outputs similar to the Monte Carlo approach discussed above.
+Hence we could use the Equation~\ref{eq:simpleDNNensemble} to calculate the ensemble's mean and variance for this approach.
 
 Lakshminarayana et al.~\cite{DeepEnsemblePaper} propose another method to predict uncertainty using deep neural networks.
-They propose that the uncertainty prediction can be done directly using a single neural network.
+They propose that the uncertainty prediction can be made directly using a single neural network.
 This is possible if we assume that the underlying uncertainty is a Gaussian distribution.
-With this assumption, the neural network would have 2 outputs instead of one.
-One for the mean of the prediction, say $\mu$, and the other for the variance,  say $\sigma^2$
- of the prediction.
-One important point to note is that the variance cannot really be negative.
-This is made sure by the authors to pass the output of the neural network through a strictly positive "softplus" function.
- 
-The authors propose to optimize the following loss function
+With this assumption, the neural network would have two outputs instead of one. One output for the mean of the prediction, say $\mu$, and the other for its variance,  say $\sigma^2$.
+One important point to note is that the variance cannot be negative.
+The authors ensure this by passing the neural network's output through a strictly positive "soft plus" function.
+
+The authors use the following loss function for the optimization.
 $$
 L_{de} = \frac{\log \sigma^2 }{2} + \frac{(y - \mu)^2}{2\sigma^2} + k
 $$
-Where both the outputs are some functions of the DNN parameters ($\theta$) and the input ($\textbf{x}$) i.e $\sigma^2 = f(\theta,  \textbf{x})$ and $\mu = g(\theta, \textbf{x})$.
-Here, the back propagation finds and updates the parameters $\theta$ using the partial derivative:
-$$
-\frac{\partial L}{\partial \theta}
-$$
-
-
-We use this loss function to build deep ensemble surrogates for the HPO.
-The prediction of uncertainty using ranking losses is however done using the simple ensemble approach given in equation~\ref{eq:simpleDNNensemble}.
-This is because the integration of the loss function which learns both the mean and variance with the ranking loss functions is non trivial.
-
-One simple approach is to simply use a combination of losses like
-$$
-L_{\textrm{total}} = L_{mse} + L_{de}
-$$
-However such loss functions would need a thorough theoretical analysis which is out of the scope of this thesis.
-Hence we do not use this approach on our proposed model.
-
-As there are are multiple neural networks, each predicting its own Gaussian distribution,
+Where both the mean and the variance is given by $\mu = g(\theta, \textbf{x})$  and $\sigma^2 = f(\theta,  \textbf{x})$ respectively.
+As there are multiple neural networks, each predicting its Gaussian distribution,
 there needs to be a mechanism to integrate the results.
 This is done using a mixture of Gaussian Distributions.
-If there are $m$ neural networks in the ensemble,  the mean and variance are given by
+If there are $m$ neural networks in the ensemble (each with its own mean and variance), the final mean and variance are given by
 $$
 \mu_{final} =  \frac{\sum\limits_{i=1}^{m} \mu_i}{m} \quad \textrm{and} \quad \sigma_{final}^2 = \frac{\sum\limits_{i=1}^{m} (\sigma_i^2 + \mu_i^2) - \mu_{final}^2}{m}
 $$
+
+We use the loss function proposed by Lakshminarayana et al.~\cite{DeepEnsemblePaper} to build a deep ensemble baseline surrogate in this thesis. 
+However, the prediction of uncertainty using the proposed ranking loss surrogates is made using the simple ensemble approach given in equation~\ref{eq:simpleDNNensemble}.
+This is because the integration of a loss function that learns both the mean and variance with the ranking loss functions is non-trivial.
+To integrate these two concepts, one must do a thorough theoretical analysis which is out of this thesis's scope.
 
 \section{Baselines}
 
