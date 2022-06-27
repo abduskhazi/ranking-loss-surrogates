@@ -316,7 +316,7 @@ The methods proposed by Schilling et al.~\cite{Schilling2016ScalableHO} and by F
 
 The meta-learned surrogate can be used in two ways during the HPO optimization procedure.
 One could use it without modification during the HPO.
-On the other hand, the surrogate can be further meta-trained (aka finetuned) using the available metadata of the target task.
+On the other hand, the surrogate can be further meta-trained (finetuned) using the available metadata of the target task.
 This thesis proposes a transfer HPO method that uses meta-learning of surrogates for knowledge transfer. We study both the finetuned and non-finetuned versions of our model.
 
 \section{Bayesian Optimization}
@@ -347,7 +347,7 @@ Both these components are discussed in the following sections.
 
 
 \subsection{Surrogate models for Bayesian Optimization}
-HPO using Sequential Model Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab} is a convenient method proposed in the literature.
+HPO using Sequential Model Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab} is a powerful and convenient method proposed in the literature.
 However,  the performance of this method is heavily reliant on how well the surrogate models the true HPO objective function.
 In this section, we discuss some of the powerful models that may be used as surrogates.
 
@@ -355,11 +355,13 @@ In this section, we discuss some of the powerful models that may be used as surr
 \label{sec:GaussianProcesses}
 Gaussian processes~\cite{GPTutorial} are predictive machine learning models that work well with few data points (or data pairs). 
 They are inherently capable of modeling uncertainty.
-Hence, they are used widely in problems such as hyperparameter optimization, where uncertainty estimation is essential.
-In this section, we briefly explain the Gaussian process regression intuitively.
+Hence, they are used widely in HPO problem settings, where uncertainty estimation is essential. 
+Due to the robustness of the Gaussian processes, we use it as one of the baseline HPO surrogates in our thesis.
+In addition, many state-of-the-art HPO methods like FSBO, TST, DGP, and RGPE use Gaussian processes in one or more components.
+In this section, we explain the Gaussian process intuitively.
 
-Before we proceed,  we need to understand normal (Gaussian) distributions. 
-Consider a scalar random variable $X$ that is distributed normally  (a.k.a Gaussian distribution) around a mean $\mu$ with a variance of $\sigma^2$.
+In order to completely grasp the concept of Gaussian processes,  we need to understand normal (Gaussian) distributions. 
+Consider a scalar random variable $X$ distributed normally around a mean $\mu$ with a variance of $\sigma^2$.
 The following equation defines the probability density function (PDF) of $X$: 
 $$
 P_X(x) = \frac{1}{\sqrt[2]{2\pi}\sigma}\exp\left(- \frac{(x - \mu)^2}{2\sigma^2}\right)
@@ -368,17 +370,17 @@ Here, $X$ represents the random variable, and $x$ represents an instance of the 
 In this case,  the mean $\mu$,  variance $\sigma^2$, and any sample $x$ are all scalars.
 
 If the random variable $\textbf{X}$ is a vector in $\mathbb{R}^d$ where $d \in I^{+}$,  then each component of the vector can be considered as a random variable.
-In this case the mean $\boldsymbol{\mu} \in \mathbb{R}^d$ whereas variance, represented by $\Sigma$, is in the $R^{d \times d}$ space.
-It is because the variance of all components in any valued vector random variable $\textbf{X}$ should contain the following two types of variance
+In this case the mean $\boldsymbol{\mu} \in \mathbb{R}^d$ whereas the variance is a matrix $\Sigma \in R^{d \times d}$.
+The variance is a matrix because the variance of any vector-valued random variable $\textbf{X}$ should contain the following two types of values:
 \begin{itemize}
-\item Variance of a vector component w.r.t itself.
-$d$ diagonal values of the matrix $\Sigma$ represent this variance.
-\item Variance of each vector component w.r.t all other components. These variances are represented by the upper/lower triangular values in the matrix $\Sigma$.
+\item Variance of a vector component w.r.t itself. This is represented by
+the $d$ diagonal values of the matrix.
+\item Variance of each vector component w.r.t all other components. These variances are represented by the upper/lower triangular values of the matrix.
 \end{itemize}
-The matrix $\Sigma$, also known as the Covariance matrix, thus has all values necessary to represent the variance of any vector-valued random variable.
+This matrix $\Sigma$, also known as the covariance matrix, has all values necessary to represent the variance of any vector-valued random variable.
 
 
-The probability density function of a vector valued variable $\textbf{X} \in \mathbb{R}^d$ with a mean $\boldsymbol{\mu}$ and covariance matrix $\Sigma$ is given by~\cite{MITMLBook}:
+The Probability Density Function (PDF) of a vector valued variable $\textbf{X} \in \mathbb{R}^d$ with a mean $\boldsymbol{\mu}$ and covariance matrix $\Sigma$ is given by~\cite{MITMLBook}:
 
 $$
 \mathcal{N}(\textbf{x} | \boldsymbol{\mu},  \Sigma) = 
@@ -387,16 +389,19 @@ $$
 $$
 This equation defines the PDF of a multivariate normal distribution.
 
-The core idea used in the Gaussian processes is that functions can be considered as vectors of infinite dimensions.
+The core idea in the Gaussian processes is that functions can be considered vectors of infinite dimensions.
 Consider any function $f$ that has a domain $\mathbb{R}$.
 If $f$ is considered to be a vector in $\mathbb{R}^{\infty}$,
 then each point $i \in \mathbb{R}$  can be represented by a component $f_i$ of the function $f$.
-A function,  hence,  is nothing but a sample from $\mathbb{R}^{\infty}$.
+Hence, a function is nothing but a sample from $\mathbb{R}^{\infty}$.
+
+\iffalse
 Unfortunately, functions sampled from $\mathbb{R}^{\infty}$ are too general and not useful by themselves.
+\fi
 
 The idea of Gaussian processes is to sample smooth functions from $\mathbb{R}^{\infty}$.
 In any smooth function $f$, if any point $g$ is close to $x$ in the domain of $f$, then $f(g) \approx f(x)$.
-It is mathematically represented by the following equation:
+The following equation mathematically represents this idea:
 $$
 \lim_{\delta x \to 0} f_{x + \delta x} \approx f^{+}_x  \;\; \textrm{and} \;\; 
 \lim_{\delta x \to 0} f_{x - \delta x} \approx f^{-}_x 
@@ -410,16 +415,14 @@ Hence, we obtain smooth functions if we sample them from a multivariate normal d
 The Gaussian process restricts the function sample space to a multivariate normal distribution.
 
 The similarity between 2 points in a domain is defined by a function called \textbf{kernel} in Gaussian processes.
-Using this kernel function, the values in the required covariance matrix are populated.
-The smoothness of the sampled function $f$ is controlled by the kernel in the GP process.
+The values in the required covariance matrix are populated using this kernel function.
+The Gaussian process kernel controls the sampled function's smoothness $f$.
 Formally kernel $k$ is defined as,
 $$
 k(\textbf{x}, \textbf{x'}) \mapsto \mathbb{R}
 $$
-
 Here, $\textbf{x}, \textbf{x'}$ belong to a domain in the most abstract sense.
 For example,  when the input domain is a euclidean space,  $\textbf{x} \in \mathbb{R}^{\mathbb{I}^+}$.
-
 Some well known kernels are:
 \begin{itemize}
 \item \textbf{Radial Basis Function Kernel}
@@ -427,7 +430,7 @@ Some well known kernels are:
 \item \textbf{Periodic Kernel}
 \end{itemize}
 
-Finally,  a Gaussian Process specifies that any new observation $y^*$ for input $\textbf{x}^*$,  is jointly normally distributed with known observations $\textbf{y}$ (corresponding to the input $\textbf{X}$) such that
+Finally,  a Gaussian Process specifies that any new observation $y^*$ for input $\textbf{x}^*$,  is jointly normally distributed with known observations $\textbf{y}$ such that
 \begin{align}
     Pr\left( \begin{bmatrix}
            \textbf{y} \\
@@ -436,7 +439,6 @@ Finally,  a Gaussian Process specifies that any new observation $y^*$ for input 
          \right)
          &=  \mathcal{N}\left(m(\textbf{X}), \mathbf{\Sigma}\right)
 \end{align}
-
 Here, $m(\textbf{X})$ is the mean of the vectors which is commonly taken as $\textbf{0}$.
 $\mathbf{\Sigma}$ is the covariance matrix defined as
 $$
@@ -446,7 +448,6 @@ $$
          \end{bmatrix}
 $$
   Where $\textbf{K} = k(\textbf{X}, \textbf{X})$,  $\textbf{K}_*  =  k(\textbf{X}, \textbf{x}_*)$ and $\textbf{K}_{**} = k(\textbf{x}_*,  \textbf{x}_*)$ for any given kernel $k$~\cite{GPTutorial}.
-  Due to the robustness of the GP process, we use this as one of the baselines in our thesis.
 
 \subsubsection{Random Regression Forest}
      The core idea of this model is to train a Random Regression Forest, using the known data as in any SMBO procedure~\cite{SMBOPaper}.
