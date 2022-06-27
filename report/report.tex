@@ -347,6 +347,7 @@ Both these components are discussed in the following sections.
 
 
 \subsection{Surrogate models for Bayesian Optimization}
+\label{sec:SurrogateModelsForBO}
 HPO using Sequential Model Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab} is a powerful and convenient method proposed in the literature.
 However,  the performance of this method is heavily reliant on how well the surrogate models the true HPO objective function.
 In this section, we discuss some of the powerful models that may be used as surrogates.
@@ -537,59 +538,20 @@ Even these approximations are computationally more expensive than the classical 
 Moreover,  it is unclear from the beginning what prior probability distribution should be used for the stochastic parameters.
 Because of these disadvantages, we do not use them as surrogates in our thesis.
 
-\subsection{Acquisition functions}
-Acquisition functions are used in each step of BO to "acquire" a good-performing HP configuration.
-During BO, they need to balance exploiting information from the evaluated HP configurations and exploring unknown configurations in the HP search space.
-The following functions are some of the most prominent acquisition functions found in the literature~\cite{GPTutorial}
-\begin{itemize}
-\item \textbf{Upper Confidence Bound (UCB)}: It returns the best possible hyperparameter configuration using a linear combination of the mean and the standard deviation.
-\item \textbf{Probability of Improvement}: It returns the probability of getting a better hyperparameter configuration than the incumbent best configuration.
-\item \textbf{Expected Improvement}: Given a Gaussian distribution at a new input point, it finds the expectation of improvement i.e ($f(x) - f_{max}$) over the part of normal that is greater than $f_{max}$.
-\end{itemize}
+\subsection{Learning the surrogates}
+In section~\ref{sec:SurrogateModelsForBO} we discussed the details of various surrogate models that can be used in the Bayesian Optimization process. These surrogates must be learned using available $(x, f(x))$  data pairs regardless of using them in a transfer or non-transfer HPO method. Surrogate learning is formulated as an optimization problem in which a loss function is minimized to get the trained surrogate.
+The type of loss function used will differ based on the problem formulation. For example, if we formulate the HPO problem as a regression problem in which the surrogate would learn the HPO objective function's output, we could use regression losses like RMSE (Root Mean Squared Error).
 
- \textbf{Expected Improvement} acquisition function is used with all the baselines in this thesis. However, it is not used with the proposed method. The reason for this decision is explained in more detail in section~\ref{sec:AcquisitionFunctionInRankingSpace}.
- 
-\section{Types of Losses}
-\subsection{BO with GP uses negative log likelihood}
-It is not clear whether pointwise losses (regression as in GP) are the correct way to model HPO responses, because we only care for the minima regions (best performing configurations), and not for estimating all observations accurately.
+In this thesis, we study and compare the performance of different loss functions. We use the negative log-likelihood loss function to learn the Deep Ensemble surrogate~\cite{DeepEnsemblePaper}. This loss $L_{de}$ is given by:
+\begin{equation}
+L_{de} = -\log p(y|x)
+\end{equation}
+where $x$ is the input HP configuration and $y$ signifies the HPO objective function's output.
+In FSBO~\cite{fsbopaper}, the loss function is similar, with the only distinction being that it uses a negative log \textbf{marginal} likelihood.
+Our proposed method sees the surrogate as a ranker in the context of SMBO. Hence, we use ranking losses to learn the surrogate in our thesis. In the next section, we discuss the ranking losses in more detail.
 
-
-\subsection{Ranking Losses}\label{sec:ranklearning}
-
-Consider a set $\mathbb{A} = \{a_1,  a_2,  a_3, ... ,  a_n\}$ where each object $a_i \in \mathbb{D}$ for some domain $\mathbb{D}$.
-Let us consider that an object with a lower rank is more preferable than an object with a higher rank.
-Then,  the task of ranking the objects of set $\mathbb{A}$ is defined as ordering all objects $a_i \in \mathbb{A}$ such that
-$$
-\texttt{Rank}(a_i) < \texttt{Rank}(a_j) \iff a_i  \succ a_j
-$$
-
-Here \texttt{Rank} of an object $a_i$ is analogous to its position in the ordered list.
-This task can be modelled by a machine learning model.
-In the most general case the cardinality of $\mathbb{A}$ is not fixed.
-Practically building a machine learning model that takes a whole set of an unknown cardinality as input is not trivial.
-To keep the model simple,  it is divided into the following components:~\cite{procedureforrankinginintro}
-\begin{itemize}
-\item Calculation of relevance scores of each $a_i \in \mathbb{A}$.
-\item Ordering or sorting of objects based on their relevance scores. 
-\end{itemize}
-
-Doing a gradient based optimization for this model is not possible.
-This is because sorting is non differentiable and we cannot get a gradient with respect to it.
-Hence, to do a gradient based optimization,  we only model the calculation of relevance scores by the machine learning model.
-We represent this model by $s$.
-We use the letter "s" to signify that we are calculating a "score" for an object. 
-$s$ is defined as
-$$
-s : \mathbb{A} \mapsto \mathbb{R}
-$$
-One can use $s$ to rank a newly given set of objects.
-First the relevant scores of the objects are predicted by $s$.
-Thereafter,  using these relevant scores,  the objects are sorted.
-
-Learning a machine learning model requires an optimizing criteria on the output of the model.
-This output in our case is the sorted list of objects.
-The optimizing criteria in the jargon of machine learning is called a loss function.
-Hence,  in our case the loss function can be referred as a \textit{Ranking Loss}.
+\subsubsection{Ranking Losses}
+\label{sec:ranklearning}
 
 Ranking losses can be broadly classified into the following types~\cite{RankingLossFirstPaperRead}:
 \begin{itemize}
@@ -626,6 +588,20 @@ We hence use the list wise approach to ranking.
 Ranking loss could be the answer in modeling hp optima better.
 \fi
  
+
+\subsection{Acquisition functions}
+Acquisition functions are used in each step of BO to "acquire" a good-performing HP configuration.
+During BO, they need to balance exploiting information from the evaluated HP configurations and exploring unknown configurations in the HP search space.
+The following functions are some of the most prominent acquisition functions found in the literature~\cite{GPTutorial}
+\begin{itemize}
+\item \textbf{Upper Confidence Bound (UCB)}: It returns the best possible hyperparameter configuration using a linear combination of the mean and the standard deviation.
+\item \textbf{Probability of Improvement}: It returns the probability of getting a better hyperparameter configuration than the incumbent best configuration.
+\item \textbf{Expected Improvement}: Given a Gaussian distribution at a new input point, it finds the expectation of improvement i.e ($f(x) - f_{max}$) over the part of normal that is greater than $f_{max}$.
+\end{itemize}
+
+ \textbf{Expected Improvement} acquisition function is used with all the baselines in this thesis. However, it is not used with the proposed method. The reason for this decision is explained in more detail in section~\ref{sec:AcquisitionFunctionInRankingSpace}.
+
+
 \section{Set-modelling with Neural Networks}
 
 In the previous sections we discussed about various types of surrogates that can be used for transferring knowledge in transfer HPO methods.
@@ -952,13 +928,49 @@ only fine tune best fit is not giving good results. Investigation in progress.
 \chapter{Background}
 \label{chap:Background}
 
-In this chapter, we discuss the fundamental concepts one must grasp to understand the thesis work. We have already talked about the concept of ranking in Section~\ref{sec:ranklearning}.
-In this chapter, we take the next step to define the ranking loss functions abstractly.
+This chapter discusses the fundamental concepts one must grasp to understand the thesis work. 
+We first talk about the concept of ranking.
+Then, we take the next step to define the ranking loss functions abstractly.
 After that, we discuss the concrete loss functions studied in this thesis.
 We also talk about how uncertainty is modeled using Deep Neural Network Ensembles.
 Lastly,  we discuss the details of the baselines - Deep Ensembles and FSBO that we studied in this thesis.
 
-\section{Ranking Loss functions: Definition}
+\section{Understanding Ranking}
+
+Consider a set $\mathbb{A} = \{a_1,  a_2,  a_3, ... ,  a_n\}$ where each object $a_i \in \mathbb{D}$ for some domain $\mathbb{D}$.
+Let us consider that an object with a lower rank is preferable to an object with a higher rank.
+Ranking the objects of set $\mathbb{A}$ is defined as ordering all objects $a_i \in \mathbb{A}$ such that
+$$
+\texttt{Rank}(a_i) < \texttt{Rank}(a_j) \iff a_i  \succ a_j
+$$
+
+Here \texttt{Rank} of an object $a_i$ is analogous to its position in the ordered list.
+An ML model can be used to model this task.
+In the most general case, the cardinality of the set $\mathbb{A}$ is not fixed.
+Practically building an ML model that takes a whole set of an unknown cardinality as input is not trivial.
+Hence, to keep the model practical, the task of ranking is divided into the following components:~\cite{procedureforrankinginintro}
+\begin{itemize}
+\item Calculation of relevance scores of each $a_i \in \mathbb{A}$.
+\item Ordering or sorting of objects based on their relevance scores. 
+\end{itemize}
+
+Doing a gradient-based optimization for an ML model that models both the above tasks is not possible.
+This is because sorting is non-differentiable, and we cannot get a gradient for the sorting functionality.
+Hence, to do a gradient-based optimization, we only model the calculation of relevance scores.
+We represent this model by $s$.
+We use the letter "s" to signify that we are calculating a "score" for an object. $s$ is defined as
+$$
+s : \mathbb{A} \mapsto \mathbb{R}
+$$
+Given a set of objects to rank, first, the relevant scores of the objects are predicted by $s$. After that, using these relevant scores,  the objects are sorted.
+Hence, one can use $s$ to rank any newly given set of objects.
+
+Learning a machine learning model requires optimizing criteria on the model's output.
+This output, in our case, is the sorted list of objects.
+The optimizing criteria in machine learning jargon are called a loss function.
+Hence,  in our case, the loss function can be referred to as a \textit{Ranking Loss}.
+
+\section{Understanding Ranking Loss functions}
 
 \iffalse
 \begin{table}[ht]
@@ -1002,14 +1014,8 @@ Let each data point $a_i$ be a sample/element from the set $\mathbb{A}$ and let 
 Normally the ground truth scores are given as real-valued numbers. Hence we assume that $y_i \in \mathbb{R}$.
 These preference scores are relative to the objects within $\mathbb{A}$.
 This means that the preference scores of two objects $a_i$ and $b_i$ belonging to 2 different sets $\mathbb{A}$ and $\mathbb{B}$ cannot be compared.
-The declaration of a function $s$ that maps objects in $\mathbb{A}$ to a real-valued score is given by:
-$$
-s : \mathbb{A} \mapsto \mathbb{R}
-$$
 
 The goal is to learn the function $s$ to predict the relevance score of any new object sampled from the set $\mathbb{A}$.
-We need a loss function to use machine learning techniques to learn $s$.
-If this loss function uses the concept of ranking, it is called a ranking loss function.
 If we parameterize function $s$ with $\theta$, we can use typical optimization techniques like gradient descent to obtain an optimum $\theta^*$ by minimizing the loss function. 
 Hence, our goal is obtaining the function $s_{\theta^*}$.
 
