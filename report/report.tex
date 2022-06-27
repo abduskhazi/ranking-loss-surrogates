@@ -538,15 +538,16 @@ Moreover,  it is unclear from the beginning what prior probability distribution 
 Because of these disadvantages, we do not use them as surrogates in our thesis.
 
 \subsection{Acquisition functions}
-The acquisition functions used in the Bayesian optimization need to balance the exploitation of information from the known/observed data points and exploration of unknown data points in the domain.
+Acquisition functions are used in each step of BO to "acquire" a good-performing HP configuration.
+During BO, they need to balance exploiting information from the evaluated HP configurations and exploring unknown configurations in the HP search space.
 The following functions are some of the most prominent acquisition functions found in the literature~\cite{GPTutorial}
 \begin{itemize}
 \item \textbf{Upper Confidence Bound (UCB)}: It returns the best possible hyperparameter configuration using a linear combination of the mean and the standard deviation.
-\item \textbf{Probability of Improvement}: It gives the probability that we can get a better hyperparameter configuration than the incumbent best configuration.
+\item \textbf{Probability of Improvement}: It returns the probability of getting a better hyperparameter configuration than the incumbent best configuration.
 \item \textbf{Expected Improvement}: Given a Gaussian distribution at a new input point, it finds the expectation of improvement i.e ($f(x) - f_{max}$) over the part of normal that is greater than $f_{max}$.
 \end{itemize}
 
- \textbf{Expected Improvement} acquisition function is used all around the thesis to make a fair comparison of the models and algorithms.
+ \textbf{Expected Improvement} acquisition function is used with all the baselines in this thesis. However, it is not used with the proposed method. The reason for this decision is explained in more detail in section~\ref{sec:AcquisitionFunctionInRankingSpace}.
  
 \section{Types of Losses}
 \subsection{BO with GP uses negative log likelihood}
@@ -1653,6 +1654,7 @@ L_{mle} = -  \sum\limits_{j=1}^{k} \log \frac{\exp(\mu(\pi^*_j))}{ \sum\limits_{
 \fi
 
 \subsection{Acquisition function in the Ranking space}
+\label{sec:AcquisitionFunctionInRankingSpace}
 When doing HP optimization using ranking loss surrogates, it is essential to note that the ranking of an HP configuration is relative.
 A configuration can have different ranks based on the batch in which it is located.
 The expected rank of a configuration is not defined in absolute terms. It is always conditioned on other configurations in the ranking batch.
