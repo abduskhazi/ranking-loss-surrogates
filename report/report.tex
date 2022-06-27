@@ -469,38 +469,37 @@ Both these advantages are limitations of the Gaussian surrogates. Hence the rand
 \fi
 
 \subsubsection{Deep Neural Networks}
-Deep Neural Networks are machine learning models in which the inputs are sequentially passed through multiple functions of computation before getting the final output.
-Figure~\ref{fig:DeepNeuralNetwork} illustrates a very basic example of a deep neural network.
-The architecture of this network is such that every neuron of one layer is connected to every neuron of the next layer. 
-Hence each layer is called a fully connected layer (FC for short).
+Deep Neural Networks (DNNs) are machine learning models consisting of a network of multiple neuron layers.
+In its most basic form, the DNN network has every neuron of one layer connected to every neuron of the following layer.
+Hence each layer is called a fully connected layer (FC for short), and the neural network is called a fully connected deep neural network.
+Figure~\ref{fig:DeepNeuralNetwork} illustrates an example of a fully connected deep neural network.
+DNNs can be viewed as models that pass inputs sequentially through multiple computation functions before getting the final output.
 
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.5]{images/DeepNeuralNetwork}
-    \caption{A sample of a fully connected deep neural network~\cite{deepNeuralNetworksImage}}
+    \caption{A sample of a fully connected deep neural network~\cite{deepNeuralNetworksImage}.}
     \label{fig:DeepNeuralNetwork}
 \end{figure}
 
-Let us denote $I$ as the input to this model and $O$ as the output.
-Let the interacting neuron layers - Input layer,  Hidden layer and the output layers be represented by functions $f_i$, $f_h$, and $f_o$ respectively.
-Then the computation of the model can be abstractly represented by
-
+Let us denote $I$ as the input to the fully connected DNN and $O$ as its output.
+Let the interacting neuron layers, i.e., the input layer, the hidden layer, and the output layer, be represented by functions $f_i$, $f_h$, and $f_o$, respectively.
+Then the computation of this DNN can be abstractly represented by
 \begin{equation}
 O = f_o(f_h(f_i(I)))
 \end{equation}
-
 And each function $f$ can be represented by the equation
 \begin{equation}
 f(I) = \textsc{NonLinearFunction}(\textbf{W} * I + \textbf{b})
 \end{equation}
+where the matrix $\textbf{W}$  holds the weights of the connections to the neurons of the current layer and $\textbf{b}$ represents some bias that is added to the outputs of the neurons.
 
-Where the matrix $\textbf{W}$  holds the weights of the connections to the neurons of the current layer and $\textbf{b}$ represents some bias that is added to the outputs of the neurons.
-The use of \textsc{NonLinearFunction} makes it possible for the neural network to represent non linear functions.
-The overall capacity of the neural network very high and it can be increased by increasing the depth of the network or by increasing the neurons at each layer.
-
-One disadvantages with deep neural network is that they cannot model uncertainty trivially.
-One method to do this is to use ensemble of neural networks or the use of specialised loss function with 2 outputs.
-Since uncertainty modelling is essential for this thesis,  it is discussed in more detail in the Section~\ref{sec:uncertaintyDeepEnsembles}.
+The use of \textsc{NonLinearFunction} makes it possible for the neural network to represent non-linear functions.
+The overall capacity of DNNs is very high. It can be further increased by increasing the depth of the network or by increasing the neurons at each layer.
+One disadvantage of DNNs is that they cannot model uncertainty trivially.
+One method to represent uncertainty in DNNs is to use an ensemble of neural networks or a specialized loss function with two outputs.
+Since uncertainty modeling is essential for this thesis, it is discussed in more detail in section~\ref{sec:uncertaintyDeepEnsembles}.
+In addition to fully connected DNNs, there are neural networks with sophisticated architectures like convolutional neural networks and recurrent neural networks. However, we do not use these in our thesis; hence we do not describe them here.
 
 \subsubsection{Bayesian Neural Networks}
 One way to quantify uncertainty is to use stochastic artificial neural networks.
