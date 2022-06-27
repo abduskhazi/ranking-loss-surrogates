@@ -275,22 +275,22 @@ Hence it uses "multiple" fidelities during the optimization process.
 
 \section{Transfer-learning for HPO}
 
-The HPO types discussed so far do every HP optimization from scratch. These types have no prior knowledge before starting any optimization cycle.
+The HPO types discussed so far do every HP optimization from scratch. These types have no prior knowledge before starting any HP optimization.
 In addition to being computationally inefficient,  it is contrary to how humans learn.
 Humans use prior experience that they have accumulated and condition their actions on this knowledge.
 Any machine learning method that uses this concept of conditioning its output on previously seen data is called a transfer learning method~\cite{Weiss2016}.
 
 The concept of transfer learning can be utilized to accelerate HPO.
 For example,  Gomes et al.~\cite{svmhpmetalearnt} propose to meta-learn a set of exemplary HP configurations for the SVM.
-They propose that if we learn HP configurations that previously worked well, there is a high chance of finding that a new SVM model also works with these parameters.
+They propose that if we learn HP configurations that previously worked well, there is a high chance that a new SVM model also works well with these parameters.
 Reif et al.~\cite{metalearningwarmstartpaper} also proposed a similar concept for the HP optimization of genetic algorithms.
-In this thesis, we compare the proposed model's performance with the performance of transfer HPO methods like Two-Stage Transfer Surrogate (TST)~\cite{tstpaper}, Ranking-Weighted Gaussian Process Ensemble (RGPE)~\cite{Feurer2018ScalableMF}, Transfer Acquisition Function Framework (TAF)~\cite{Wistuba2017ScalableGP}, and Few Shot Bayesian Optimization (FSBO)~\cite{fsbopaper}.
-The TST method comprises two stages. In the first stage, multiple surrogates are learned for each metadata (or task). The outputs of surrogates are combined in the second stage to rank the HP configurations. These two stages are used with the SMBO algorithm to do HP optimizations. We have discussed Bayesian Optimizations and SMBOs in detail in section~\ref{sec:BayesianOptimization}.
-RGPE is very similar to TST because it also uses multiple models (Gaussian Processes in this case) learned for each task. One significant difference among many others between the 2 is that TST uses Nadaraya-Watson kernel-weighting to combine the surrogate outputs, whereas RGPE uses a linear combination of Gaussians instead. Wistuba et al. use a different method to do transfer HPO in their proposed model called TAF. They use the knowledge transfer mechanism during the acquisition phase of the SMBO process instead of using surrogates to transfer knowledge.
-FSBO gives a state-of-the-art performance in the transfer HPO solutions. Hence, we discuss this in detail in the following chapters.
+In this thesis, we compare the proposed model's performance with the performance of state-of-the-art transfer HPO methods like Two-Stage Transfer Surrogate (TST)~\cite{tstpaper}, Ranking-Weighted Gaussian Process Ensemble (RGPE)~\cite{Feurer2018ScalableMF}, Transfer Acquisition Function Framework (TAF)~\cite{Wistuba2017ScalableGP}, and Few Shot Bayesian Optimization (FSBO)~\cite{fsbopaper}.
+The TST method comprises two stages. In the first stage, multiple surrogates are learned for each metadata (or task). The outputs of the learned surrogates are combined in the second stage to rank the HP configurations. These two stages are used with the SMBO algorithm to do HP optimizations. We have discussed Bayesian Optimizations and SMBOs in detail in section~\ref{sec:BayesianOptimization}.
+RGPE is very similar to TST because it also uses multiple models (Gaussian Processes in this case) learned for each task. One significant difference among many others between the two is that TST uses Nadaraya-Watson kernel-weighting to combine the surrogate outputs, whereas RGPE uses a linear combination of Gaussians instead. Wistuba et al. use a different method to do transfer HPO in their proposed model called TAF. They use the knowledge transfer mechanism during the acquisition phase of the SMBO process instead of using surrogates to transfer knowledge.
+FSBO is a transfer HPO solution that gives a state-of-the-art performance.  Hence, we discuss this in detail in the following chapters.
 
 On the other hand, any method that does not have prior knowledge before starting an HP optimization is called a non-transfer HPO method.
-We also compare our proposed method with non-transfer techniques in this thesis. These include Gaussian Processes (GP), Deep Networks for Global Optimization (DNGO)~\cite{dngopaper}, Bayesian Optimization with Hamiltonian Monte Carlo Artificial Neural Networks (BOHAMIANN)~\cite{bohamiannpaper}, and Deep Kernel GP (DGP)~\cite{fsbopaper}. GPs are standard models used in Bayesian Optimizations for the HPO problem. In addition to being used in a silo, they are also used as sub-components in many different models. We have discussed the working of GPs in detail in section~\ref{sec:GaussianProcesses}. In DNGO, Snoek et al. propose using neural networks instead of GPs as surrogates in the Bayesian optimization. In BOHAMIANN, Springenberg et al. propose using neural networks as surrogates like in the case of DNGO. However, they employ the Bayesian neural network regression concept for doing the Bayesian optimization.
+We also compare our proposed method with some state-of-the-art non-transfer techniques in this thesis. These include Gaussian Processes (GP), Deep Networks for Global Optimization (DNGO)~\cite{dngopaper}, Bayesian Optimization with Hamiltonian Monte Carlo Artificial Neural Networks (BOHAMIANN)~\cite{bohamiannpaper}, and Deep Kernel GP (DGP)~\cite{fsbopaper}. GPs are standard models used in Bayesian Optimizations for the HPO problem. In addition to being used in a silo, they are also used as sub-components in many different models. We have discussed the working of GPs in detail in section~\ref{sec:GaussianProcesses}. In DNGO, Snoek et al. propose using neural networks instead of GPs as surrogates in the Bayesian optimization. In BOHAMIANN, Springenberg et al. propose using neural networks as surrogates like in the case of DNGO. However, they employ the Bayesian Neural Network Regression Concept for doing the Bayesian optimization.
 DGP is a non-transfer version of FSBO where the Deep kernel surrogate is not meta-learned but directly used in the HP optimization.
 No meta-training or knowledge transfer is done in any of these methods. Hence they are classified as non-transfer HPO methods.
 
@@ -303,23 +303,21 @@ They suggest a few initial HP configurations that have worked well for similar d
 These initial configurations are evaluated for the given model, and the evaluated values act as a starting point (or hinge) for the HPO method.
 The idea of warm starting is to automate the selection of the initial configurations before the HPO optimization runs.
 
-Warm starting was used by Gomes et al. ~\cite{svmhpmetalearnt}, and Reif et al. ~\cite{metalearningwarmstartpaper}. In their respective papers, the authors used the meta-learned HP configurations as starting points for finding the optima in the HP response surface.
-This idea was also proposed for the SMBO optimization algorithm by Feurer et al. ~\cite{Feurer2014UsingMT}.
+Warm starting was used by Gomes et al.~\cite{svmhpmetalearnt}, and Reif et al.~\cite{metalearningwarmstartpaper}. In their respective papers, the authors used the meta-learned HP configurations as starting points for finding the optima in the HP response surface.
+This idea was also proposed for the SMBO optimization algorithm by Feurer et al.~\cite{Feurer2014UsingMT}
 
 
 \subsection{Meta-learning of surrogates}
 
-HPO models that use surrogates like SMBO,  have an additional gateway through which previous knowledge can be injected.
-The idea is to meta-learn the surrogate using previously stored meta-data from similar tasks.
-This is used by Schilling et al.~\cite{Schilling2016ScalableHO} in which they learn a collection of Gaussian models for each previously similar dataset due to computational constraints.
-They then use the collection of GPs as a surrogate for the SMBO procedure.
-Another flavour of this approach was proposed  by Feurer et al.~\cite{Feurer2018ScalableMF} proposed the use of rank weighted GP Ensembles (RGPE) surrogates meta-learnt from previous meta data.
+The idea of meta-learning a surrogate is to meta-train it using meta-data from previously optimized similar tasks.
+After its training, the surrogate can be used in an algorithm like SMBO to predict good-performing HP configurations.
+This surrogate's prediction of good-performing HP configurations is conditioned on the training meta-data. This pre-conditioning makes it a transfer HPO.
+The methods proposed by Schilling et al.~\cite{Schilling2016ScalableHO} and by Feurer et al.~\cite{Feurer2018ScalableMF} are a couple of examples among many others that use meta-learning of surrogates to do knowledge transfer.
 
-This meta learnt surrogate can be used in 2 different ways during the HPO optimization procedure.
-For example in SMBO,  one could use it without any modification (aka fine tuning) to suggest the next best candidate to evaluate from a given HP configuration list.
-On the other hand the surrogate can be further meta trained (aka fine tuned) using the available target task meta data. 
-
-Using meta learning of surrogates,  this thesis proposes a new surrogate model.
+The meta-learned surrogate can be used in two ways during the HPO optimization procedure.
+One could use it without modification during the HPO.
+On the other hand, the surrogate can be further meta-trained (aka finetuned) using the available metadata of the target task.
+This thesis proposes a transfer HPO method that uses meta-learning of surrogates for knowledge transfer. We study both the finetuned and non-finetuned versions of our model.
 
 \section{Bayesian Optimization}
 \label{sec:BayesianOptimization}
