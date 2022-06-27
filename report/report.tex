@@ -502,39 +502,40 @@ Since uncertainty modeling is essential for this thesis, it is discussed in more
 In addition to fully connected DNNs, there are neural networks with sophisticated architectures like convolutional neural networks and recurrent neural networks. However, we do not use these in our thesis; hence we do not describe them here.
 
 \subsubsection{Bayesian Neural Networks}
-One way to quantify uncertainty is to use stochastic artificial neural networks.
-These are also called Bayesian Neural Networks (BNN) because they are trained using Bayesian inference mechanism~\cite{BayesianNeuralNetworks}.
-The basic idea is to make sure that the output of any layer in the neural network is stochastic and not a point estimate like in the case of classical artificial neural networks.
+Bayesian Neural Networks are a particular type of neural network in which the output of any layer in the neural network is stochastic and not a point estimate like in the case of classical neural networks.
+These types of neural networks are called Bayesian Neural Networks (BNN) because they are trained using Bayesian inference mechanism~\cite{BayesianNeuralNetworks}.
+BNNs can be used to quantify uncertainty directly because of their stochastic property.
 
-In Bayesian neural networks the stochasticity is added by using a stochastic activation function or stochastic weights and biases.
+In BNNs, stochasticity is added either by using a stochastic activation function or by using stochastic weights and biases.
 Consider the case where we model a BNN using stochastic weights and biases.
-All weights and biases can be represented by a parameter vector $\mathbf{\theta}$.
-We then have to define a probability distribution of the parameter vector $p(\theta)$.
-This is the prior or Hypothesis in Bayesian jargon.
-For example one prior could be a multivariate Gaussian distribution with a mean and a covariance matrix.
+Let us represent all weights and biases by a parameter vector $\mathbf{\theta}$.
+First, we define a probability distribution of $\mathbf{\theta}$ given by  $p(\theta)$.
+This is the prior or a hypothesis in the Bayesian jargon.
+For example, one prior could be a multivariate Gaussian distribution with a defined mean and a covariance matrix.
 Given the training data $D$,  we calculate the new probability distribution to get the posterior distribution $p(\theta | D)$ using Bayes theorem.
-Here $D$ is also called evidence.
+Here $D$ is also referred to as evidence in Bayesian terms.
 We do not mention the intricacies of the BNN training procedure as it is out of scope for this thesis.
 
-To understand the estimation of uncertainty,  let the neural network be represented by $f_{\theta}$ for a definite parameter vector $\theta$. 
-The uncertainty calculation is done using the following equations
+Let a non-stochastic neural network be represented by $f_{\theta}$ for a definite parameter vector $\theta$. 
+The uncertainty calculation in BNNs is done using the following equations
 \begin{align*}
 \mathbf{\theta}_i \sim p(\mathbf{\theta}| D)  \\
 y_i = f_{\mathbf{\theta}_i}(x) \\
 \textit{where} \quad i \in \mathbb{I}^+
 \end{align*}
 
-First we sample a set of parameters from the posterior probability distribution $p(\theta | D)$.
-Using these parameters we calculate multiple values of $y$ for the given input, say $x$.
-Using these multiple output values,  one can calculate the mean and the variance of the output of the network.
-Note that if the output of the Bayesian Neural Network is a vector we would need to calculate the covariance matrix to get the multivariate variance.
+First, we sample a set of parameters from the posterior probability distribution $p(\theta | D)$.
+Using this set of parameters, we calculate multiple values of $y$ for the given input, say $x$.
+Hence we obtain multiple output values for a single input $x$.
+One can use these multiple output values to calculate the output's mean and variance.
+Note that if the output of the Bayesian Neural Network is a vector, we would need to calculate the covariance matrix to get the multivariate variance.
 
-Even though BNNs are theoretically very robust,  practically they are difficult to train.
+Even though BNNs are theoretically very robust, they are practically difficult to train.
 Firstly,  the exact estimation of the posterior is computationally intractable.
 Hence approximate methods like Monte Carlo Markov chains and variational inference methods are used to train the BNNs.
-Even these approximations are computationally more expensive than the a classical artificial neural network.
-Moreover,  it is not clear from the beginning what prior probability distribution should be used  for the stochastic parameters.
-Because of these disadvantages we do not use them for as surrogates in our thesis.
+Even these approximations are computationally more expensive than the classical artificial neural network.
+Moreover,  it is unclear from the beginning what prior probability distribution should be used for the stochastic parameters.
+Because of these disadvantages, we do not use them as surrogates in our thesis.
 
 \subsection{Acquisition functions}
 The acquisition functions used in the Bayesian optimization need to balance the exploitation of information from the known/observed data points and exploration of unknown data points in the domain.
