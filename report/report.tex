@@ -2744,6 +2744,20 @@ Next show the best results obtained by architecture.
 
 \chapter{Conclusion}
 
+In this thesis we study a method of Hyper parameter optimization using Sequential Model based Optimization algorithm as a reference algorithm.
+The angle of approach to this problem however is different from usually studied HPO methods.
+We formulated the problem of selecting next HP configurations within the SMBO cycle as a problem of ranking.
+Due to the nature of the ranking losses studied by us,  we needed to design a suitable surrogate for it.
+
+In the quest to design get good performance for our proposed model we systematically studied and chronologically added essential components to the model which were - addition of context using deep sets,  addition of weighting to the loss function and the addition of uncertainty to the model.
+We found that the model with all the these components gave results which were on par with the state of the art results of FSBO.
+The reason for this,  we hypothesis, is that the training and sampling mechanism for the loss function is very different as compared to the other HPO surrogates or losses.
+The advantage that our model is able to sample combinatorial number of samples from a given set of HP configurations is a upper hand for the proposed model.
+
+Even though we cannot claim the superiority of this method unequivocally due to the scope of application of the ranking loss functions,  we do encourage the reader to pursue further research in this area. 
+We believe from our research the models trained using ranking losses have the potential to give very good Hyper parameter optimization results.
+We also believe that the concepts developed in this thesis could aid in other areas of research like Information retrieval which heavily use ranking losses.
+
 The ranking loss surrogate model proposed in this thesis has a few limitations and gaps which need to be researched and implemented. 
 As the scope of this thesis was limited we could not explore many research directions.
 In this section we mention some of the topics that could be interesting to take up in any further research in this area.
@@ -2895,22 +2909,6 @@ On research direction would be to incorporate the ideas of PiRank in order to se
 
 Lastly,  novel HPO surrogates that have not been explored by this thesis can be implemented.
 This would not only further the research empirically but also ideas used in other baselines could be incorporated to improve the model.
-
-
-\section{Conclusion}
-In this thesis we study a method of Hyper parameter optimization using Sequential Model based Optimization algorithm as a reference algorithm.
-The angle of approach to this problem however is different from usually studied HPO methods.
-We formulated the problem of selecting next HP configurations within the SMBO cycle as a problem of ranking.
-Due to the nature of the ranking losses studied by us,  we needed to design a suitable surrogate for it.
-
-In the quest to design get good performance for our proposed model we systematically studied and chronologically added essential components to the model which were - addition of context using deep sets,  addition of weighting to the loss function and the addition of uncertainty to the model.
-We found that the model with all the these components gave results which were on par with the state of the art results of FSBO.
-The reason for this,  we hypothesis, is that the training and sampling mechanism for the loss function is very different as compared to the other HPO surrogates or losses.
-The advantage that our model is able to sample combinatorial number of samples from a given set of HP configurations is a upper hand for the proposed model.
-
-Even though we cannot claim the superiority of this method unequivocally due to the scope of application of the ranking loss functions,  we do encourage the reader to pursue further research in this area. 
-We believe from our research the models trained using ranking losses have the potential to give very good Hyper parameter optimization results.
-We also believe that the concepts developed in this thesis could aid in other areas of research like Information retrieval which heavily use ranking losses.
 
 
 
