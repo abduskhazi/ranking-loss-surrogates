@@ -450,18 +450,23 @@ $$
   Where $\textbf{K} = k(\textbf{X}, \textbf{X})$,  $\textbf{K}_*  =  k(\textbf{X}, \textbf{x}_*)$ and $\textbf{K}_{**} = k(\textbf{x}_*,  \textbf{x}_*)$ for any given kernel $k$~\cite{GPTutorial}.
 
 \subsubsection{Random Regression Forest}
-     The core idea of this model is to train a Random Regression Forest, using the known data as in any SMBO procedure~\cite{SMBOPaper}.
-Random regression forests are an ensemble of regression trees. 
-This property is used to our advantage to predict the mean and the variance. 
-The mean of the prediction of all the trees is the mean of the surrogate model.
-The variance in the prediction of all trees is the variance of the surrogate model.
+Random regression forests are an ensemble of regression trees.
+When it is used as a surrogate in the SMBO procedure~\cite{SMBOPaper},  its training is done using the known HP configurations and their evaluations.
+Since this model is an ensemble, predicting the mean and variance of the surrogate is trivial. The mean of the surrogate is the mean of the predictions of all the trained trees. Similarly, the variance of the surrogate is the variance of their predictions.
 
-   The advantages of this model are
-   \begin{itemize}
-   \item It can handle both continuous and discrete variables trivially without any modifications to the model.
-The data splitting during training is done using any variable be it discrete or continuous.
-	\item It can handle conditional variables, unlike Gaussian processes, by making sure that data is not split based on a variable till it is guaranteed that no conditionality is broken by the split.
-   \end{itemize}
+The following are the two main advantages of using this model.
+\begin{itemize}
+\item It can handle both continuous and discrete variables trivially without any modifications to the model. This means that the HP search space need not be restricted.
+\item It can handle conditional variables.
+\end{itemize}
+
+Both these advantages are limitations of the Gaussian surrogates. Hence the random regression forests can be used as surrogates where the Gaussian process cannot.
+
+\iffalse
+1. The data splitting during training is done using any variable be it discrete or continuous.
+
+2. unlike Gaussian processes, by making sure that data is not split based on a variable till it is guaranteed that the split breaks no conditionality.
+\fi
 
 \subsubsection{Deep Neural Networks}
 Deep Neural Networks are machine learning models in which the inputs are sequentially passed through multiple functions of computation before getting the final output.
