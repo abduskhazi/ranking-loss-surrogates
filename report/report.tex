@@ -625,19 +625,21 @@ Since the sophisticated attention mechanisms used in Set Transformers were unnec
 The following section discusses these Deep Sets.
 
 % \subsection{Set-transformers}
-\subsection{Deep Sets}\label{sec:DeepSets}
-Traditionally deep learning or machine learning models learn functions of the following format:
+\subsection{Deep Sets}
+\label{sec:DeepSets}
+
+Machine learning models learn functions of the following format:
 $$
 f : \mathbb{R}^d \mapsto \mathbb{R}^k \quad d,k \in \mathbb{I}^+ \quad \textrm{For Regression}
 $$
 $$
 f : \mathbb{R}^d \mapsto \{c_1, c_2, ... c_n\}  \quad \textrm{For Multi-Classification}
 $$
-which can be thought of transforming objects from the input space to the output space.
 
-For our problem of set latent representation,  the input space changes to a space containing sets (each instance in the space is a set by itself).
-The output space however remains similar to either the regression case for regression tasks and classification case for classification tasks.
-Consider $\mathbb{X} = \{a,b,  c, ... \}$ be a set containing all possible elements within the sets of the input space.
+The function $f$ transforms objects from an input space to an output space.
+For the problem of set latent representation, the input space is a space containing Sets (i.e., each object in the space is a Set by itself).
+The output space, however, remains similar to the regression case for regression tasks and the classification case for classification tasks.
+Let $\mathbb{X}$ be the union of all possible sets in the inputs space.
 Then the set representation problem can be defined as:
 $$
 g : 2^{\mathbb{X}} \mapsto R^k   \quad k \in \mathbb{I}^+ \quad \textrm{For Regression}
@@ -645,19 +647,21 @@ $$
 $$
 g : 2^{\mathbb{X}} \mapsto \{c_1, c_2, ... c_n\}  \quad \textrm{For Multi-Classification}
 $$
-Where $2^{\mathbb{X}}$ is the power set of $\mathbb{X}$.
+Here, $2^{\mathbb{X}}$ is the power set of $\mathbb{X}$.
 
-2 very important constraints of this problem are
+Two critical constraints of this problem are:
 \begin{itemize}
 \item Permutation-Invariance constraint: The permutation of the objects within an input set should be irrelevant for the model $g$.
 \item Set cardinality invariance constraint: The cardinality of the set can be variable.
 Hence our model $g$ should be invariant to the number of elements in the input set.
 \end{itemize}
 
+\iffalse
 Permutation equivariance is another type of constraint that the deep set paper deals with.
 In this constraint the latent space should be equivariant or symmetric to the permutation of the objects in the input set.
 This creates issues for our problem because we don't care if our latent space is some symmetric mapping of the input space.
 We want the whole set to be mapped definitively to a latent embedding.
+\fi
 
 \begin{figure}[htb]
 \centering
@@ -691,20 +695,18 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \label{fig:DeepSetArchitecture}
 \end{figure}
 
-Figure~\ref{fig:DeepSetArchitecture} illustrates the architecture proposed by the deep set paper.
-We use a set of only 3 objects in the Figure for simplicity.
-The architecture passes all the 3 inputs through the a deep neural network independently to get intermediate outputs $I_1$, $I_2$, $I_3$.
-To solve the permutation invariance constraint,  any mathematical operation that is commutative and associative is applied on the intermediate outputs.
+Figure~\ref{fig:DeepSetArchitecture} illustrates the architecture proposed by the Zaheer et al.~\cite{deepSets}.
+We use a set of only three objects in the Figure for simplicity.
+The architecture independently passes all the three inputs through the deep neural network to get intermediate outputs $I_1$, $I_2$, and $I_3$.
+To solve the permutation invariance constraint,  any mathematical operation that is commutative and associative is applied to the intermediate outputs.
 As long as the pooling operator is permutation invariant, the proposed architecture is also permutation invariant.
-Examples of such operators are sum, mean, max etc.
-
-To solve the problem of cardinality constraint we can use the mean operator.
+Examples of such operators are sum, mean, and max.
+The mean pooling operator is better in our case because it also meets the Set cardinality constraint.
 Hence the pooling operation becomes:
 $$
 \textrm{Pool}(I_1, I_2, I_3) = \frac{ I_1 + I_2 + I_3}{3}
 $$
-
-The output of the pool operation is then passed through a different Deep Neural Network to finally get the Latent output.
+The output of the pool operation is then passed through a different Deep Neural Network to get a latent output.
 
 \iffalse
 \section{RGPE}
