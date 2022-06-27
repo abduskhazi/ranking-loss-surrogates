@@ -603,27 +603,26 @@ The following functions are some of the most prominent acquisition functions fou
 
 \section{Set-modelling with Neural Networks}
 
-In the previous sections we discussed about various types of surrogates that can be used for transferring knowledge in transfer HPO methods.
-Training on data from known tasks and then using this trained model for working on unknown tasks, however,  has a major shortcoming conceptually.
-Humans do not pre-condition their actions on new tasks only on their previous experiences.
-Their pre-conditioning also includes the knowledge of the current task (however little it may be).
+In the previous sections, we discussed various types of surrogates that can transfer knowledge in transfer HPO methods.
+However, training on data from known tasks and using this trained model for unknown tasks has a conceptual shortcoming.
+Humans do not pre-condition their actions on new tasks only on previous experiences.
+Their pre-conditioning also includes the knowledge of the current task (however slight it may be).
 
-
-To model this concept,  one has to learn to represent and pre-condition knowledge from known tasks in a model.
-This makes the model context aware.
-If we consider a HP configuration and its evaluation ($\textbf{X}$, $y$) as a single object,  then the group of all the known pairs can be represented as a set.
-Here,  $\textbf{X}$ is a feature vector and $y$ is a scalar.
-Now our problem is a 2 stage process which includes
+To model this concept, one has to learn to represent and pre-condition knowledge from known tasks in a model.
+Doing this makes the model context-aware.
+If we consider an HP configuration and its evaluation ($\textbf{x}$, $y$) as a single object, then the group of all the known pairs can be represented as a set.
+Here, $\textbf{x}$ is a feature vector, and $y$ is a scalar.
+Now our problem is a 2 stage process that includes
 \begin{itemize}
-\item Representation of a Set
-\item Conditioning of our model on the Set Representation.
+\item Representation of a set.
+\item Conditioning of our model on this representation.
 \end{itemize}
 
 
-We use Deep Neural networks to represent a set in this thesis because it is a model with  high representational capacity and is easy to train.
-Deep Sets by Zaheer et.  al~\cite{deepSets} and Set Transformers by lee et. al~\cite{setTransformer} are two of the interesting researches that we found in the literature.
-Since the sophisticated attention mechanisms used in Set transformers were unnecessary for us,  we chose to use the more simple architecture used in Deep Sets.
-The next section discusses about these Deep Sets.
+We use Deep Neural networks to represent a set in this thesis because it is a model with high representational capacity and is easy to train.
+Deep Sets by Zaheer et al.~\cite{deepSets} and Set Transformers by lee et al.~\cite{setTransformer} are two of the exciting researches that we found in the literature.
+Since the sophisticated attention mechanisms used in Set Transformers were unnecessary,  we chose to use the simpler architecture used in Deep Sets.
+The following section discusses these Deep Sets.
 
 % \subsection{Set-transformers}
 \subsection{Deep Sets}\label{sec:DeepSets}
