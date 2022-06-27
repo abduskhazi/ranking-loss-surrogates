@@ -561,27 +561,26 @@ Ranking losses can be broadly classified into the following types~\cite{RankingL
 \end{itemize}
 
 In point-wise ranking losses,  the loss function views the ranking problem as a problem of assigning a label to each queried data point.
-Hence,  each learning instance is a single object $a_i$ within the set $\mathbb{A}$.
-For example,  Li et. al.~\cite{McRank} use point-wise ranking losses for their proposed model called McRank.
-Li et.  al.  formulate the ranking problem as a multilevel classification problem.
+Hence,  each learning instance is a single object.
+For example, Li et al.~\cite{McRank} use point-wise ranking losses for their proposed model called McRank.
+They formulate the ranking problem as a multilevel classification problem.
 Each data point is classified independently using soft classification.
 The score of an object then is its expected rank.
-Similarly,  Cossock et.  al.~\cite{subsetregressionpaper} use point-wise ranking losses for doing subset regression. 
+Similarly, Cossock et al.~\cite{subsetregressionpaper} use point-wise ranking losses for subset regression. 
 \iffalse
-Therefore, the complete scoring function comprises of a multi-level classifier and an external expectation calculation.
+Therefore, the complete scoring function comprises a multilevel classifier and an external expectation calculation.
 \fi
 
 In pair-wise ranking losses,  the loss function's input is a pair of objects.
-In this case we learn to model pair-wise preferences.
-The loss function tries to separate the input data points as much as possible in the output space by minimising the pair-wise classification error~\cite{pairwisepreferencespaper}.
+The loss function tries to separate the input data points as much as possible in the output space by minimizing the pair-wise classification error~\cite{pairwisepreferencespaper}.
 Examples of models built using pair-wise loss functions are Rankboost~\cite{rankboostpaper} and RankNet~\cite{ranknetpaper}.
 
-In list-wise ranking losses,  a single learning instance is the whole input set i.e all the objects in the input set.
+In list-wise ranking losses,  a single learning instance is the whole input set, i.e., all the objects in the input set.
 This makes an intuitive sense because we cannot rank the objects independently as an object's rank is relative to the ranks of other objects in a set.
-This is the fundamental advantage of list-wise ranking losses when compared to the point-wise and pair-wise losses.
-Moreover,  it has been shown by Cao et. al.~\cite{listwisebetter} that training a model with list wise losses gives us a superior model as compared to training with point-wise or pair-wise losses.
+This is the fundamental advantage of list-wise ranking losses compared to the point-wise and pair-wise losses.
+Moreover,  it has been shown by Cao et al.~\cite{listwisebetter} that training a model with list-wise losses gives us a superior model compared to training with point-wise or pair-wise losses.
 The 2 most prominent list-wise loss functions are ListNet~\cite{listwisebetter} and ListMLE~\cite{listmlepaper}.
-We discuss and analyse these loss functions in detail in Chapter~\ref{chap:Background}.
+We discuss and analyze these loss functions in detail in chapter~\ref{chap:Background}.
 
 \iffalse
 We hence use the list wise approach to ranking.
