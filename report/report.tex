@@ -137,10 +137,8 @@ Hence, the proposed idea in this thesis is called \textbf{Hyperparamter Optimiza
 \section{Objective}
 \label{sec:HPODefinition}
 
-The aim is to study ranking loss surrogates in the context of Hyperparameter optimization.
-
-To find out the best hyper-parameter for any machine learning model $m$, we must first quantify a given hyper-parameter configuration $\textbf{x}$ by a real-valued number $v \in \mathbb{R}$.
-If we define that
+To define the objective and scope of this thesis, let us first understand how one does HPO.
+To find the best hyperparameter for any machine learning model $m$, we quantify a hyperparameter configuration $\textbf{x}$ by a real-valued number $v \in \mathbb{R}$. If we define that
 $$
 \textbf{x}_1 \succ  \textbf{x}_2 \iff v_{\textbf{x}_1} < v_{\textbf{x}_2}
 $$
@@ -148,18 +146,14 @@ then HPO can be defined mathematically by an abstract function, say,  $f(\textbf
 $$
      \underset{\rm \textbf{x}}{\rm argmin}  f(\textbf{x}) \;\;\;  \forall \textbf{x} \in \mathbb{S}
 $$
-Where $\mathbb{S}$ is the hyper-parameter search space.
-
-This function $f(\textbf{x}) \mapsto \mathbb{R}$ is evaluated in the following chronological steps:
+where $\mathbb{S}$ is the space containing the set of all hyperparameters, also called hyperparameter search space.
+The function $f$ is evaluated in the following chronological steps:
 \begin{enumerate}
-\item Using a given hyper-parameter configuration $\textbf{x}$,  we train our model $m$ to obtain the model $m^{trained}_\textbf{x}$. It consists of learning the parameters of our model, E.g., learning the weights and biases of a Deep Neural Network.
-We use the training data to learn this model.
-\item The validation data is passed through $m^{trained}_\textbf{x}$ to obtain the required results.
-These results are evaluated based on an evaluation criterion '$\textrm{eval}$'. This criterion is different for different problems, e.g., Regression and Classification.
-The result of this evaluation is a real-value that gives a score for the configuration $\textbf{x}$.
+\item Using a given hyperparameter configuration $\textbf{x}$,  we train our model $m$ to obtain the model $m^{trained}_\textbf{x}$. It consists of learning the parameters of our model, for example, learning the weights and biases of a Deep Neural Network. We use any given training data to learn this model.
+\item Validation split of the data is passed through $m^{trained}_\textbf{x}$ to obtain the validation prediction results. These results are evaluated based on an evaluation criterion '$\textrm{eval}$'. The result of this evaluation is a real-value that gives a score for the configuration $\textbf{x}$.
 \end{enumerate}
 
-Hence the function $f(\textbf{x}) \mapsto \mathbb{R}$ can be written as 
+The function $f$ can hence be written as 
 $$
 f(m^{trained}_\textbf{x} (\textrm{Data}_\textrm{val})) \mapsto \mathbb{R}
 $$
