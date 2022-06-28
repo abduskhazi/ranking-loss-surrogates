@@ -2752,7 +2752,7 @@ One of the key takeaways of this thesis is that it is crucial to differentiate t
 
 We conclude that a context-aware model trained with a weighted listwise loss function has the potential to give excellent hyperparameter optimization results. We encourage the reader to use this model for any HPO. We also believe that doing more research on listwise losses in the HPO domain could give promising results. The concepts developed in this thesis and any further research on listwise losses could also aid other areas like Information Retrieval, which heavily uses ranking losses. In the rest of this chapter, we discuss the proposed model's advantages and limitations. Finally, we end this report by suggesting some interesting future research directions.
 
-\section{Advantages of using Ranking loss surrogates}
+\section{Advantages}
 \label{sec:advantages}
 
 First and foremost, one of the main advantages of the proposed surrogate model is that it is a transfer HPO surrogate. Training the surrogate on previously available metadata makes the surrogate perform significantly better than other non-transfer HPO surrogates.
@@ -2762,22 +2762,36 @@ For example, if we have a metadata set of 100 HP observations, i.e., 100 ($\text
 This is a significant advantage because, during an HPO optimization, the known HP configurations and their evaluations are very scarce.
 We can also increase the surrogate model's complexity without worrying much about the available data.
 
-Another significant advantage is that the range or the distribution of the actual scores in the metadata is irrelevant to the training procedure.
-This has an inherently dampening effect on any uncertainty of the HPO objective function's output.
-As the order of the known evaluations is the only relevant thing, minor variations in the objective function's output do not affect the loss's training. This advantage also allows us to manipulate the range of our surrogate's scores based on our requirements.
+Another significant advantage of the proposed method is that training using ranking losses inherently dampens any uncertainty of the HPO objective function's output.
+This is because ranking losses work in the ranking space. The range of the actual scores in the metadata is irrelevant to the training procedure.
+As the order of the known evaluations is the only relevant thing, minor variations in the objective function's output do not affect the loss's training. This also allows us to manipulate the range of our surrogate's scores based on our requirements.
 
 
 \section{Limitations}
 \label{sec:Limitations}
+\label{sec:NegativeTransferLearning}
+Even though the proposed method gives state-of-the-art results, it has some limitations that need further study. In this section, we critically analyze the limitations of the proposed model.
 
-In this section we first discuss some of the major advantages of the proposed model when compared to the baselines.
-Then we move on to critically analyse the limitations of the model.
+We found in our research that for some search spaces, the ranking loss surrogate's validation errors did not reduce during its training. In fact, they increased.
+Figure~\ref{fig:NegativeLearning} illustrates this for the search space id 5527.
+This deterioration of validation loss signifies that negative transfer learning is occuring~\cite{Weiss2016}.
+Negative transfer learning occurs when the source tasks set differs from the target tasks. In this example, the meta-training task is different from the meta-validation task.
 
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.5]{images/NegativeLearning}
+    \caption{Training loss curve of ranking losses}
+    \label{fig:NegativeLearning}
+\end{figure}
 
+This problem should occur only in the cases where the model is context-free.
+Even though our ranking loss surrogate is made context-aware by integrating deep sets into its architecture, we still have the problem of negative transfer learning.
+One remedy for getting around this problem is to finetune the model with more epochs.
+Nevertheless, we cannot guarantee that the finetuning will re-learn from the small number of observed HP configurations during the optimization cycle.
+Since the testing/evaluation task may be similar to the training task, we could also not do any early stopping during meta-training.
 
-\subsubsection{Disadvantages}
-Our proposed model does have some limitations which need to be further studied.
-Some of these are
+Some of these are:
+
 \begin{itemize}
 \item In our model,  a scorer is first learnt and then using this scorer,  we rank the set of query HP configurations.
 During our training of the scoring model/surrogate,  we ignore the sorting functionality necessary to complete the process of ranking.
@@ -2789,14 +2803,6 @@ This puts a major restriction on the range of the relevance scores.
 It may not have the output space to completely map the range of the true scoring function.
 More research is required to find out better strictly increasing functions.
 
-\item The range controller function we use in our model is $\tanh$ because of the function's smoothness.
-However,  if the output relevance scores of 2 HP configurations are either at the positive extreme or negative extreme,  then it may be difficult to distinguish between them.
-This can be dampenned by tuning the $k$ and $\alpha$ parameters as discussed in Section~\ref{sec:BasicScoringModelDNN},  but this does have practical limits due to the floating point implementations in computer languages.
-
-\item It is during the meta training that all the meta training tasks / meta datasets have the same output range for simplicity.
-This is the case of all outputs HPO-B.
-If there is any other meta data used,  the outputs of the different meta data (tasks) should be normalized before being used in the training process.
-
 \item The meta trained model may be biased towards one task due to a larger availability of data from this task.
 This is however dampened by the fact the we are using the double sampling mechanism.
 This makes sure all the tasks sampled equal number of times.
@@ -2806,31 +2812,16 @@ However,  this leads to over fitting of the model towards the tasks that have le
 \item The quality requirement of the uncertainty estimation and need for it is not always the same.
 The search spaces that have less data need more uncertainty and vis versa.
  The learnt model is extremely sensitive to the learning rate and the number of epochs.
+ \item The range controller function we use in our model is $\tanh$ because of the function's smoothness.
+However,  if the output relevance scores of 2 HP configurations are either at the positive extreme or negative extreme,  then it may be difficult to distinguish between them.
+This can be dampenned by tuning the $k$ and $\alpha$ parameters as discussed in Section~\ref{sec:BasicScoringModelDNN},  but this does have practical limits due to the floating point implementations in computer languages.
+\item It is during the meta training that all the meta training tasks / meta datasets have the same output range for simplicity.
+This is the case of all outputs HPO-B.
+If there is any other meta data used,  the outputs of the different meta data (tasks) should be normalized before being used in the training process.
 \fi
 
 \end{itemize}
     
-\subsubsection{Negative transfer learning}
-\label{sec:NegativeTransferLearning}
-For some search spaces,  the validation errors of the ranking loss model did not reduce at all during its training.
-In fact the validation loss became worse.
-Figure~\ref{fig:NegativeLearning} shows an illustration of this for the search space id 5527.
-This is a classic example of negative transfer learning~\cite{Weiss2016}.
-Negative transfer learning occurs when the set of source tasks (here,  training datasets) is very different from the target tasks (here, validation datasets).
-
-\begin{figure}[htb]
-  \centering
-    \includegraphics[scale=0.5]{images/NegativeLearning}
-    \caption{Training loss curve of ranking losses}
-    \label{fig:NegativeLearning}
-\end{figure}
-
-This problem should occur only in the cases where the model is context free.
-In our case,  the ranking loss model with deep set is context aware and results like these were unexpected.
-Hence the issues with negative transfer learning remains unsolved when using our model.
-One remedy for getting around this problem is to fine tune the model with a larger number of epochs.
-Nevertheless,  we cannot guarantee that the fine tuning will re-learn from the small amount observed data points during the optimization cycle.
-Note: Since the testing/evaluation task may be similar to the training task,  we did not do any early stopping.
 
 \iffalse
 \section{Evaluation}
