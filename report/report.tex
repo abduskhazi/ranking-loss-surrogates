@@ -159,31 +159,28 @@ f(m^{trained}_\textbf{x} (\textrm{Data}_\textrm{val})) \mapsto \mathbb{R}
 $$
 
 Finally, the HPO problem can be defined using the following equation:
-\begin{equation}\label{eq:hpoobjectivefunc}
+\begin{equation}
+\label{eq:hpoobjectivefunc}
 \underset{\rm \textbf{x}}{\rm argmin} \;\; f(m^{trained}_\textbf{x} (\textrm{Data}_\textrm{val})) \mapsto \mathbb{R}   \;\;\;  \forall \textbf{x} \in \mathbb{S}
 \end{equation}
 
-One way to view this objective function non-mathematically is that we are trying to select a hyper parameter setting of the given model to obtain the best (lowest) validation error~\cite{fsbopaper}.
 
-\subsubsection{HPO Constraints}\label{sec:hpoConstraints}
+\iffalse
+\subsubsection{HPO Constraints}
+\fi
+\label{sec:hpoConstraints}
 
-Hyperparameter optimization is different from other optimization methods because it has different constraints~\cite{bayesianOptimizationTutorial}.
-It is because of the peculiar properties of the hyper-parameter search spaces.
-Finding the correct hyper-parameter setting is generally not feasible using a brute-force approach (trying out all possible combinations of hyper-parameters) because the search space has many dimensions, and the search space may be continuous.
-More specifically,  some of the important constraints of this optimization problem are:
+One way to view this objective function non-mathematically is that we are trying to select a hyper parameter setting of the given model to obtain the best (lowest) validation error~\cite{fsbopaper}.  Apart from being computationally expensive,  HPO has the following constraints:
 
-\begin{enumerate}
-\item The evaluation of a given HPO configuration is computationally expensive.
+\begin{itemize}
 \item It is a non-convex optimization problem.
 \item The process of getting $m^{trained}_\textbf{x}$ from $m$ is stochastic hence the value $v_{\textbf{x}}$ is noisy.
 \item Some dimensions have conditional constraints. The values of some dimensions may depend on the values of others. For example, the number of neurons in layer three only makes sense if we have three or more layers in a neural network.
 \item The search space is hybrid in terms of continuity. Some dimensions (variables) may be continuous, while others may be discrete.
 Using a gradient method is hence not trivial.
-\end{enumerate}
+\end{itemize}
 
-To deal with the constraints of HPO problems, researchers have used different strategies for developing HPO algorithms and models.
-Some of the more prominent approaches are Black-Box HPO, 
-Multi-fidelity HPO and Online HPO.
+This thesis aims to improve the HPO by learning good surrogates of the HPO objective function. It uses the concept of ranking to select the best HP configuration in the SMBO algorithm. Since the surrogate should behave like a ranking, ranking losses are used to learn the surrogate of the function $f$. The thesis only targets the discrete HPO problem. This is because ranking requires sets with discrete objects. In order to improve the performance of the learned surrogate, the thesis also tries to make it context-aware.
 
 \label{ProblemOverviewlabel}
 
