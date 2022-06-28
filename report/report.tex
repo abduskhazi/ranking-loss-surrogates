@@ -2744,45 +2744,36 @@ Next show the best results obtained by architecture.
 
 \chapter{Conclusion}
 
-In this thesis we study a method of Hyper parameter optimization using Sequential Model based Optimization algorithm as a reference algorithm.
-The angle of approach to this problem however is different from usually studied HPO methods.
-We formulated the problem of selecting next HP configurations within the SMBO cycle as a problem of ranking.
-Due to the nature of the ranking losses studied by us,  we needed to design a suitable surrogate for it.
+In this thesis, we studied how to use the concept of ranking with Sequential Model-Based Optimization (SMBO) to improve hyperparameter optimization. The HPO method we researched was a transfer learning method with two canonical parts: ranking loss functions and context-aware HPO surrogates. Firstly, we formulated the problem of selecting HP configurations within the SMBO algorithm as a ranking problem. Then, we researched the effects of using various ranking losses to train and finetune the HPO surrogate. We also studied the effect of adding weighting to the ranking loss. Finally, we integrated deep sets into the surrogate model architecture to make it context-aware.
 
-In the quest to design get good performance for our proposed model we systematically studied and chronologically added essential components to the model which were - addition of context using deep sets,  addition of weighting to the loss function and the addition of uncertainty to the model.
-We found that the model with all the these components gave results which were on par with the state of the art results of FSBO.
-The reason for this,  we hypothesis, is that the training and sampling mechanism for the loss function is very different as compared to the other HPO surrogates or losses.
-The advantage that our model is able to sample combinatorial number of samples from a given set of HP configurations is a upper hand for the proposed model.
+We found in our study that the loss function used to learn an HPO surrogate significantly affects its performance. Among the ranking loss functions, listwise ranking loss showed the best performance during the HPO optimizations. After adding weighting to the listwise ranking loss function, the proposed model's performance further improved. Adding deep-sets to the surrogate made its performance on par with the performance of state-of-the-art transfer HPO methods. However, the results were the best only when we used the ranking loss surrogate in the transfer learning scenario.
 
-Even though we cannot claim the superiority of this method unequivocally due to the scope of application of the ranking loss functions,  we do encourage the reader to pursue further research in this area. 
-We believe from our research the models trained using ranking losses have the potential to give very good Hyper parameter optimization results.
-We also believe that the concepts developed in this thesis could aid in other areas of research like Information retrieval which heavily use ranking losses.
+One of the key takeaways of this thesis is that it is crucial to differentiate the ranking space from the output space. The ranking loss surrogates performed well because they learn and function in the ranking space rather than the output space. Hence we also conclude that working in the ranking space is better than working in the output space. Moreover, working in the ranking space is helpful in a problem domain like the HPO. The output ranges of the evaluated HPO objective functions may differ for different tasks. By working in the ranking space, we avoid normalizing meta-data values usually done by other transfer HPO methods.
 
-The ranking loss surrogate model proposed in this thesis has a few limitations and gaps which need to be researched and implemented. 
-As the scope of this thesis was limited we could not explore many research directions.
-In this section we mention some of the topics that could be interesting to take up in any further research in this area.
-Thereafter we conclude our thesis.
+We conclude that a context-aware model trained with a weighted listwise loss function has the potential to give excellent hyperparameter optimization results. We encourage the reader to use this model for any HPO. We also believe that doing more research on listwise losses in the HPO domain could give promising results. The concepts developed in this thesis and any further research on listwise losses could also aid other areas like Information Retrieval, which heavily uses ranking losses. In the rest of this chapter, we discuss the proposed model's advantages and limitations. Finally, we end this report by suggesting some interesting future research directions.
 
-\section{Advantages and Limitations}
-\label{sec:advantagesAndLimitations}
+\section{Advantages of using Ranking loss surrogates}
+\label{sec:advantages}
+
+First and foremost, one of the main advantages of the proposed surrogate model is that it is a transfer HPO surrogate. Training the surrogate on previously available metadata makes the surrogate perform significantly better than other non-transfer HPO surrogates.
+
+Secondly, we also found that the sampling mechanism required for the listwise loss function had the upper hand compared to other loss functions. Because a set has a massive number of possible subsets, the number of data instances sampled for the listwise loss is very high. 
+For example, if we have a metadata set of 100 HP observations, i.e., 100 ($\textbf{x}$,$y$) pairs, and a training list size of 15, then a total of ${100 \choose 15}$ training lists can be sampled from the metadata.
+This is a significant advantage because, during an HPO optimization, the known HP configurations and their evaluations are very scarce.
+We can also increase the surrogate model's complexity without worrying much about the available data.
+
+Another significant advantage is that the range or the distribution of the actual scores in the metadata is irrelevant to the training procedure.
+This has an inherently dampening effect on any uncertainty of the HPO objective function's output.
+As the order of the known evaluations is the only relevant thing, minor variations in the objective function's output do not affect the loss's training. This advantage also allows us to manipulate the range of our surrogate's scores based on our requirements.
+
+
+\section{Limitations}
+\label{sec:Limitations}
 
 In this section we first discuss some of the major advantages of the proposed model when compared to the baselines.
 Then we move on to critically analyse the limitations of the model.
 
-First and foremost,  one advantage of the proposed surrogate model is that it is a transfer HPO surrogate.  Previous available meta data will help the model to give better performance over non transfer HPO surrogate.
 
-Secondly,  even if the amount of meta data is limited it has little affect on the training.
-This is due to the nature of the loss function and the amount of data points that can be sampled during meta training.
-For example,  if we have a meta data set of 100 observations i.e 100 ($X$,$y$) pairs,  and we have a list size of 15,  then the total number of training samples is given by $100C15$.
-Hence the sampling method used gives us data that is exponential in number.
-And each sampled list is a unique instance to train.
-This is a big advantage for us as we can increase the complexity of the surrogate model with relative easy.
-This also has a big advantage during fine tuning where the data is very less.
-
-Another major advantage is that the range or the distribution of the actual scores is irrelevant for the training procedure.
-This inherently dampens the effect of uncertainty by itself.
-As the order of the known evaluations is the  only relevant thing,  minor variations in the output of the objective function has no effect on the training of the loss.
-This also gives us flexibility of tampering the range of our surrogate based on our requirement.
 
 \subsubsection{Disadvantages}
 Our proposed model does have some limitations which need to be further studied.
@@ -2903,7 +2894,7 @@ Then we may select the best region and subdivide the space and continue the proc
 This method is just a workaround to the main problem and we also cannot really guarantee that an optima will be found in contract to any gradient based optimization method.
 Hence,  further research needs to be done on how to formulate the ranking loss function for continuous search spaces.
 
-We already discussed in Section~\ref{sec:advantagesAndLimitations}  that the ranking loss function does not optimize the sorting function.
+We already discussed in Section~\ref{sec:Limitations}  that the ranking loss function does not optimize the sorting function.
 The inclusion of sorting functionality in the loss function has  been proposed and studied in Swezey et.  al~\cite{PiRank}.
 On research direction would be to incorporate the ideas of PiRank in order to see if there is any improvement in the model.
 
