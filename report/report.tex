@@ -123,21 +123,22 @@ Abstract goes here
 
 \chapter{Introduction}
 
-The performance of any machine learning model is sensitive to the hyper-parameters used during the model training. 
-Instead of using a new model type, it is more helpful to tune the hyper-parameters of an existing model to improve its performance.
-Learning the best hyper-parameter for an ML model is called, Hyperparameter optimization (HPO in short).
+Machine learning has become a ubiquitous tool in the modern economy. 
+Due to the availability of extensive data at a meager cost, applying machine learning methods has become very accessible.
+Computer vision, marketing, customer service, and cybersecurity are some of the many domains that use machine learning. A critical factor in its success is that it gives a general framework for learning the models. One only needs to use the data and apply the formulated optimization to train the models. In other words, complex models are created using this framework without needing to program them explicitly.
 
-The true evaluation of a hyperparameter optimisation objective function is computationally very expensive. 
-Researchers have tried to get around this problem by proposing model based HPO algorithms.
-In these methods,  the true objective function is modelled by a cheap surrogate function of high representational capacity.
-For example,  the Sequential Model Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab} algorithm is a very important algorithm that iterates between learning a model given a few HP configuration evaluations and using the model to propose the next candidate to evaluate.
+Even though most machine learning models can work out of the box, their performance does not come for free. Their performance is sensitive to the hyperparameters used during the model training. Some examples of hyperparameters are the learning rate, the type of optimizer, the architecture of the neural networks, and the regularization parameter.
+One needs to tune the model's hyperparameters to get the most performance. Tuning the hyperparameters to get the best performing machine learning model is called Hyperparameter Optimization (HPO in short).
 
-This thesis studies various existing approaches to HPO and proposes a new idea for the same using the concept of ranking.
-The proposed idea in this thesis is called \textbf{Hyperparamter Optimization using Ranking Loss Surrogates}. 
-The results obtained using this model are compared against the state-of-the-art results obtained using models like FSBO,  RGPE,  TAF, and others. 
+A brute force method for an HPO would be to try out all possible configurations. This method is intractable because the space of hyperparameter configurations may be continuous. Even if the space is discrete, the number of combinations may be prohibitively large. Moreover, evaluating even one hyperparameter configuration may take many days. This task of evaluating an HP configuration is called the HPO objective function. Considering the cost of the HPO objective function, more sophisticated methods have been developed over the past decades. Sequential Model-Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab} is one method that has been used successfully for HPO. This method uses cheap approximations of the actual HPO's objective function to predict good HP configurations. These cheap approximations are called surrogates which need to be learned using the available hyperparameters configurations and their evaluations. This thesis proposes using the concept of ranking to learn the surrogates in SMBO. It proves that using this ranking surrogate in SMBO is a viable alternative to other methods.
+Hence, the proposed idea in this thesis is called \textbf{Hyperparamter Optimization using Ranking Loss Surrogates}.
 
-\section{Hyper Parameter Optimization}
+
+\section{Objective}
 \label{sec:HPODefinition}
+
+The aim is to study ranking loss surrogates in the context of Hyperparameter optimization.
+
 To find out the best hyper-parameter for any machine learning model $m$, we must first quantify a given hyper-parameter configuration $\textbf{x}$ by a real-valued number $v \in \mathbb{R}$.
 If we define that
 $$
@@ -191,8 +192,6 @@ Some of the more prominent approaches are Black-Box HPO,
 Multi-fidelity HPO and Online HPO.
 
 \label{ProblemOverviewlabel}
-\section{Objective}
-The aim is to study ranking loss surrogates in the context of Hyperparameter optimization.
 
 \section{Overview}
 
