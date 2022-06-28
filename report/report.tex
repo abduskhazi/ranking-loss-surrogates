@@ -2780,7 +2780,7 @@ Negative transfer learning occurs when the source tasks set differs from the tar
 \begin{figure}[htb]
   \centering
     \includegraphics[scale=0.5]{images/NegativeLearning}
-    \caption{Training loss curve of ranking losses}
+    \caption{Training and validation loss curves obtained for the training of search space 5527.}
     \label{fig:NegativeLearning}
 \end{figure}
 
@@ -2790,25 +2790,20 @@ One remedy for getting around this problem is to finetune the model with more ep
 Nevertheless, we cannot guarantee that the finetuning will re-learn from the small number of observed HP configurations during the optimization cycle.
 Since the testing/evaluation task may be similar to the training task, we could also not do any early stopping during meta-training.
 
-Some of these are:
+Another disadvantage of the proposed model is that we ignore the sorting functionality necessary to complete the ranking process during our surrogate training. This is because sorting is non-differentiable.
+Due to this issue, the complete ranking process is not learned with the listwise loss. This means that we do not solve the complete ranking problem at hand conceptually.
 
-\begin{itemize}
-\item In our model,  a scorer is first learnt and then using this scorer,  we rank the set of query HP configurations.
-During our training of the scoring model/surrogate,  we ignore the sorting functionality necessary to complete the process of ranking.
-This is because sorting is non differentiable. 
-Which means that the true evaluation of the ranked list is not optimized.
+Our loss function uses the exponentiation function as the strictly increasing positive function.
+The usage of the exponentiation function puts a practical restriction on the range of the relevance scores. This is because standard floating-point implementations in computer languages only have a fixed range of values they can represent.
+These floating-point implementations may not have the range to map the actual HPO objective function's range completely.
+Hence, more research is required to find out better strictly increasing functions.
 
-\item Our loss function makes use of exponentiation function as the strictly increasing positive function.
-This puts a major restriction on the range of the relevance scores.
-It may not have the output space to completely map the range of the true scoring function.
-More research is required to find out better strictly increasing functions.
-
-\item The meta trained model may be biased towards one task due to a larger availability of data from this task.
-This is however dampened by the fact the we are using the double sampling mechanism.
-This makes sure all the tasks sampled equal number of times.
-However,  this leads to over fitting of the model towards the tasks that have lesser data because this data is overused during training.
+Another problem with our model is that the meta-trained model may be biased towards one task due to the larger availability of data from this task.
+Double sampling helps us eliminate this issue by sampling all tasks with equal probability.
+However, the consequence of double sampling is that the meta-training overfits the surrogate to the tasks with lesser data because their data is overused during training. More studies must be conducted to find a mechanism for fair metadata sampling across tasks.
 
 \iffalse
+\begin{itemize}
 \item The quality requirement of the uncertainty estimation and need for it is not always the same.
 The search spaces that have less data need more uncertainty and vis versa.
  The learnt model is extremely sensitive to the learning rate and the number of epochs.
@@ -2818,9 +2813,8 @@ This can be dampenned by tuning the $k$ and $\alpha$ parameters as discussed in 
 \item It is during the meta training that all the meta training tasks / meta datasets have the same output range for simplicity.
 This is the case of all outputs HPO-B.
 If there is any other meta data used,  the outputs of the different meta data (tasks) should be normalized before being used in the training process.
-\fi
-
 \end{itemize}
+\fi
     
 
 \iffalse
@@ -2857,40 +2851,21 @@ as explained by sebastian.
 
 \section{Further research work}
 
-We introduced uncertainty into our model with the use of Deep Ensembles. 
-With this we had many basic scoring models each giving their own.
-The mean of these neural networks was taken to be the joint output of the
-ensemble.
-This mean was used by the loss function to train the whole model.
-We can term this as "collective training" of the ensemble.
-There is,  however,  also the possibility of independent training where each neural network is trained independently.
-Some intricacies if we train this way are
-\begin{itemize}
-\item The Deep Set architecture is a backbone that is common to all basic scoring models.  How is this to be trained?
-\item Independent training implies that the range of the output of different basic scoring models is different. 
-Are these to be normalized? Or do we take the ranking from all scoring models and average them.
-\end{itemize}
+During our thesis, we found various topics that could be taken up for future research. For example, in section~\ref{sec:AcquisitionFunctionInRankingSpace} we proposed that further research on acquisition functions is necessary due to the intricacies of the ranking space. Similarly, we already know from section~\ref{sec:Limitations} that the listwise loss function does not optimize the sorting function.
+Interestingly, the inclusion of sorting functionality in a loss function has been proposed and studied in Swezey et al. ~\cite{PiRank}.
+One research direction would be to incorporate the ideas of PiRank in order to see if there is any improvement in the proposed model.
 
-In the proposed model,  the deep neural networks output a list of output scores. 
-We use this output to calculate the mean and the variance of the scores.
-The deep ensemble, however, paper proposes a method to directly calculate the mean and this variance.
-The integration of this idea with ranking losses is non-trivial.
-Hence the integration of this Deep Ensemble architecture with the ranking loss function can be taken up in further research work.
-It would be interesting to see the affect of this integration for HPO problems with very less meta data because Deep Ensembles by themselves as introduced by ~\cite{DeepEnsemblePaper} perform relatively good in the evaluation phase.
+Lakshminarayanan et al.~\cite{DeepEnsemblePaper} propose a new loss function that inherently learns an output's mean and variance. Our idea, on the other hand, predicts definite scores. After that, it predicts the mean and variance in the ranks induced by the scores. One exciting idea we could not explore due to the scope of the thesis is the integration of the loss function proposed by Lakshminarayanan et al. and ranking losses. Doing a theoretical and empirical analysis of such an integration could be one research direction.
+It would be interesting to see the effect of this integration on HPO problems with less metadata because Deep Ensembles by themselves perform relatively well in a silo.
 
 This thesis has primarily focused on how to select HP configurations from a set of discrete HP configurations.
 Hence the model does not deal with continuous search spaces directly.
-For working with continuous HP search spaces,  we can divide the space  (in the euclidean sense) into hyper-volumes and use 1 HP configuration as a representative for the whole hyper-volume.
-Then we may select the best region and subdivide the space and continue the process till a particular granularity.
-This method is just a workaround to the main problem and we also cannot really guarantee that an optima will be found in contract to any gradient based optimization method.
-Hence,  further research needs to be done on how to formulate the ranking loss function for continuous search spaces.
+For working with continuous HP search spaces,  we can divide the space  (in the Euclidean sense) into hyper-volumes and use 1 HP configuration to represent the whole hyper-volume.
+Then we may select the best region, subdivide the space, and continue the process until we reach a particular granularity.
+This method is just a workaround to the main problem, and we also cannot guarantee that an optimum will be found.
+Hence, further research must be done on formulating the ranking loss function for continuous search spaces.
 
-We already discussed in Section~\ref{sec:Limitations}  that the ranking loss function does not optimize the sorting function.
-The inclusion of sorting functionality in the loss function has  been proposed and studied in Swezey et.  al~\cite{PiRank}.
-On research direction would be to incorporate the ideas of PiRank in order to see if there is any improvement in the model.
-
-Lastly,  novel HPO surrogates that have not been explored by this thesis can be implemented.
-This would not only further the research empirically but also ideas used in other baselines could be incorporated to improve the model.
+Lastly, novel HPO surrogates that this thesis has not explored can be implemented. It would not only further the research empirically, but also ideas used in other baselines could be incorporated to improve the model.
 
 
 
