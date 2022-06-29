@@ -574,7 +574,7 @@ The 2 most prominent list-wise loss functions are ListNet~\cite{listwisebetter} 
 We discuss and analyze these loss functions in detail in chapter~\ref{chap:Background}.
 
 \iffalse
-We hence use the list wise approach to ranking.
+We hence use the listwise approach to ranking.
 Ranking loss could be the answer in modeling hp optima better.
 \fi
  
@@ -1789,7 +1789,7 @@ Keeping this constraint in mind,  we need to use a weighting function $c(j)$ suc
 Here, $j$ is the ranking of the object.
 
 This section discusses some strategies to do this weighting for our problem.
-The concept of biased ranking loss is discussed in "Top-Rank Enhanced List wise Optimization for Statistical Machine Translation" by  Chen et al. ~\cite{TRLWO}.
+The concept of biased ranking loss is discussed in "Top-Rank Enhanced Listwise Optimization for Statistical Machine Translation" by  Chen et al. ~\cite{TRLWO}.
 Chen et. al propose a position based weighting of the ranking function such that:
 \begin{equation}
 w_j = \frac{k - j + 1}{\Sigma_{t=1}^k t}
@@ -2507,7 +2507,7 @@ The list-wise loss function functions better than the state-of-the-art transfer 
 \end{figure}
 
 
-\subsection{Study of weighted list Wise losses}
+\subsection{Study of weighted Listwise losses}
 
 In Section~\ref{sec:positionEnhancedRanking} we discussed the requirement for weighting for our problem.
 This section presents a short ablation to study its effect on our models.
@@ -2569,7 +2569,7 @@ We also present in Figure~\ref{fig:Q3AblationFinalRank100} the critical rank gra
 \end{minipage}\par
 \vskip\floatsep% normal separation between figures
 \includegraphics[width=0.45\textwidth]{images/Q3AblationFinalRank@100}
-    \caption{Critical rank graph of the list wise weighted transfer learning with deep sets with sentinel performances}
+    \caption{Critical rank graph of the listwise weighted transfer learning with deep sets with sentinel performances}
    \label{fig:Q3AblationFinalRank100}
 \end{figure}
 
@@ -2970,7 +2970,7 @@ Then the loss function we would use to learn our scorer is
 \underset{\theta}{\rm argmin} \quad L_{mle}(s(l \mid \theta),  - k * l)
 \end{equation}
 where $k \in \mathbb{R}$.
-Note that the second parameter of list wise loss function is scale-invariant; hence scaling the list does not affect the loss output (Section~\ref{sec:listMLE}).
+Note that the second parameter of listwise loss function is scale-invariant; hence scaling the list does not affect the loss output (Section~\ref{sec:listMLE}).
 To keep the output score in a defined range, we utilized the range controlling mechanism discussed in Appendex~\ref{chap:OutputRangeControl}.
 
 We sample the testing data from the following ranges to evaluate our learned model:
@@ -2993,7 +2993,7 @@ We report the average of 5 runs in Table~\ref{table:caseStudyResults}.
 \resizebox{\linewidth}{!} {
 \begin{tabular}{ | c | c | c | c | c | c | }
 \hline
-\textbf{Training Epochs} & \textbf{List size} & \textbf{In-range Acc.} & \textbf{Out-of-range Acc.} & \textbf{Hybrid-range Acc.} \\ [0.5 ex]
+\textbf{Training Epochs} & \textbf{List size} & \textbf{In range Acc.} & \textbf{Out of range Acc.} & \textbf{Hybrid range Acc.} \\ [0.5 ex]
 \hline \hline
 1000 & 3 & 0.99 & 0.27 & 0.40\\
 100 & 3  & 0.77 & 0.29 & 0.11\\
