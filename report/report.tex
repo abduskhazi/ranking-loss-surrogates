@@ -2666,20 +2666,36 @@ However, as the optimization steps proceed, the surrogate can condition its sele
 \subsection{Comparing results with SOTA surrogates}
 After analyzing our proposed model, one natural question is how it performs against the state-of-the-art HPO surrogates. We compare our results with the best-performing transfer and non-transfer HPO surrogates to answer this question.
 
-Figure~\ref{fig:NonTransferSOAT} compares the results with some prominent state-of-the-art non-transfer HPO surrogates. We see from this figure that the proposed model far outperforms these surrogates. This is natural because our model is a transfer model and has the advantage of getting meta-trained before being used in the optimization.
+Figure~\ref{fig:NonTransferSOTA} compares the results with some prominent state-of-the-art non-transfer HPO surrogates. This figure shows that the non-transfer version of the proposed model shows comparable performance to the Gaussian Process surrogate. This is the case both in the rank graph and the average regret. We also see that the proposed model performs very well in the initial few optimization steps. This can be seen in the critical graphs shown in figure~\ref{fig:SOTANonTransferCriticalRankedGraph}. This property is also seen in its transfer variant.
 
+\iffalse
 Interestingly, the average regret of the proposed model at the end of optimizations is not very good compared to non-transfer surrogates.
 Since the average regret gives a biased estimation of the results and the rank graph is a more accurate picture,  we conclude here that the proposed ranking loss surrogate model is better than the non-transfer surrogates.
+\fi
 
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/NonTransferSOAT}
     \caption{Comparing our results against SOTA non-transfer HPO surrogates.}
-    \label{fig:NonTransferSOAT}
+    \label{fig:NonTransferSOTA}
+\end{figure}
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/NonTransferSOTARank@25}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/NonTransferSOTARank@50}
+\end{minipage}\par
+\vskip\floatsep% normal separation between figures
+\includegraphics[width=0.45\textwidth]{images/NonTransferSOTARank@100}
+    \caption{Critical rank graph of the proposed model with SOTA non-transfer HPO surrogates.}
+   \label{fig:SOTANonTransferCriticalRankedGraph}
 \end{figure}
 
 
-Figure~\ref{fig:TransferSOAT} however, compares the results with other state-of-the-art transfer HPO surrogates. As we see from this figure, the strength of using the proposed model is that it outperforms the state-of-the-art results in the first evaluations in the optimization procedure. Moreover, it outperforms RGPE, which also uses the concept of ranking making our model unequivocally better performing than other ranking methods. This can also be seen in the critical rank graphs shown in Figure~\ref{fig:SOATCriticalRankedGraph}.
+Figure~\ref{fig:TransferSOAT} compares the results with other state-of-the-art transfer HPO surrogates. As we see from this figure, the strength of using the proposed model is that it outperforms the state-of-the-art results in the first evaluations in the optimization procedure. Moreover, it outperforms RGPE, which also uses the concept of ranking making our model unequivocally better performing than other ranking methods. This can also be seen in the critical rank graphs shown in Figure~\ref{fig:SOATCriticalRankedGraph}.
 
 \begin{figure}[h]
   \centering
