@@ -2370,7 +2370,7 @@ In each section, we present an ablation study to highlight the essential compone
 For uniformity, we use the following strategy - We will use the same number of neural networks and the same neural network architecture in our study.
 We also try to keep the learning rate similar for similar components.
 For different components, however, we use different learning rates.
-For example, learning rates during meta-training and fine-tuning are different.
+For example, learning rates during meta-training and finetuning are different.
 Similarly, each loss function may require a different learning rate to perform the best as the HP response surfaces change with the used loss function.
 Like in the best case of Deep Ensembles, we use ten neural networks in our ensemble. Each neural network has two 32-neuron layers.
 
@@ -2437,7 +2437,7 @@ In this section, we discuss the following question - are ranking losses better f
 For the regression case,  we use the Deep Ensemble baseline implementation proposed by Lakshminarayanan et al. ~\cite{DeepEnsemblePaper} as a reference. We use subset regression,  RankNet, and ListMLE loss functions for point-wise, rank-wise, and list-wise ranking losses, respectively. 
 
 \subsubsection{Non-transfer HPO}
-We first test the non-transfer HPO case where the surrogate models are not meta-trained. We only do fine-tune (or training) during the evaluation phase. We also reinitialize the models before every evaluation step. We have discussed the reason for this in-depth in Section~\ref{sec:rlfinetune}.
+We first test the non-transfer HPO case where the surrogate models are not meta-trained. We only do finetune (or training) during the evaluation phase. We also reinitialize the models before every evaluation step. We have discussed the reason for this in-depth in Section~\ref{sec:rlfinetune}.
 We train each neural network for 1000 epochs at every evaluation step. The learning rate is 0.02, and we do not use cosine annealing.
 Using cosine annealing here did not make sense since there is no guarantee that the randomly initialized model is near a local optimum.
 Hence, we need a bigger learning rate to find quicker optimization.
@@ -2446,7 +2446,7 @@ We try to keep all the parameters the same as the best case of DE results (Our r
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/Q1AblationNonTransfer}
-    \caption{Comparison of Ranking losses with regression losses (Non transfer case)}
+    \caption{Comparison of Ranking losses with regression losses (Non-transfer HPO case).}
     \label{fig:Q1AblationNonTransfer}
 \end{figure}
 
@@ -2464,7 +2464,7 @@ Firstly, we see that the average regret for both the regression losses is simila
 \end{minipage}\par
 \vskip\floatsep% normal separation between figures
 \includegraphics[width=0.45\textwidth]{images/Q1AblationNonTransferRank@100}
-    \caption{Critical rank graph of the non transfer ablation study (Non transfer case)}
+    \caption{Critical rank graph of the non-transfer HPO methods.}
    \label{fig:Q1AblationNonTransferRank100}
 \end{figure}
 
@@ -2473,7 +2473,7 @@ Firstly, we see that the average regret for both the regression losses is simila
 In the transfer HPO case,  we first train the models with the meta-training data given by the HPO-B data set and then store our models on persistent storage.
 We train the models for 5000 epochs with a fixed learning rate of 0.001.
 We used a batch size of 100 for all models. We used a list size of 100 for the list-wise loss functions.
-However, we use cosine annealing during fine-tuning for the reasons discussed in Section~\ref{sec:rlfinetune}.
+However, we use cosine annealing during finetuning for the reasons discussed in Section~\ref{sec:rlfinetune}.
 It is because there is a very high chance that the learned model is close to any one of the local optima (the exception to this is the negative learning rate case discussed later).
 
 The selection of batches of HP configuration for training is not trivial.
