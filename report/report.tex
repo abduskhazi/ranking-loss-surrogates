@@ -2481,16 +2481,17 @@ For any given search space,  we have data on multiple tasks.
 As the distribution of HP configurations may differ for different tasks, we need to learn to rank the HP configurations against other configurations within the same task.
 Hence, for each step within an epoch (i.e., for the number of batches within the epoch),  we randomly select a task (i.e., meta-dataset) and then select the HP configurations within this task.
 This sampling mechanism is the double sampling mechanism we discussed in Section~\ref{sec:rlmetatraining}.
-Double sampling is not required during fine-tuning as we are fine-tuning only for a particular task.
+Double sampling is not required during finetuning as we are finetuning only for a particular task.
 
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/Q1AblationTransfer}
-    \caption{Comparison of Ranking losses with regression losses (Transfer case)}
+    \caption{Comparison of Ranking losses with regression losses (Transfer case).}
     \label{fig:Q1AblationTransfer}
 \end{figure}
 
 Figure~\ref{fig:Q1AblationTransfer} compares the average regret and the ranking graph for the regression and ranking losses for the transfer case.
+The "-T" suffix in the legends signifies that the corresponding plot is for a transfer HPO case.
 As we can see here,  the listwise ranking losses are far superior to other losses.
 It is also interesting to see that the average regret of the list-wise losses is similar to the regression losses in the transfer case.
 To check the overall performance of the list-wise loss models, we compare this model with the worst,  medium, and best performing surrogates as sentinels for the study.
@@ -2501,7 +2502,7 @@ The list-wise loss function functions better than the state-of-the-art transfer 
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/Q1FinalAblation}
-    \caption{Comparison of list-wise transfer with standard HPO surrogates}
+    \caption{Comparison of listwise (transfer) loss with baseline HPO surrogates.}
     \label{fig:Q1FinalAblation}
 \end{figure}
 
@@ -2514,7 +2515,7 @@ We do not separate the transfer and non-transfer cases here.
 We use inverse log weighting for the weighting in our case.
 From Figure~\ref{fig:Q2Ablation}, we see that both in the case of transfer HPO and non-transfer HPO, the weighting positively impacted the performance. Moreover, the models trained with weighted list-wise losses are better at every optimization cycle step.
 
-Even though the difference in the average regret is not significant in the 4 cases,  the ranking graph differences are pretty significant. One thing to note here is that when we use list-wise loss,  we train and fine-tune with the same weighted loss. We do not use a different weighting (like the inverse linear weighting for training and inverse log weighting for the meta training). Moreover, we use the double sampling mechanism discussed above during meta-training.
+Even though the difference in the average regret is not significant in the 4 cases,  the ranking graph differences are pretty significant. One thing to note here is that when we use list-wise loss,  we train and finetune with the same weighted loss. We do not use a different weighting (like the inverse linear weighting for training and inverse log weighting for the meta training). Moreover, we use the double sampling mechanism discussed above during meta-training.
 
 \begin{figure}[h]
   \centering
