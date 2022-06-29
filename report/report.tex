@@ -722,7 +722,7 @@ Key points:
     2. Treat HPO as a few shot learning problem (In the context of transfer learning)
     3. Use kernel k(phi(x), phi(x')) where phi is a neural network that transforms x to a latent vector
     4. Learn parameters of phi(W) and kernel(theta) together based on historical meta data
-    5. Fine tune both W and theta based on the given task. If possible use warm start for initialization.
+    5. Finetune both W and theta based on the given task. If possible use warm start for initialization.
     6. Learn output range variance by creating augumented tasks.
 
 Conceptual points:
@@ -773,7 +773,7 @@ There are 16 search spaces (model optmizations here)
         Dataset 3
 
 Pretrain the FSBO model with the train split of the dataset. M'
-Fine tune it on 1 dataset and evaluate using Expected Improvement
+Finetune it on 1 dataset and evaluate using Expected Improvement
     i.e run loop like the training with the given data.
 
 Did not use strictGP --> Is it a problem?
@@ -911,7 +911,7 @@ Advantages:
 
 Best Model for training and ft giving auful resuts - Reason can be that we are selecting a very unfitted model due to too much variation in the validation losses.
 Hence we are start only ft best model. Ih the hope that we will get better resutls.
-only fine tune best fit is not giving good results. Investigation in progress. 
+only finetune best fit is not giving good results. Investigation in progress. 
 
 \fi
 
@@ -1902,7 +1902,7 @@ After the meta-training, every model is saved to a persistent location (e.g., ha
 
 
 
-\subsection{Fine tuning}\label{sec:rlfinetune}
+\subsection{Finetuning}\label{sec:rlfinetune}
 Finetuning is the second major part of the optimization process.
 It may be considered optional for transfer HPO surrogates like ours.
 However, we found that it gave improved results.
@@ -2597,11 +2597,11 @@ During the training however,  we found that the loss curves were very jumpy.
 Figure~\ref{fig:DeepSetLoss4796} and Figure~\ref{fig:DeepSetLoss5527} shows this clearly.
 We think that this is because of very high representation capacity which is a consequence of using the deep set architecture.
 
-The results of this training and fine tuning our model with deep sets are shown in Figure~\ref{fig:RLDeepSetevaluation}.
-In the figure "raw" means that there was no fine tuning performed and the trained model was used as is in the the evaluation/optimization cycle.
-One advantage we see with this model is that whether fine tuning is done or not,  the first few evaluations are better than the state of the art results.
+The results of this training and finetuning our model with deep sets are shown in Figure~\ref{fig:RLDeepSetevaluation}.
+In the figure "raw" means that there was no finetuning performed and the trained model was used as is in the the evaluation/optimization cycle.
+One advantage we see with this model is that whether finetuning is done or not,  the first few evaluations are better than the state of the art results.
 This can be seen in the Rank@5 graph critical graph given in Figure~\ref{fig:DeepSetRank5}.
-In the later evaluation steps, naturally,  using fine tuning makes gives better performance.
+In the later evaluation steps, naturally,  using finetuning makes gives better performance.
 
 \begin{figure}[h]
   \centering
@@ -2619,7 +2619,7 @@ In the later evaluation steps, naturally,  using fine tuning makes gives better 
 \fi
 
 \iffalse
-The fine tuned results is better than all the baselines except FSBO.
+The finetuned results is better than all the baselines except FSBO.
 In fact,  it is better than FSBO in the first few evaluation steps.
 This can be seen in Figure~\ref{fig:RLDeepSetWeightedRank25}.
 
@@ -2845,7 +2845,7 @@ Next show different strategies used for building the ranking loss model one step
 First with only scorer.
 then with deep set.
 Then with raw deep set
-fine tuning and deep set
+finetuning and deep set
 adding uncertainty
 
 Checking the early stop and hypothesing why is was wrong.
