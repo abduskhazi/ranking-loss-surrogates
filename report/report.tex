@@ -2651,11 +2651,12 @@ If we do not use any finetuning, selecting the HP configurations for the evaluat
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/FineTuningAblation}
-    \caption{Studying how finetuning affects the optimization performance.}
+    \caption{Effect of finetuning on surrogate performance.}
     \label{fig:FineTuningAblation}
 \end{figure}
 
 From Figure~\ref{fig:FineTuningAblation} one can see that finetuning does help make the model get better results in the long run.
+The "-Raw" suffix signifies that no finetuning is performed using the trained model.
 One fascinating result we see is that without any finetuning, the ranking loss surrogate shows good performance in the first evaluation steps.
 This is because the surrogate model learns the best HP configuration found in the training metadata during meta-training.
 Hence it selects these HP configurations in the first evaluation steps.
@@ -2673,7 +2674,7 @@ Since the average regret gives a biased estimation of the results and the rank g
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/NonTransferSOAT}
-    \caption{Comparing our results against other non-transfer HPO surrogates.}
+    \caption{Comparing our results against SOTA non-transfer HPO surrogates.}
     \label{fig:NonTransferSOAT}
 \end{figure}
 
