@@ -2520,7 +2520,7 @@ Even though the difference in the average regret is not significant in the 4 cas
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/Q2Ablation}
-    \caption{Comparison of listwise losses with the weighting strategy.}
+    \caption{Comparison of listwise losses with theg weighting strategy.}
     \label{fig:Q2Ablation}
 \end{figure}
 
@@ -2544,7 +2544,7 @@ Figure~\ref{fig:Q3Ablation} shows the results of this study. In the non-transfer
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/Q3Ablation}
-    \caption{Studying how the addition of context (Deep Sets) affects our model}
+    \caption{Comparing the effect of adding Deep Sets to the proposed model.}
     \label{fig:Q3Ablation}
 \end{figure}
 
@@ -2553,7 +2553,7 @@ We compare the best results obtained so far with the sentinel performances of GP
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/Q3AblationFinal}
-    \caption{Best model with sentinal HPO performance}
+    \caption{Comparison of the best proposed model with other baseline HPO surrogates.}
     \label{fig:Q3AblationFinal}
 \end{figure}
 
@@ -2640,7 +2640,7 @@ This can be seen in Figure~\ref{fig:RLDeepSetWeightedRank25}.
 In this section, we evaluate our built model chronologically, first using the basic scorer model,  then making the model context-aware, and then adding uncertainty capability to the model.
 \fi
 
-\subsection{Study of the effect of Fine Tuning}
+\subsection{Study of the effect of Finetuning}
 \label{sec:EffectOfFineTuningResults}
 There are two ways of using the meta-trained ranking loss surrogate model. One way is to use it directly without changing it in the optimization process. The other is to finetune it at every evaluation step of the optimization process. We have always used the latter in our ablation studies (or answers to research questions) until now.
 In this section, we will see how the performance changes when no finetuning is done during the optimization process.
