@@ -2520,7 +2520,7 @@ Even though the difference in the average regret is not significant in the 4 cas
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/Q2Ablation}
-    \caption{Comparison of list-wise transfer with standard HPO surrogates}
+    \caption{Comparison of listwise losses with the weighting strategy.}
     \label{fig:Q2Ablation}
 \end{figure}
 
@@ -2533,7 +2533,7 @@ For sampling, we used a support set of data points, i.e., \{$X_s$, $y_s$\} that 
 Then the support points are sampled without replacement from this task.
 Subsequently, we sample the query points $X_q$ based on the batch size and list size (By default, 100 for both).
 During meta tuning, we must also have a support and query set for training.
-We again use 20\% of the points as support points and the rest as query points during the fine-tuning process.
+We again use 20\% of the points as support points and the rest as query points during the finetuning process.
 
 One major issue when training with deep sets is that we cannot train the neural networks separately.
 It is because of the common backbone in ensemble architecture.
@@ -2576,7 +2576,7 @@ We also present in Figure~\ref{fig:Q3AblationFinalRank100} the critical rank gra
 
 \iffalse
 
-This is because less relearning happens in fine-tuning due to the addition of context to our model.
+This is because less relearning happens in finetuning due to the addition of context to our model.
 
 During the training however,  we found that the loss curves were very jumpy.
 
