@@ -2239,8 +2239,8 @@ The results of Deep Ensemble and FSBO baselines are discussed in this section.
 
 \subsubsection{Deep Ensembles}
 
-The deep ensembles we used contained five neural networks by default. Each neural network had two fully connected neural layers with 32 neurons each. All neural networks used the same architecture. 
-We considered the non-transfer case for deep ensembles. Hence we did not do any meta-training for this surrogate.
+The Deep Ensembles (DE for short) we used contained five neural networks by default. Each neural network had two fully connected neural layers with 32 neurons each. All neural networks used the same architecture. 
+We considered only the non-transfer case for DE. Hence we did not do any meta-training for them.
 The training was done using the Adam optimizer with a full batch gradient. This is because there are very few data points during any optimization step. We train each neural network for 1000 epochs with a learning rate of 0.02 at every evaluation step in an HPO optimization.
 We do not use adversarial examples as proposed by Lakshminarayanan
  et al. ~\cite{DeepEnsemblePaper} as the input HP search space may not be continuous.
@@ -2256,13 +2256,13 @@ Figure~\ref{fig:DEPerformance} shows the performance of various Deep Ensemble mo
 We used the best results of Random and Gaussian surrogate baselines to compare how Deep ensembles fair in the HPO-B benchmark.
 In addition to plotting the rank graph,  we also plot the average regret for every model.
 In the average regret graph, the y-axis represents the regret on a log scale.
-In Figure~\ref{fig:DEPerformance},  DE\_M5 stands for Deep Ensembles with five neural networks, whereas DE\_M10 stands for Deep Ensembles with ten neural networks.
-An "rs" suffix in the legend denotes that the surrogates are reinitialized before fine-tuning at every evaluation step.
+In Figure~\ref{fig:DEPerformance},  DE-M5 stands for Deep Ensembles with five neural networks, whereas DE-M10 stands for Deep Ensembles with ten neural networks.
+An "RS" suffix in the legend denotes that the surrogates are reinitialized before finetuning at every evaluation step.
 
 In this thesis, we studied the following main models of Deep Ensembles
 \begin{itemize}
-\item Deep Ensembles that fine-tune with no restarting.
-\item Deep Ensembles that fine-tune with restart at every evaluation step.
+\item Deep Ensembles that finetune with no restarting.
+\item Deep Ensembles that finetune with restart at every evaluation step.
 \item Deep Ensembles with 5 and 10 neural networks.
 \end{itemize}
 
@@ -2327,7 +2327,7 @@ Finally, we also do restarts for the FSBO domain with the restart mechanism disc
 \end{figure}
 
 Figure~\ref{fig:FSBOPerformance} shows the rank graph of FSBO compared to the best performing models of random search, GP and DE surrogates.
-There is a slight difference in ranking graphs of previous surrogates because a few HPO optimizations were unsuccessful for the FSBO due to non-positive definite Matrix exceptions obtained during meta-training and fine-tuning (The GPytorch implementation threw this).
+There is a slight difference in ranking graphs of previous surrogates because a few HPO optimizations were unsuccessful for the FSBO due to non-positive definite Matrix exceptions obtained during meta-training and finetuning (The GPytorch implementation threw this).
 As we can see,  our implementation could not give us state-of-the-art results for FSBO.
 Since these results are a correct yardstick to measure the ranking loss surrogate model, we used the results obtained by the FSBO implementation provided by Pineda et al. ~\cite{pineda2021hpob} in the rest of the thesis.
 
@@ -2436,7 +2436,7 @@ Due to the negative transfer learning issue, we could not employ an early stoppi
 In this section, we discuss the following question - are ranking losses better for HPO than regression ones? Secondly, which ranking loss is better for HPO: point-wise,  pair-wise, or list-wise loss?
 For the regression case,  we use the Deep Ensemble baseline implementation proposed by Lakshminarayanan et al. ~\cite{DeepEnsemblePaper} as a reference. We use subset regression,  RankNet, and ListMLE loss functions for point-wise, rank-wise, and list-wise ranking losses, respectively. 
 
-\subsubsection{Non transfer HPO}
+\subsubsection{Non-transfer HPO}
 We first test the non-transfer HPO case where the surrogate models are not meta-trained. We only do fine-tune (or training) during the evaluation phase. We also reinitialize the models before every evaluation step. We have discussed the reason for this in-depth in Section~\ref{sec:rlfinetune}.
 We train each neural network for 1000 epochs at every evaluation step. The learning rate is 0.02, and we do not use cosine annealing.
 Using cosine annealing here did not make sense since there is no guarantee that the randomly initialized model is near a local optimum.
