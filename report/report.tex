@@ -548,31 +548,31 @@ Our proposed method sees the surrogate as a ranker in the context of SMBO. Hence
 
 Ranking losses can be broadly classified into the following types~\cite{RankingLossFirstPaperRead}:
 \begin{itemize}
-\item  Point-wise ranking losses
-\item  Pair-wise ranking losses
-\item  List-wise ranking losses
+\item  Pointwise ranking losses
+\item  Pairwise ranking losses
+\item  Listwise ranking losses
 \end{itemize}
 
-In point-wise ranking losses,  the loss function views the ranking problem as a problem of assigning a label to each queried data point.
+In pointwise ranking losses,  the loss function views the ranking problem as a problem of assigning a label to each queried data point.
 Hence,  each learning instance is a single object.
-For example, Li et al.~\cite{McRank} use point-wise ranking losses for their proposed model called McRank.
+For example, Li et al.~\cite{McRank} use pointwise ranking losses for their proposed model called McRank.
 They formulate the ranking problem as a multilevel classification problem.
 Each data point is classified independently using soft classification.
 The score of an object then is its expected rank.
-Similarly, Cossock et al.~\cite{subsetregressionpaper} use point-wise ranking losses for subset regression. 
+Similarly, Cossock et al.~\cite{subsetregressionpaper} use pointwise ranking losses for subset regression. 
 \iffalse
 Therefore, the complete scoring function comprises a multilevel classifier and an external expectation calculation.
 \fi
 
-In pair-wise ranking losses,  the loss function's input is a pair of objects.
-The loss function tries to separate the input data points as much as possible in the output space by minimizing the pair-wise classification error~\cite{pairwisepreferencespaper}.
-Examples of models built using pair-wise loss functions are Rankboost~\cite{rankboostpaper} and RankNet~\cite{ranknetpaper}.
+In pairwise ranking losses,  the loss function's input is a pair of objects.
+The loss function tries to separate the input data points as much as possible in the output space by minimizing the pairwise classification error~\cite{pairwisepreferencespaper}.
+Examples of models built using pairwise loss functions are Rankboost~\cite{rankboostpaper} and RankNet~\cite{ranknetpaper}.
 
-In list-wise ranking losses,  a single learning instance is the whole input set, i.e., all the objects in the input set.
+In listwise ranking losses,  a single learning instance is the whole input set, i.e., all the objects in the input set.
 This makes an intuitive sense because we cannot rank the objects independently as an object's rank is relative to the ranks of other objects in a set.
-This is the fundamental advantage of list-wise ranking losses compared to the point-wise and pair-wise losses.
-Moreover,  it has been shown by Cao et al.~\cite{listwisebetter} that training a model with list-wise losses gives us a superior model compared to training with point-wise or pair-wise losses.
-The 2 most prominent list-wise loss functions are ListNet~\cite{listwisebetter} and ListMLE~\cite{listmlepaper}.
+This is the fundamental advantage of listwise ranking losses compared to the pointwise and pairwise losses.
+Moreover,  it has been shown by Cao et al.~\cite{listwisebetter} that training a model with listwise losses gives us a superior model compared to training with pointwise or pairwise losses.
+The 2 most prominent listwise loss functions are ListNet~\cite{listwisebetter} and ListMLE~\cite{listmlepaper}.
 We discuss and analyze these loss functions in detail in chapter~\ref{chap:Background}.
 
 \iffalse
@@ -1016,30 +1016,30 @@ There are various types of ranking loss functions. The type of ranking loss defi
 This is because the learning instance (or an input instance) to a loss function is different for different ranking types.
 The output of any loss function studied in this thesis remains a scalar irrespective of its type.
 
-We already know from Section~\ref{sec:ranklearning} that ranking losses can be either point-wise, pair-wise, or list-wise.
-For point-wise loss functions, each learning instance is a single object.
+We already know from Section~\ref{sec:ranklearning} that ranking losses can be either pointwise, pairwise, or listwise.
+For pointwise loss functions, each learning instance is a single object.
 Its format hence can be defined as:
 \begin{equation}
-L_{\texttt{point-wise}} : s(\mathbb{A}) \times \mathbb{Y} \mapsto \mathbb{R}
+L_{\texttt{pointwise}} : s(\mathbb{A}) \times \mathbb{Y} \mapsto \mathbb{R}
 \end{equation}
 
-Similarly,  the pair-wise loss function has each instance as a pair of objects and their corresponding ground truths. Its format can hence be defined as:
+Similarly,  the pairwise loss function has each instance as a pair of objects and their corresponding ground truths. Its format can hence be defined as:
 \begin{equation}
-L_{\texttt{pair-wise}} : s_1(\mathbb{A}) \times s_2(\mathbb{A}) \times \mathbb{Y}_1 \times \mathbb{Y}_2 \mapsto \mathbb{R}
+L_{\texttt{pairwise}} : s_1(\mathbb{A}) \times s_2(\mathbb{A}) \times \mathbb{Y}_1 \times \mathbb{Y}_2 \mapsto \mathbb{R}
 \end{equation}
 
-One learning instance for list-wise losses is a set of objects with corresponding ground truths.
-If we take any positive integer $n \leq |\mathbb{A}|$,  the declaration of the list-wise loss is given by
+One learning instance for listwise losses is a set of objects with corresponding ground truths.
+If we take any positive integer $n \leq |\mathbb{A}|$,  the declaration of the listwise loss is given by
 \begin{equation}
-L_{\texttt{list-wise}} : s_1(\mathbb{A}) \times s_2(\mathbb{A}) ...  s_{n}(\mathbb{A}) \times \mathbb{Y}_1 \times \mathbb{Y}_2 \times ...  \mathbb{Y}_{n} \mapsto \mathbb{R}
+L_{\texttt{listwise}} : s_1(\mathbb{A}) \times s_2(\mathbb{A}) ...  s_{n}(\mathbb{A}) \times \mathbb{Y}_1 \times \mathbb{Y}_2 \times ...  \mathbb{Y}_{n} \mapsto \mathbb{R}
 \end{equation}
 
 In the following sections, we analyze the loss functions studied in this thesis.
-As list-wise loss functions are more advantageous conceptually than others, we discuss them in more detail.
+As listwise loss functions are more advantageous conceptually than others, we discuss them in more detail.
 
 \section{Pointwise Loss Function: Subset Regression}
 
-We take the subset regression loss function proposed by Cossock et al. ~\cite{subsetregressionpaper} as a reference for analyzing point-wise loss functions.
+We take the subset regression loss function proposed by Cossock et al. ~\cite{subsetregressionpaper} as a reference for analyzing pointwise loss functions.
 We reused the implementation written by Pobrotyn et al. ~\cite{Pobrotyn2020ContextAwareLT} for our analysis.
 
 
@@ -1075,7 +1075,7 @@ We reused the implementation written by Pobrotyn et al. ~\cite{Pobrotyn2020Conte
 
 As we know from table~\ref{tab:dataformat} we are always given a set of values and their corresponding relevance scores to train.
 Hence, we have $\{a_1, a_2, a_3..., a_n\}$ as inputs and $\{y_1, y_2, y_3..., y_n\}$ as their corresponding relevance scores.
-As the $L_{\texttt{pair-wise}}$ takes only pairs of values we obtain first the scores of all objects to get $\{s(a_1), s(a_2), s(a_3)..., s(a_n)\}$.
+As the $L_{\texttt{pairwise}}$ takes only pairs of values we obtain first the scores of all objects to get $\{s(a_1), s(a_2), s(a_3)..., s(a_n)\}$.
 Then,  we form all possible pairs of inputs to the loss function from the given scores of objects.
 For example,  after forming the pairs, one instance of the loss function is of the form $\{s(a_1), s(a_2), y_1, y_2\}$.
 
@@ -2436,8 +2436,8 @@ Due to the negative transfer learning issue, we could not employ an early stoppi
 
 \subsection{Study of ranking losses}
 
-In this section, we discuss the following question - are ranking losses better for HPO than regression ones? Secondly, which ranking loss is better for HPO: point-wise,  pair-wise, or list-wise loss?
-For the regression case,  we use the Deep Ensemble baseline implementation proposed by Lakshminarayanan et al. ~\cite{DeepEnsemblePaper} as a reference. We use subset regression,  RankNet, and ListMLE loss functions for point-wise, rank-wise, and list-wise ranking losses, respectively. 
+In this section, we discuss the following question - are ranking losses better for HPO than regression ones? Secondly, which ranking loss is better for HPO: pointwise,  pairwise, or listwise loss?
+For the regression case,  we use the Deep Ensemble baseline implementation proposed by Lakshminarayanan et al. ~\cite{DeepEnsemblePaper} as a reference. We use subset regression,  RankNet, and ListMLE loss functions for pointwise, pairwise, and listwise ranking losses, respectively. 
 
 \subsubsection{Non-transfer HPO}
 We first test the non-transfer HPO case where the surrogate models are not meta-trained. We only do finetune (or training) during the evaluation phase. We also reinitialize the models before every evaluation step. We have discussed the reason for this in-depth in Section~\ref{sec:rlfinetune}.
@@ -2475,7 +2475,7 @@ Firstly, we see that the average regret for both the regression losses is simila
 \subsubsection{Transfer HPO}
 In the transfer HPO case,  we first train the models with the meta-training data given by the HPO-B data set and then store our models on persistent storage.
 We train the models for 5000 epochs with a fixed learning rate of 0.001.
-We used a batch size of 100 for all models. We used a list size of 100 for the list-wise loss functions.
+We used a batch size of 100 for all models. We used a list size of 100 for the listwise loss functions.
 However, we use cosine annealing during finetuning for the reasons discussed in Section~\ref{sec:rlfinetune}.
 It is because there is a very high chance that the learned model is close to any one of the local optima (the exception to this is the negative learning rate case discussed later).
 
@@ -2496,11 +2496,11 @@ Double sampling is not required during finetuning as we are finetuning only for 
 Figure~\ref{fig:Q1AblationTransfer} compares the average regret and the ranking graph for the regression and ranking losses for the transfer case.
 The "-T" suffix in the legends signifies that the corresponding plot is for a transfer HPO case.
 As we can see here,  the listwise ranking losses are far superior to other losses.
-It is also interesting to see that the average regret of the list-wise losses is similar to the regression losses in the transfer case.
-To check the overall performance of the list-wise loss models, we compare this model with the worst,  medium, and best performing surrogates as sentinels for the study.
+It is also interesting to see that the average regret of the listwise losses is similar to the regression losses in the transfer case.
+To check the overall performance of the listwise loss models, we compare this model with the worst,  medium, and best performing surrogates as sentinels for the study.
 The random selection strategy is the worst performing,  whereas FSBO is the best performing SMBO surrogate. We use a GP surrogate to represent a surrogate with a medium performance.
 Figure~\ref{fig:Q1FinalAblation} shows this ablation.
-The list-wise loss function functions better than the state-of-the-art transfer HPO model "FSBO" in the first 15 to 20 evaluation steps.
+The listwise loss function functions better than the state-of-the-art transfer HPO model "FSBO" in the first 15 to 20 evaluation steps.
 
 \begin{figure}[h]
   \centering
@@ -2516,9 +2516,9 @@ In Section~\ref{sec:positionEnhancedRanking} we discussed the requirement for we
 This section presents a short ablation to study its effect on our models.
 We do not separate the transfer and non-transfer cases here.
 We use inverse log weighting for the weighting in our case.
-From Figure~\ref{fig:Q2Ablation}, we see that both in the case of transfer HPO and non-transfer HPO, the weighting positively impacted the performance. Moreover, the models trained with weighted list-wise losses are better at every optimization cycle step.
+From Figure~\ref{fig:Q2Ablation}, we see that both in the case of transfer HPO and non-transfer HPO, the weighting positively impacted the performance. Moreover, the models trained with weighted listwise losses are better at every optimization cycle step.
 
-Even though the difference in the average regret is not significant in the 4 cases,  the ranking graph differences are pretty significant. One thing to note here is that when we use list-wise loss,  we train and finetune with the same weighted loss. We do not use a different weighting (like the inverse linear weighting for training and inverse log weighting for the meta training). Moreover, we use the double sampling mechanism discussed above during meta-training.
+Even though the difference in the average regret is not significant in the 4 cases,  the ranking graph differences are pretty significant. One thing to note here is that when we use listwise loss,  we train and finetune with the same weighted loss. We do not use a different weighting (like the inverse linear weighting for training and inverse log weighting for the meta training). Moreover, we use the double sampling mechanism discussed above during meta-training.
 
 \begin{figure}[h]
   \centering
@@ -2931,7 +2931,7 @@ Even though theoretically, the score range does not need to be restricted, we ha
 Due to the exponentiation in our loss function, if the score range is too high,  the values in equation~\ref{eq:overflowissue} may overflow.
 On the other hand, if it is too small, the values may underflow.
 In both these cases, we are bound to get NAN (Not A Number) exceptions when executing our implementations.
-We would also get similar issues for the pair-wise loss function because we use exponentiation for calculating the probability, as shown in equation~\ref{eq:pairwiseprobability}.
+We would also get similar issues for the pairwise loss function because we use exponentiation for calculating the probability, as shown in equation~\ref{eq:pairwiseprobability}.
 One way to eliminate this issue is to use the log-sum-exp trick. This trick is used in the ListMLE implementation given by Pobrotyn
  et. al. ~\cite{Pobrotyn2020ContextAwareLT} and we use this implementation in our thesis.
 
