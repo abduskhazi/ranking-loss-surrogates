@@ -109,7 +109,9 @@ Signature
 \pagenumbering{roman}
 \begin{abstract}
 
-Abstract goes here
+Hyperparameter optimization is vital in training any machine learning model. The hyperparameter configuration obtained from the optimization directly impacts the machine learning model's performance. Hence various hyperparameter optimization methods have been proposed in the past decade. Among these methods, Sequential Model-Based Optimization (SMBO) methods have successfully predicted suitable configurations at a relatively lesser computational cost. Moreover, using transfer learning has furthered their performance. However, the learning and design of surrogates used in SMBO is still an active area of research. This thesis proposes a different perspective on the learning and usage of surrogates in the SMBO algorithm. It formulates the selection of configurations to evaluate in the SMBO algorithm as a ranking problem. The surrogates are learned using ranking losses and work in the ranking space rather than the output space of the hyperparameter objective function. This thesis shows that using transfer learning surrogates in ranking space is more advantageous in a problem domain like hyperparameter optimization, where metadata is very scarce. The surrogate learning using listwise ranking losses gave the best performance among all ranking losses.
+Moreover, the thesis also proposes incorporating a weighting strategy that is position dependent in the listwise ranking loss to improve its performance. It also proposes making this surrogate context-aware by integrating Deep Sets into its architecture. It concludes that using a surrogate with Deep Sets learned with a weighted listwise ranking loss gave hyperparameter optimization results on par with state-of-the-art transfer hyperparameter methods on the HPO-B benchmark.
+
 
 \end{abstract}
 
