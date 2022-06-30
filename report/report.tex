@@ -1798,6 +1798,7 @@ where $w_j$ represents weight of the object at position $j$ in the ordered list.
 This strategy decreases the weights linearly across the ranks.
 
 Linear weighting has an issue. It makes the weight of the middle object in the list $0.5$ times the weight of the object at the top.
+This can be seen in the position dependent attention graph of figure~\ref{fig:weightingfunctions} (The weights of the position dependent attention graph are scaled by a factor of 50 to make a fair comparison between the weights).
 This, however, is not what we want for our case.
 We need a sharper decrease in weights across the ranks.
 We could use 2 alternative strategies of weighting the ordered list
