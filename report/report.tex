@@ -528,7 +528,7 @@ Because of these disadvantages, we do not use them as surrogates in our thesis.
 
 \subsection{Learning the surrogates}
 In section~\ref{sec:SurrogateModelsForBO} we discussed the details of various surrogate models that can be used in the Bayesian Optimization process. These surrogates must be learned using available $(x, f(x))$  data pairs regardless of using them in a transfer or non-transfer HPO method. Surrogate learning is formulated as an optimization problem in which a loss function is minimized to get the trained surrogate.
-The type of loss function used will differ based on the problem formulation. For example, if we formulate the HPO problem as a regression problem in which the surrogate would learn the HPO objective function's output, we could use regression losses like RMSE (Root Mean Squared Error).
+The type of loss function used will differ based on the problem formulation. For example, if we formulate the HPO problem as a regression problem in which the surrogate would learn the HPO objective function's output, we could use regression losses like Root Mean Squared Error (RMSE).
 
 In this thesis, we study and compare the performance of different loss functions. We use the negative log-likelihood loss function to learn the Deep Ensemble surrogate~\cite{DeepEnsemblePaper}. This loss $L_{de}$ is given by:
 \begin{equation}
@@ -1037,7 +1037,7 @@ We reused the implementation written by Pobrotyn et al. ~\cite{Pobrotyn2020Conte
 
 
 The basic idea of subset regression is to learn the rank of the objects directly and not have an extra step of using the output scores to determine the rank of objects.
-The subset regression loss function is similar to the RMSE (Root Mean Squared Error) loss function.
+The subset regression loss function is similar to the RMSE loss function.
 Given a batch of size $N$ containing objects $a_i$ and their corresponding ground truth values $y_i$ such that $0 \leq i \leq N$,  the loss function is of the form
 \begin{equation}
 L_{\texttt{SubsetRegression}} = \frac{1}{N} \sum\limits_{i=1}^{N} (s(a_i) - \texttt{level}(y_i))^2
