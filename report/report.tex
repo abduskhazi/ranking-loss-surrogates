@@ -417,12 +417,7 @@ k(\textbf{x}, \textbf{x'}) \mapsto \mathbb{R}
 $$
 Here, $\textbf{x}, \textbf{x'}$ belong to a domain in the most abstract sense.
 For example,  when the input domain is a euclidean space,  $\textbf{x} \in \mathbb{R}^{\mathbb{I}^+}$.
-Some well known kernels are:
-\begin{itemize}
-\item \textbf{Radial Basis Function Kernel}
-\item \textbf{Matern Kernel}
-\item \textbf{Periodic Kernel}
-\end{itemize}
+Some well known kernels are Radial Basis Function Kernel,  Matern Kernel,  and Periodic Kernel.
 
 Finally,  a Gaussian Process specifies that any new observation $y^*$ for input $\textbf{x}^*$,  is jointly normally distributed with known observations $\textbf{y}$ such that
 \begin{align}
@@ -451,7 +446,7 @@ Since this model is an ensemble, predicting the mean and variance of the surroga
 The following are the two main advantages of using this model.
 \begin{itemize}
 \item It can handle both continuous and discrete variables trivially without any modifications to the model. This means that the HP search space need not be restricted.
-\item It can handle conditional variables.
+\item It can handle conditional variables more efficiently as compared to the Gaussian surrogate.
 \end{itemize}
 
 Both these advantages are limitations of the Gaussian surrogates. Hence the random regression forests can be used as surrogates where the Gaussian process cannot.
@@ -588,13 +583,11 @@ The following functions are some of the most prominent acquisition functions fou
 \begin{itemize}
 \item \textbf{Upper Confidence Bound (UCB)}: It returns the best possible hyperparameter configuration using a linear combination of the mean and the standard deviation.
 \item \textbf{Probability of Improvement}: It returns the probability of getting a better hyperparameter configuration than the incumbent best configuration.
-\item \textbf{Expected Improvement}: Given a Gaussian distribution at a new input point, it finds the expectation of improvement i.e ($f(x) - f_{max}$) over the part of normal that is greater than $f_{max}$.
+\item \textbf{Expected Improvement}: Given a Gaussian distribution at a new input point, it finds the expectation of improvement i.e ($f(x) - f_{max}$) over the part of normal that is greater than $f_{max}$.  This acquisition function is used with all the baselines in this thesis. However, it is not used with the proposed method. The reason for this decision is explained in more detail in section~\ref{sec:AcquisitionFunctionInRankingSpace}.
 \end{itemize}
 
- \textbf{Expected Improvement} acquisition function is used with all the baselines in this thesis. However, it is not used with the proposed method. The reason for this decision is explained in more detail in section~\ref{sec:AcquisitionFunctionInRankingSpace}.
 
-
-\section{Set-modelling with Neural Networks}
+\section{Set-Modelling with Neural Networks}
 
 In the previous sections, we discussed various types of surrogates that can transfer knowledge in transfer HPO methods.
 However, training on data from known tasks and using this trained model for unknown tasks has a conceptual shortcoming.
@@ -1493,7 +1486,7 @@ The results already present in the benchmarking data of~\cite{pineda2021hpob} we
 
 
 
-\chapter{Method}\label{chap:ProposedIdea}
+\chapter{Proposed Method: Deep Ranker}\label{chap:ProposedIdea}
 
 % \section{Proposed Idea: : Ranking Loss Surrogates}
 
@@ -1683,6 +1676,7 @@ Please note that the implementation is a little more sophisticated than this due
 
 Before calculating the loss, the predicted scores are reduced by a constant factor for numerical safety and accuracy. Here we use the max of the predicted scores as a constant factor. This can be seen in Step 2 of \textsc{ListMLE} procedure in Algorithm~\ref{alg:listMLEAlgorithm}.
 This reduction of the constant factor does not affect the loss because the strictly increasing positive function we use is exponentiation. This is illustrated in Equation~\ref{eq:ExpConstantFactor} using sample numbers $a_i \in  \mathbb{R}$.
+In this equation, $k$ represents the total number of elements that are ranked.
 
 \begin{equation}
 \label{eq:ExpConstantFactor}
@@ -1797,6 +1791,7 @@ Chen et. al propose a position based weighting of the ranking function such that
 w_j = \frac{k - j + 1}{\Sigma_{t=1}^k t}
 \end{equation}
 where $w_j$ represents weight of the object at position $j$ in the ordered list.
+$k$ represents the total number of elements that are ranked.
 This strategy decreases the weights linearly across the ranks.
 
 Linear weighting has an issue. It makes the weight of the middle object in the list $0.5$ times the weight of the object at the top.
