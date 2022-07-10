@@ -110,7 +110,7 @@ Signature
 \begin{abstract}
 
 Hyperparameter Optimization (HPO) is vital in training any Machine Learning (ML) model. The hyperparameter configuration obtained from the optimization directly impacts the ML model's performance. Hence various HPO methods have been proposed in the past decade. Among these methods, Sequential Model-Based Optimization (SMBO) methods have successfully predicted suitable configurations at a relatively lesser computational cost. Moreover, using transfer learning has furthered their performance. However, the learning and design of surrogates used in SMBO is still an active area of research. This thesis proposes a different perspective on the learning and usage of surrogates in the SMBO algorithm. It formulates the selection of configurations to evaluate in the SMBO algorithm as a ranking problem. The surrogates are learned using ranking losses and work in the ranking space rather than the output space of the hyperparameter objective function. This thesis shows that using transfer learning surrogates in ranking space is more advantageous in a problem domain like HPO, where metadata is very scarce. The surrogate learning using listwise ranking losses gave the best performance among all ranking losses.
-Moreover, the thesis also proposes incorporating a weighting strategy that is position dependent in the listwise ranking loss to improve its performance. It also proposes making this surrogate context-aware by integrating Deep Sets into its architecture. It concludes that using a surrogate with Deep Sets learned with a weighted listwise ranking loss gave HPO results on par with state-of-the-art transfer hyperparameter methods on the HPO-B benchmark.
+Moreover, the thesis proposes incorporating a weighting strategy that is position-dependent in the listwise ranking loss to improve its performance. It also proposes making this surrogate context-aware by integrating Deep Sets into its architecture. It concludes that using a surrogate with Deep Sets learned with a weighted listwise ranking loss gave HPO results on par with state-of-the-art transfer hyperparameter methods on the HPO-B benchmark.
 
 
 \end{abstract}
@@ -279,7 +279,7 @@ They propose that if we learn HP configurations that previously worked well, the
 Reif et al.~\cite{metalearningwarmstartpaper} also proposed a similar concept for the HP optimization of genetic algorithms.
 In this thesis, we compare the proposed model's performance with the performance of state-of-the-art transfer HPO methods like Two-Stage Transfer Surrogate (TST)~\cite{tstpaper}, Ranking-Weighted Gaussian Process Ensemble (RGPE)~\cite{Feurer2018ScalableMF}, Transfer Acquisition Function Framework (TAF)~\cite{Wistuba2017ScalableGP}, and Few Shot Bayesian Optimization (FSBO)~\cite{fsbopaper}.
 The TST method comprises two stages. In the first stage, multiple surrogates are learned for each metadata (or task). The outputs of the learned surrogates are combined in the second stage to rank the HP configurations. These two stages are used with the SMBO algorithm to do HP optimizations. We have discussed Bayesian Optimizations and SMBOs in detail in section~\ref{sec:BayesianOptimization}.
-RGPE is very similar to TST because it also uses multiple models (Gaussian Processes in this case) learned for each task. One significant difference among many others between the two is that TST uses Nadaraya-Watson kernel-weighting to combine the surrogate outputs, whereas RGPE uses a linear combination of Gaussians instead. Wistuba et al. use a different method to do transfer HPO in their proposed model called TAF. They use the knowledge transfer mechanism during the acquisition phase of the SMBO process instead of using surrogates to transfer knowledge.
+RGPE is very similar to TST because it also uses multiple models (Gaussian Processes in this case) learned for each task. One significant difference  between the two is that TST uses Nadaraya-Watson kernel-weighting to combine the surrogate outputs, whereas RGPE uses a linear combination of Gaussians instead. Wistuba et al. use a different method to do transfer HPO in their proposed model called TAF. They use the knowledge transfer mechanism during the acquisition phase of the SMBO process instead of using surrogates to transfer knowledge.
 FSBO is a transfer HPO solution that gives a state-of-the-art performance.  Hence, we discuss this in detail in the following chapters.
 
 On the other hand, any method that does not have prior knowledge before starting an HP optimization is called a non-transfer HPO method.
@@ -328,7 +328,7 @@ The core procedure of the BO in the HPO domain is the following:
 \item Append $(x', f(x'))$ to $D$ and repeat the process.
 \end{enumerate}
 
-The above process repeats till the computational resources are finished or we find an acceptable HP configuration.
+The above process repeats till the computational resources are finished, or we find an acceptable HP configuration.
 This procedure is also called SMBO (Sequential model-based Optimization).
 The procedure alternates between collecting data and fitting the surrogate model with the collected data~\cite{SMBOPaper}.
 Hence, there are two essential components of Bayesian Optimization:
@@ -417,7 +417,7 @@ k(\textbf{x}, \textbf{x'}) \mapsto \mathbb{R}
 $$
 Here, $\textbf{x}, \textbf{x'}$ belong to a domain in the most abstract sense.
 For example,  when the input domain is a euclidean space,  $\textbf{x} \in \mathbb{R}^{\mathbb{I}^+}$.
-Some well known kernels are Radial Basis Function Kernel,  Matern Kernel,  and Periodic Kernel.
+Some well-known kernels are Radial Basis Function Kernel,  Matern Kernel,  and Periodic Kernel.
 
 Finally,  a Gaussian Process specifies that any new observation $y^*$ for input $\textbf{x}^*$,  is jointly normally distributed with known observations $\textbf{y}$ such that
 \begin{align}
@@ -1145,12 +1145,12 @@ P = \frac{\phi(s(a))}{\Sigma_i \phi(s(a_i))} \;\;\; \forall i \in \{1, 2, 3, ...
 \end{equation}
 
 Equation~\ref{eq:objselection} is also referred to as top 1 probability of an object by Cao et al. ~\cite{listwisebetter}.
-This is because this gives the probability of ranking the object first when we are calculating the permutation probability of given list.
+This is because this gives the probability of ranking the object first when we are calculating the permutation probability of the given list.
 
 The proposed method to find the distance between 2 lists in ListNet is
 \begin{enumerate}
 \item Find the top 1 probabilities of each object using the scores given by the scoring function.
-\item Using the ground truth values, find similar top 1 probabilities.
+\item Using the ground truth values find similar top 1 probabilities.
 \item Since the list of top 1 probabilities forms a probability distribution, the cross-entropy between the two top 1 probability lists is taken as the "distance" metric.
 \end{enumerate}
 
