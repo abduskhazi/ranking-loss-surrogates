@@ -1346,9 +1346,9 @@ In the rest of this report,  we refer to this as an optimization step.
         \State $EI_{scores} \gets$ EI( $X_{pending}$ ) \Comment{Expected Improvement scores}
         \State $x^* \gets $ best $(EI_{scores})$
         \State $y^* \gets f(x^*)$ \Comment{HP objective function evaluation}
-        \State $X_{known} \gets X_{known} \cup x^*$
-        \State $Y_{known} \gets Y_{known} \cup y^*$
-        \State $X_{pending} \gets X_{pending} \setminus x^*$ 
+        \State $X_{known} \gets X_{known} \cup \{x^*\}$
+        \State $Y_{known} \gets Y_{known} \cup \{y^*\}$
+        \State $X_{pending} \gets X_{pending} \setminus \{x^*\}$ 
         \State $i \gets i + 1$
     \EndFor
     
