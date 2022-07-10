@@ -587,7 +587,7 @@ The following functions are some of the most prominent acquisition functions fou
 \end{itemize}
 
 
-\section{Set-Modelling with Neural Networks}
+\section{Set Modelling with Neural Networks}
 
 In the previous sections, we discussed various types of surrogates that can transfer knowledge in transfer HPO methods.
 However, training on data from known tasks and using this trained model for unknown tasks has a conceptual shortcoming.
@@ -917,8 +917,11 @@ only finetune best fit is not giving good results. Investigation in progress.
 This chapter discusses the fundamental concepts one must grasp to understand the thesis work. 
 We first talk about the concept of ranking.
 Then, we take the next step to define the ranking loss functions abstractly.
-After that, we discuss the concrete loss functions studied in this thesis.
-We also talk about how uncertainty is modeled using Deep Neural Network Ensembles.
+After that, we discuss the concrete ranking loss functions studied in this thesis.
+This ranking concept and hence ranking losses are used to learn HPO surrogates of the SMBO process in our proposed model.
+One of the most fundamental advantages of ranking surrogates in the SMBO process is that the surrogate works in the ranking space rather than the HPO objective function's output space. This is because we can completely ignore the output range of the HPO objective function, which gives much freedom to the surrogates to model the objective function.
+
+After discussing the intricacies of ranking losses, we discuss how uncertainty is modeled using Deep Neural Network Ensembles.
 Lastly,  we discuss the details of the baselines - Deep Ensembles and FSBO that we studied in this thesis.
 
 \section{Understanding Ranking}
@@ -1252,7 +1255,7 @@ In the current literature,  uncertainty quantification methods using deep neural
 \begin{itemize}
 \item Bayesian Neural networks~\cite{Goan-2020}.
 \item Ensemble Approach using Monte Carlo drop out~\cite{JMLR:v15:srivastava14a}.
-\item Ensemble approaches using multiple neural networks.
+\item Ensemble approaches using multiple neural networks ~\cite{DeepEnsemblePaper}.
 \end{itemize}
 
 In a Bayesian neural network(BNN), a prior over the network parameters (Weights and Biases) is specified during the initialization of the BNN.
@@ -1454,6 +1457,11 @@ k(\phi(\textbf{x}, \textbf{w})  ,   \phi(\textbf{x'}, \textbf{w}) |  \mathbf{\th
 $$
 where $\textbf{x}$ and $\textbf{x'}$ are configurations in the original HP search space. $\mathbf{\theta}$ and $\textbf{w}$ are parameters of kernel $k$ and the neural network $\phi$ respectively.
 We used the implementation of deep kernels provided by Patacchiola et al.~\cite{patacchiola2020bayesian} in this thesis.
+The parameters $\mathbf{\theta}$ and $\textbf{w}$  are learned by maximizing the log marginal likelihood.
+If we represent $\textbf{X}^{(1)}$... $\textbf{X}^{(T)}$ as the evaluated HP configurations of $T$ tasks and $\textbf{y}^{(1)}$...$\textbf{y}^{(T)}$ as their evaluations, the loss function maximises the following log probability
+$$
+\log p( \textbf{y}^{(1)}...\textbf{y}^{(T)} | \textbf{X}^{(1)}...\textbf{X}^{(T)}, \mathbf{\theta}, \textbf{w})
+$$
 
 During meta-training, we train our surrogate by learning the parameters $\mathbf{\theta}$ and $\textbf{w}$.
 We used the Matern $\frac{5}{2}$ kernel in our implementation.
@@ -1885,14 +1893,12 @@ After the meta-training, every model is saved to a persistent location (e.g., ha
 \hspace*{\algorithmicindent} \textbf{Input} : $m_{\theta}$ \Comment{Surrogate model to train (parameterized by $\theta$)}
 \begin{algorithmic}[1]
 \Procedure{MetaTrain}{$m_{\theta}$,  $X_{train}$,  $y_{train}$, $epochs$}
-    \For{$i < epochs$}
-            \For{$j < 100$}
+    \For{$i < $ epochs $*$ batch size}
                 \State $B_{X}, B_{y} \gets$ \textsc{DoubleSample}($X_{train}$) \Comment{Get the training batch}
                 \State $y_{pred} \gets m_{\theta}(B_{X})$
                 \State $\textrm{loss} \gets L_{mle}(y_{pred},  B_{y}) $
                 \State $g \gets \frac{\partial \textrm{loss}}{\partial \theta}$ \Comment{$g$ stands for gradient}
                 \State Use $g$ to update $\theta$ using the Adam optimizer
-            \EndFor
     \EndFor
 \EndProcedure
 \end{algorithmic}
