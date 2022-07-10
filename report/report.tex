@@ -2435,7 +2435,7 @@ Due to the negative transfer learning issue, we could not employ an early stoppi
 \end{figure}
 \fi
 
-\subsection{Study of ranking losses}
+\subsection{Which loss functions are better?}
 
 In this section, we discuss the following question - are ranking losses better for HPO than regression ones? Secondly, which ranking loss is better for HPO: pointwise,  pairwise, or listwise loss?
 For the regression case,  we use the Deep Ensemble baseline implementation proposed by Lakshminarayanan et al. ~\cite{DeepEnsemblePaper} as a reference. We use subset regression,  RankNet, and ListMLE loss functions for pointwise, pairwise, and listwise ranking losses, respectively. 
@@ -2455,8 +2455,8 @@ We try to keep all the parameters the same as the best case of DE results (Our r
 \end{figure}
 
 Firstly, we see that the average regret for both the regression losses is similar. This result is expected because the only significant difference between the two models is how uncertainty is modeled. Secondly,  we see from Figure~\ref{fig:Q1AblationNonTransfer} that the models trained with ranking losses are better at the beginning of the optimization steps cycle than the regression losses. This can be seen in the critical rank graphs of Figure~\ref{fig:Q1AblationNonTransferRank100} as well. However, the pointwise loss function very quickly deteriorates in performance in the long run. The pointwise loss function tries to learn the rank directly from the input. The learned ranks also depend on the other HP configurations in a given batch. Hence this loss function does not train the model to learn relative differences in the HP configurations.
-
-
+\textbf{In conclusion, we found that listwise ranking losses are better than the other ranking losses (i.e., pairwise and pointwise ranking losses) for the non-transfer HPO case.
+We also find that listwise ranking losses are better than the regression ones}.
 
 \begin{figure}[h]% [H] is so declass\'e!
 \centering
@@ -2502,6 +2502,7 @@ To check the overall performance of the listwise loss models, we compare this mo
 The random selection strategy is the worst performing,  whereas FSBO is the best performing SMBO surrogate. We use a GP surrogate to represent a surrogate with a medium performance.
 Figure~\ref{fig:Q1FinalAblation} shows this ablation.
 The listwise loss function functions better than the state-of-the-art transfer HPO model "FSBO" in the first 15 to 20 evaluation steps.
+\textbf{To conclude,  listwise ranking losses are superior to all other losses even in the transfer HPO case}.
 
 \begin{figure}[h]
   \centering
@@ -2511,7 +2512,7 @@ The listwise loss function functions better than the state-of-the-art transfer H
 \end{figure}
 
 
-\subsection{Study of weighted Listwise losses}
+\subsection{Does adding weighting to listwise loss improve the results?}
 
 In Section~\ref{sec:positionEnhancedRanking} we discussed the requirement for weighting for our problem.
 This section presents a short ablation to study its effect on our models.
@@ -2520,6 +2521,9 @@ We use inverse log weighting for the weighting in our case.
 From Figure~\ref{fig:Q2Ablation}, we see that both in the case of transfer HPO and non-transfer HPO, the weighting positively impacted the performance. Moreover, the models trained with weighted listwise losses are better at every optimization cycle step.
 
 Even though the difference in the average regret is not significant in the 4 cases,  the ranking graph differences are pretty significant. One thing to note here is that when we use listwise loss,  we train and finetune with the same weighted loss. We do not use a different weighting (like the inverse linear weighting for training and inverse log weighting for the meta training). Moreover, we use the double sampling mechanism discussed above during meta-training.
+\textbf{To conclude,  adding weighting functionality to listwise losses improves the performance of the learned surrogate in the transfer HPO case.
+However,  the performance in the non-transfer HPO case only improves marginally.}
+
 
 \begin{figure}[h]
   \centering
@@ -2529,7 +2533,7 @@ Even though the difference in the average regret is not significant in the 4 cas
 \end{figure}
 
 
-\subsection{Study of Surrogate Design: Addition of Deep Sets}
+\subsection{Does adding deep sets into the architecture improve performance?}
 
 We found in our research that our model could be improved by making it context-aware. We used an architecture with deep sets described in Section~\ref{sec:DeepSetWithModel}. As previously discussed, the latent result of the deep-set is used as a context for the scoring model. To meta-train this architecture,  we needed to change the training and sampling mechanisms.
 
@@ -2553,6 +2557,9 @@ Figure~\ref{fig:Q3Ablation} shows the results of this study. In the non-transfer
 \end{figure}
 
 We compare the best results obtained so far with the sentinel performances of GP,  FSBO,  and Random search. Figure~\ref{fig:Q3AblationFinal} illustrates this.  Two interesting observations can be made from our results. First,  our model performs significantly well in the first evaluation steps, and the performance later deteriorates w.r.t to state-of-the-art results. Hence,  this model can be used in any transfer HPO case with limited evaluation steps due to the computation budget. Secondly,   the average regret is also significantly better in the initial phase. Hence, we can unequivocally state that our proposed model is a good candidate to consider in any transfer HPO problem. 
+We also present in Figure~\ref{fig:Q3AblationFinalRank100} the critical rank graphs for reference.
+
+\textbf{To conclude, after integrating deep sets into the surrogate architecture,  the surrogate improves the performance of the transfer HPO case very significantly. However, the performance deteriorates in the non-transfer case. Hence we recommend using deep sets with meta-training to get the best results.}
 
 \begin{figure}[h]
   \centering
@@ -2561,7 +2568,7 @@ We compare the best results obtained so far with the sentinel performances of GP
     \label{fig:Q3AblationFinal}
 \end{figure}
 
-We also present in Figure~\ref{fig:Q3AblationFinalRank100} the critical rank graphs for reference.
+
 
 \begin{figure}[h]% [H] is so declass\'e!
 \centering
@@ -2644,7 +2651,7 @@ This can be seen in Figure~\ref{fig:RLDeepSetWeightedRank25}.
 In this section, we evaluate our built model chronologically, first using the basic scorer model,  then making the model context-aware, and then adding uncertainty capability to the model.
 \fi
 
-\subsection{Study of the effect of Finetuning}
+\subsection{Does using finetuning for the transfer learning surrogate improve performance?}
 \label{sec:EffectOfFineTuningResults}
 There are two ways of using the meta-trained ranking loss surrogate model. One way is to use it directly without changing it in the optimization process. The other is to finetune it at every evaluation step of the optimization process. We have always used the latter in our ablation studies (or answers to research questions) until now.
 In this section, we will see how the performance changes when no finetuning is done during the optimization process.
@@ -2665,9 +2672,11 @@ One fascinating result we see is that without any finetuning, the ranking loss s
 This is because the surrogate model learns the best HP configuration found in the training metadata during meta-training.
 Hence it selects these HP configurations in the first evaluation steps.
 It makes intuitive sense because this behavior is shown by experts who try out the best HP configuration seen in their experience in the first evaluations. On average, this strategy works very well; hence the first evaluations were good for the non-finetuned surrogate model.
-However, as the optimization steps proceed, the surrogate can condition its selection on more data. This conditioning is only done when the model is finetuned. Hence the finetuned surrogate works better in the long run.
+However, as the optimization steps proceed, the surrogate can condition its selection on more data. This conditioning is only done when the model is finetuned. 
 
-\subsection{Comparing results with SOTA surrogates}
+\textbf{It can be concluded that finetuning plays a significant role in the improvement of transfer HPO performance. Even though not using finetuning may perform well in the first few steps of the optimization,  the finetuned surrogate works better in the long run.}
+
+\subsection{How does the proposed model compare to SOTA surrogates?}
 After analyzing our proposed model, one natural question is how it performs against the state-of-the-art HPO surrogates. We compare our results with the best-performing transfer and non-transfer HPO surrogates to answer this question.
 
 Figure~\ref{fig:NonTransferSOTA} compares the results with some prominent state-of-the-art non-transfer HPO surrogates. This figure shows that the non-transfer version of the proposed model shows comparable performance to the Gaussian Process surrogate. This is the case both in the rank graph and the average regret. We also see that the proposed model performs very well in the initial few optimization steps. This can be seen in the critical graphs shown in figure~\ref{fig:SOTANonTransferCriticalRankedGraph}. This property is also seen in its transfer variant.
@@ -2796,6 +2805,18 @@ Negative transfer learning occurs when the source tasks set differs from the tar
     \caption{Training and validation loss curves obtained for the training of search space 5527.}
     \label{fig:NegativeLearning}
 \end{figure}
+
+Out of the 16 search spaces in HPO-B, the search spaces with ID 5527, 5889, 5906, 6766, and 7609 showed negative transfer learning curves during the training of our proposed model. 
+We conclude that it is inevitable for any transfer learning method to give bad results for these search spaces.
+
+\iffalse
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.20]{images/NegativeTransferLearingRankWise}
+    \caption{Rank graphs per search space for all the SOTA transfer learning methods.}
+    \label{fig:NegativeTransferLearingRankWise}
+\end{figure}
+\fi
 
 This problem should occur only in the cases where the model is context-free.
 Even though our ranking loss surrogate is made context-aware by integrating deep sets into its architecture, we still have the problem of negative transfer learning.
