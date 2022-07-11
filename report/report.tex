@@ -2385,7 +2385,7 @@ Like in the best case of Deep Ensembles, we use ten neural networks in our ensem
 In this section, we discuss the observations we made during the meta-training of the proposed model. The effect of finetuning on the optimization results is discussed in detail in Section~\ref{sec:EffectOfFineTuningResults}. Please note that this meta-training is required only for the transfer HPO case. For the non-transfer case, we directly do a finetuning with the evaluated HP configurations during the HP optimization.
 The two main architectures we study in this thesis are the Basic Scoring model and the Basic Scoring model with Deep Sets. 
 
-The training of the Basic Scoring Model (without Deep sets) obtained relatively smooth loss curves. This is illustrated using the loss curves of the search space with id "4796" in Figure~\ref{fig:loss4796BasicScoringModel}. The "input dim = 3" in the image title specifies that the dimensionality of this HP search space is 3. After adding deep sets to the model, the loss curves become jumpy. This is illustrated in Figure~\ref{fig:loss4796DeepSets} using the same search space. These jumpy loss curves are expected because adding deep sets increases the architecture's representation capacity (and the parameter space). A bigger parameter space results in more noisy gradients during the stochastic gradient descent. 
+The training of the Basic Scoring Model (without Deep Sets) obtained relatively smooth loss curves. This is illustrated using the loss curves of the search space with id "4796" in Figure~\ref{fig:loss4796BasicScoringModel}. The "input dim = 3" in the image title specifies that the dimensionality of this HP search space is 3. After adding deep sets to the model, the loss curves become jumpy. This is illustrated in Figure~\ref{fig:loss4796DeepSets} using the same search space. These jumpy loss curves are expected because adding deep sets increases the architecture's representation capacity (and the parameter space). A bigger parameter space results in more noisy gradients during the stochastic gradient descent. 
 
 \begin{figure}[h]% [H] is so declass\'e!
 \centering
@@ -2625,7 +2625,7 @@ In the later evaluation steps, naturally,  using finetuning makes gives better p
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.20]{images/RLDeepSetevaluation}
-    \caption{Benchmarking for the Deep set evaluation data}
+    \caption{Benchmarking for the Deep Set evaluation data}
     \label{fig:RLDeepSetevaluation}
 \end{figure}
 \fi
