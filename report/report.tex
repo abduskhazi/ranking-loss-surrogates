@@ -88,13 +88,13 @@
 
 \chapter*{Declaration \thispagestyle{empty}}
 
-I hereby declare, that I am the sole author and composer of my Thesis and that no
+I hereby declare, that I am the sole author and composer of my thesis and that no
 other sources or learning aids, other than those listed, have been used. Furthermore,
 I declare that I have acknowledged the work of others by providing detailed
 references of said work.
 
-I hereby also declare, that my Thesis has not been prepared for another examination
-or assignment, either wholly or excerpts thereof.
+I also hereby declare that my thesis has not been prepared for another examination
+or assignment, either in its entirety or excerpts thereof. 
 
 \vspace{100pt}
 
@@ -282,7 +282,7 @@ They propose that if we learn HP configurations that previously worked well, the
 Reif et al.~\cite{metalearningwarmstartpaper} also proposed a similar concept for the HP optimization of genetic algorithms.
 In this thesis, we compare the proposed model's performance with the performance of state-of-the-art transfer HPO methods like Two-Stage Transfer Surrogate (TST)~\cite{tstpaper}, Ranking-Weighted Gaussian Process Ensemble (RGPE)~\cite{Feurer2018ScalableMF}, Transfer Acquisition Function Framework (TAF)~\cite{Wistuba2017ScalableGP}, and Few Shot Bayesian Optimization (FSBO)~\cite{fsbopaper}.
 The TST method comprises two stages. In the first stage, multiple surrogates are learned for each metadata (or task). The outputs of the learned surrogates are combined in the second stage to rank the HP configurations. These two stages are used with the SMBO algorithm to do HP optimizations. We have discussed Bayesian Optimizations and SMBOs in detail in section~\ref{sec:BayesianOptimization}.
-RGPE is very similar to TST because it also uses multiple models (Gaussian Processes in this case) learned for each task. One significant difference  between the two is that TST uses Nadaraya-Watson kernel-weighting to combine the surrogate outputs, whereas RGPE uses a linear combination of Gaussians instead. Wistuba et al. use a different method to do transfer HPO in their proposed model called TAF. They use the knowledge transfer mechanism during the acquisition phase of the SMBO process instead of using surrogates to transfer knowledge.
+RGPE is very similar to TST because it also uses multiple models (Gaussian Processes in this case) learned for each task. One significant difference between the two is that TST uses Nadaraya-Watson kernel-weighting to combine the surrogate outputs, whereas RGPE uses a linear combination of Gaussians instead. Wistuba et al. use a different method to do transfer HPO in their proposed model called TAF. They use the knowledge transfer mechanism during the acquisition phase of the SMBO process instead of using surrogates to transfer knowledge.
 FSBO is a transfer HPO solution that gives a state-of-the-art performance.  Hence, we discuss this in detail in the following chapters.
 
 On the other hand, any method that does not have prior knowledge before starting an HP optimization is called a non-transfer HPO method.
@@ -307,8 +307,8 @@ This idea was also proposed for the SMBO optimization algorithm by Feurer et al.
 
 The idea of meta-learning a surrogate is to meta-train it using meta-data from previously optimized similar tasks.
 After its training, the surrogate can be used in an algorithm like SMBO to predict good-performing HP configurations.
-This surrogate's prediction of good-performing HP configurations is conditioned on the training meta-data. This pre-conditioning makes it a transfer HPO.
-The methods proposed by Schilling et al.~\cite{Schilling2016ScalableHO} and by Feurer et al.~\cite{Feurer2018ScalableMF} are a couple of examples among many others that use meta-learning of surrogates to do knowledge transfer.
+This surrogate's prediction of good-performing HP configurations is conditioned on the training meta-data. This preconditioning makes it a transfer HPO.
+The methods proposed by Schilling et al.~\cite{Schilling2016ScalableHO}, and by Feurer et al.~\cite{Feurer2018ScalableMF} are a couple of examples among many others that use meta-learning of surrogates to do knowledge transfer.
 
 The meta-learned surrogate can be used in two ways during the HPO optimization procedure.
 One could use it without modification during the HPO.
@@ -594,10 +594,10 @@ The following functions are some of the most prominent acquisition functions fou
 
 In the previous sections, we discussed various types of surrogates that can transfer knowledge in transfer HPO methods.
 However, training on data from known tasks and using this trained model for unknown tasks has a conceptual shortcoming.
-Humans do not pre-condition their actions on new tasks only on previous experiences.
-Their pre-conditioning also includes the knowledge of the current task (however slight it may be).
+Humans do not precondition their actions on new tasks only on previous experiences.
+Their preconditioning also includes the knowledge of the current task (however slight it may be).
 
-To model this concept, one has to learn to represent and pre-condition knowledge from known tasks in a model.
+To model this concept, one has to learn to represent and precondition knowledge from known tasks in a model.
 Doing this makes the model context-aware.
 If we consider an HP configuration and its evaluation ($\textbf{x}$, $y$) as a single object, then the group of all the known pairs can be represented as a set.
 Here, $\textbf{x}$ is a feature vector, and $y$ is a scalar.
@@ -609,7 +609,7 @@ Now our problem is a 2 stage process that includes
 
 
 We use Deep Neural networks to represent a set in this thesis because it is a model with high representational capacity and is easy to train.
-Deep Sets by Zaheer et al.~\cite{deepSets} and Set Transformers by Lee et al.~\cite{setTransformer} are two of the exciting researches that we found in the literature.
+Deep Sets by Zaheer et al.~\cite{deepSets} and Set Transformers by Lee et al.~\cite{setTransformer} are two exciting pieces of research we found in the literature.
 Since the sophisticated attention mechanisms used in Set Transformers were unnecessary,  we chose to use the simpler architecture used in Deep Sets.
 The following section discusses these Deep Sets.
 
@@ -1314,11 +1314,11 @@ In this thesis,  2 HPO techniques were implemented before studying the proposed 
 Deep Ensembles (DE) were studied with two main objectives in mind.
 First, to study how uncertainty is estimated using Deep Neural Networks.
 This was a prerequisite to understanding how to implement uncertainty in our proposed model as we use deep neural networks as a scorer in our model. 
-The second objective was to understand how a non-transfer technique would work for the HP optimization problem.
+The second objective was understanding how a non-transfer technique would work for the HP optimization problem.
 It is also possible to make the Deep Ensemble surrogate a transfer technique by meta-training it before using it in the HP optimization. However, we did not do this in our thesis.
 
 The second technique implemented was FSBO.
-We chose this because this gave the state-of-the-art results on the HPO-B benchmark. The HPO-B benchmark is discussed later in Chapter~\ref{chap:HPOBExplanation}.
+We chose this because this gave state-of-the-art results on the HPO-B benchmark. The HPO-B benchmark is discussed later in Chapter~\ref{chap:HPOBExplanation}.
 Studying FSBO also gave us an idea of implementing the transfer HPO mechanism in our proposed ranking loss surrogate model.
 In addition, we used Random search and GP as standard baselines for result comparison.
 
@@ -1378,7 +1378,7 @@ We also use this reinitialization in FSBO and the proposed ranking loss surrogat
 Finally, as the neural networks are independent,  they can be trained in parallel.
 This makes DE surrogates scalable.
 
-One question that remains to be answered is what sort of architecture our neural networks use.
+One question remains: What sort of architecture should our neural networks use.
 For this, two architectures were analyzed - an undivided neural network as shown in Figure~\ref{fig:undividedarchitecture} and a neural network divided at its tail as shown in Figure~\ref{fig:dividedarchitecture}.
 
 \begin{figure}[H]
@@ -1663,7 +1663,7 @@ A configuration can have different ranks based on the batch in which it is locat
 The expected rank of a configuration is not defined in absolute terms. It is always conditioned on other configurations in the ranking batch.
 Due to this property, using the predicted uncertainty in the ranking space is tricky.
 
-Moreover, using well-defined acquisition functions like Expected Improvement (EI) is not trivial. EI requires us to maintain an incumbent evaluated value. The incumbent is the best-evaluated HP objective function's value in the output space. However, it is always 1 in the ranking space because the best possible rank in any ranking batch is always 1. Hence, if we used EI with ranking loss surrogates, it would be impossible to select the following HP configuration efficiently.
+Moreover, using well-defined acquisition functions like Expected Improvement (EI) is not trivial. EI requires us to maintain an incumbent evaluated value. The incumbent is the best-evaluated HP objective function's value in the output space. However, it is always 1 in the ranking space because the best possible rank in any ranking batch is always 1. Hence, if we used EI with ranking loss surrogates, it would be impossible to efficiently select the following HP configuration.
 It is also not possible to directly use the output scores of the ensemble. Each neural network in the ensemble gives separate scores for the input batch of configurations. These scores of each neural network may not be in the same range.
 
 Due to these intricacies, we believe a detailed study of the different acquisition functions in the ranking space is necessary. Such a study is out of scope for this thesis. Therefore, we leave this study for future research.
@@ -1733,7 +1733,7 @@ The algorithm modifies and removes elements in predicted and actual lists.
 Consider a case where the list elements are stored in a data structure that stores objects in contiguous memory locations (like an array).
 The time complexity of removing an element from an array is O(n), where $n$ is the list size.
 The removal operation is done for all list elements one by one resulting in the worst-case time complexity of $O(n^2)$.
-Even if we store the list in a data structure that stores its elements in a non-contiguous memory location (for example, a linked list), accessing the elements in the list would have $O(n)$ time complexity. This would also result in time complexity of $O(n^2)$.
+Even if we store the list in a data structure that stores its elements in a non-contiguous memory location (for example, a linked list), accessing the elements in the list would have $O(n)$ time complexity. This would also result in a time complexity of $O(n^2)$.
 
 One way to solve this problem is to sort the lists before calculating the permutation probability.
 This approach is followed by Pobrotyn
@@ -1744,7 +1744,7 @@ For this reason, we use the implementation given by Pobrotyn
 Algorithm~\ref{alg:listMLESorted} depicts this approach.
 
 
-More precisely, the ListMLE loss is re-written in the following form:
+More precisely, the ListMLE loss is rewritten in the following form:
 
 \begin{equation}
 L_{mle} = \sum\limits_{j=1}^{k} \left( \log \sum\limits_{t=j}^k \exp(s(\pi^*_k)) - \log \exp(s(\pi^*_j)) \right)
@@ -1806,7 +1806,7 @@ $k$ represents the total number of elements that are ranked.
 This strategy decreases the weights linearly across the ranks.
 
 Linear weighting has an issue. It makes the weight of the middle object in the list $0.5$ times the weight of the object at the top.
-This can be seen in the position dependent attention graph of figure~\ref{fig:weightingfunctions} (The weights of the position dependent attention graph are scaled by a factor of 50 to make a fair comparison between the weights).
+This can be seen in the position-dependent attention graph of figure~\ref{fig:weightingfunctions} (The weights of the position-dependent attention graph are scaled by a factor of 50 to make a fair comparison between the weights).
 This, however, is not what we want for our case.
 We need a sharper decrease in weights across the ranks.
 We could use 2 alternative strategies of weighting the ordered list
@@ -2029,7 +2029,7 @@ This helps the model get deep into the local minimum; hence, the probability of 
 \end{figure}
 
 Figure~\ref{fig:goodFTLoss} shows a finetuning loss curve obtained using cosine annealing.
-This strategy reduces the problems that could prop us when using a constant learning rate. However, we realized at the later stage of the thesis that cosine annealing could not be used extensively while finetuning the proposed model due to the issue of negative transfer learning.
+This strategy reduces the problems that could prop us when using a constant learning rate. However, we realized at the later stage of the thesis that cosine annealing could not be used while finetuning the proposed model due to the issue of negative transfer learning.
 During training, on the other hand, we use a constant learning rate as we can use the validation loss as a reference for overfitting or underfitting.
 
 \section{Ranking Surrogate Model}
@@ -2107,10 +2107,10 @@ We keep the node abstract for simplicity.
 
 To rank a batch of query HP configurations $\textbf{X}_q$, first, the data points in the support set $\textbf{X}_s$, $\textbf{y}_s$ are passed through the deep-set.
 Each $X_s^i$, $y_s^i$ are concatenated to get a single vector for input into the deep set to obtain a vector $X_s^i : y_s^i$.
-This concatenation is passed through the Deep-set, we obtain the latent output $O_l$.
-Please note that there is a single latent output from the deep set and all the support HP configuration points need to be input to it in one shot.
+This concatenation is passed through the deep-set,  and we obtain the latent output $O_l$.
+Please note that there is a single latent output from the deep-set,  and all the support HP configuration points need to be input to it in one shot.
 
-It can be argued that we could use the concatenation $X_s^i : rank(y_s^i)$ instead of directly using the actual value of the objective function. This is a way to concatenate a value from the ranking space instead of the output space. However there are two significant issues with this approach. First, the size of the support set is undefined; hence the range of the ranks can vary drastically. Second, we already know that values in the ranking space are relative. So even if we use the same number of support set elements, the same HP configuration can have different ranks in different support batches. Hence we believe a deeper study of the ranking space is required before it can be employed in the concatenation.
+It can be argued that we could use the concatenation $X_s^i : rank(y_s^i)$ instead of directly using the actual value of the objective function. This is a way to concatenate a value from the ranking space instead of the output space. However,  there are two significant issues with this approach. First, the size of the support set is undefined; hence the range of the ranks can vary drastically. Second, we already know that values in the ranking space are relative. So even if we use the same number of support set elements, the same HP configuration can have different ranks in different support batches. Hence we believe a deeper study of the ranking space is required before it can be employed in the concatenation.
 
 After obtaining the latent output $O_l$ from the deep-set,  it is concatenated with the query data points.
 The concatenated result is passed through a Deep Neural Network to get their respective scores and, subsequently, their ranks.
@@ -2123,7 +2123,7 @@ The whole batch of these concatenated vectors is then ranked using the rest of t
 \subsubsection{Meta training}
 
 Using the architecture with a deep-set during the HP optimization is very straightforward.
-We can use the known HP configurations as a support set, and the queried HP configurations as the query set.
+We can use the known HP configurations as a support set and the queried HP configurations as the query set.
 During meta-training,  however,  we have to divide the data into support and query sets.
 
 In the meta-training, we randomly select 20\% of the batch size as a support set. The sampling is done without replacement.
@@ -2377,7 +2377,7 @@ In each section, we present an ablation study to highlight the essential compone
 For uniformity, we use the following strategy - We will use the same number of neural networks and the same neural network architecture in our study.
 We also try to keep the learning rate similar for similar components.
 For different components, however, we use different learning rates.
-For example, learning rates during meta-training and finetuning are different.
+For example, the learning rate during meta-training and finetuning is different.
 Similarly, each loss function may require a different learning rate to perform the best as the HP response surfaces change with the used loss function.
 Like in the best case of Deep Ensembles, we use ten neural networks in our ensemble. Each neural network has two 32-neuron layers.
 
@@ -2548,7 +2548,7 @@ One major issue when training with deep sets is that we cannot train the neural 
 It is because of the common backbone in ensemble architecture.
 In order to keep the training as separate as possible, we initialize the neural networks separately. After that, we calculate the loss of each neural network separately with the same batch data. Then we aggregate the losses and back-propagate the aggregated loss through the whole architecture. Note that we do not aggregate the scores of the neural networks but the ranking losses obtained from each scoring neural network.
 
-Figure~\ref{fig:Q3Ablation} shows the results of this study. In the non-transfer case,  the model becomes terrible. The primary reason for this is that the complexity of the architecture is very high, and it needs a considerable amount of data to train. This data is absent during the HPO optimization cycle. However,  in the case of transfer learning,  we see an enormous improvement when we use deep sets. It makes intuitive sense because each task is different from the other. The embedding of this information, or rather the difference in information, helps the model distinguish the tasks and pre-condition the learning process. 
+Figure~\ref{fig:Q3Ablation} shows the results of this study. In the non-transfer case,  the model becomes terrible. The primary reason for this is that the complexity of the architecture is very high, and it needs a considerable amount of data to train. This data is absent during the HPO optimization cycle. However,  in the case of transfer learning,  we see an enormous improvement when we use deep sets. It makes intuitive sense because each task is different from the other. The embedding of this information, or rather the difference in information, helps the model distinguish the tasks and precondition the learning process. 
 
 \begin{figure}[h]
   \centering
@@ -2961,14 +2961,14 @@ PLACKETT-LUCE DISTRIBUTIONS -> Very important to explain the rationale about usi
 \chapter{Controlling the output range}
 \label{chap:OutputRangeControl}
 
-Lets take the listwise loss function $L_{mle}$ which is nothing but maximum log-likelihood estimation. 
-In our surrogate models, we use the strictly positive increasing function $\exp$ as proposed by Fen et. al.~\cite{listmlepaper}.
+Let's take the listwise loss function $L_{mle}$ which is nothing but maximum log-likelihood estimation. 
+In our surrogate models, we use the strictly positive increasing function $\exp$ as proposed by Fen et al.~\cite{listmlepaper}.
 Hence, our $L_{mle}$ becomes 
 \begin{equation}\label{eq:overflowissue}
 L_{mle} = -  \sum\limits_{j=1}^{k} \log \frac{\exp(s(\pi^*_j))}{ \sum\limits_{t=j}^k \exp(s(\pi^*_k))}
 \end{equation}
 
-Even though theoretically, the score range does not need to be restricted, we have practical limitations due to implementation constraints of floating-point numbers.
+Even though, theoretically, the score range does not need to be restricted, we have practical limitations due to implementation constraints of floating-point numbers.
 Due to the exponentiation in our loss function, if the score range is too high,  the values in equation~\ref{eq:overflowissue} may overflow.
 On the other hand, if it is too small, the values may underflow.
 In both these cases, we are bound to get NAN (Not A Number) exceptions when executing our implementations.
@@ -3014,7 +3014,7 @@ Then the loss function we would use to learn our scorer is
 \underset{\theta}{\rm argmin} \quad L_{mle}(s(l \mid \theta),  - k * l)
 \end{equation}
 where $k \in \mathbb{R}$.
-Note that the second parameter of listwise loss function is scale-invariant; hence scaling the list does not affect the loss output (Section~\ref{sec:listMLE}).
+Note that the second parameter of the listwise loss function is scale-invariant; hence scaling the list does not affect the loss output (Section~\ref{sec:listMLE}).
 To keep the output score in a defined range, we utilized the range controlling mechanism discussed in Appendex~\ref{chap:OutputRangeControl}.
 
 We sample the testing data from the following ranges to evaluate our learned model:
@@ -3052,7 +3052,7 @@ We report the average of 5 runs in Table~\ref{table:caseStudyResults}.
 \end{table}
 
 We find from the tabulated results that training the model by running a higher number of epochs is vital.
-Moreover, bigger list size is crucial to comprehensively learning the objective function.
+Moreover,  a bigger list size is crucial to comprehensively learning the objective function.
 The larger list size will make our model work well when the input is from the same distribution seen during training.
 Moreover,  it also performs well when the input comes from a hybrid range.
 These are good properties to have in any machine learning model.
