@@ -2735,7 +2735,7 @@ Figure~\ref{fig:TransferSOTA} compares the results with other state-of-the-art t
 \textbf{To conclude, using a listwise weighted surrogate with deep sets gives results on par with state-of-the-art HPO methods both in the transfer and non-transfer case in the initial optimization steps. Its performance, however, degrades in the later steps.}
 
 \subsection{Final ablation}
-Finally, in this section, we show the ablation of all the different ranking loss surrogates that were used in the previous ablations. Figure~\ref{fig:FinalAblation} shows this ablation. In this figure, we can see that making the model a transfer model, weighting the ranking loss, and adding deep sets all significantly improved the proposed model's performance. 
+In this section, we show the ablation of all the different ranking loss surrogates that were used in the previous ablations. Figure~\ref{fig:FinalAblation} shows this ablation. In this figure, we can see that making the model a transfer model, weighting the ranking loss, and adding deep sets all significantly improved the proposed model's performance. 
 The biggest strength of the proposed model is that it is excellent in the initial 30-40 steps of the optimization process (compared to state-of-the-art HPO surrogates). This is crucial for a sequential process like SMBO because selecting a good HP configuration in a particular step affects the selection of subsequent HP configurations.
 The second strength of the model is that there is a possibility of reducing negative learning from occurring because of the context encoded using the deep sets.
 
@@ -2746,6 +2746,22 @@ The second strength of the model is that there is a possibility of reducing nega
     \label{fig:FinalAblation}
 \end{figure}
 
+\subsection{UCB and EI in the ranking space}
+In the previous experiments, we used average rank as the acquisition function. This section briefly discusses the results of 2 more sophisticated acquisition functions applied to the ranking space - Upper Confidence Bound (UCB) and Expected Improvement (EI).
+
+In the case of UCB, the integration is simple. We use the ranks obtained from the ensemble of rankers to calculate the mean and the standard deviation rank of each HP configuration. Using this mean and the standard deviation, we can calculate the UCB score. However, when we use the EI as an acquisition function, we must pass the incumbent HP configuration in both the support and query sets. It is important to note that the effect of passing the same configuration in the support and query set has not been studied in this thesis. A detailed analysis of acquisition functions in the ranking space is out of the scope for this thesis, as mentioned in section~\ref{sec:AcquisitionFunctionInRankingSpace}.
+
+We only use the state-of-the-art transfer HPO method (i.e., FSBO) for this ablation study as a reference. We compare the learned surrogates that use the Average (rank), UCB, and EI as acquisition functions.
+Figure~\ref{fig:acqusitionRanking} shows the ranked graph comparing these models.
+All models in this figure~\ref{fig:acqusitionRanking} are meta-trained with weighted listwise ranking loss. Hence they are transfer HPO methods. They also use deep sets in their architecture.
+\textbf{We conclude that both UCB and EI acquisition functions are superior even in the ranking space. Further, the proposed surrogate model with EI  acquisition performs better than FSBO in all optimization steps.}
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.22]{images/acqusitionRanking}
+    \caption{Ablation of different acqusition functions in the ranking space.}
+    \label{fig:acqusitionRanking}
+\end{figure}
 
 \iffalse
 Data used in the experiment
