@@ -1992,7 +1992,7 @@ We call this such a minimum, a stubborn local minimum.
 The brown dot in the figure depicts the stubborn local minimum.
 
 If we reload and retrain our model afresh, the probability of reaching a good local minimum is higher. For example, during training for the blue curve, the surrogate model can start from a value $x > 10$. This would enable it to reach a better local minimum than a model that does not restart finetuning.
-The number of ways to reach a good local minimum would increase exponentially with the increase in the dimensions of the HP search space.
+The number of ways to reach a good local minimum would increase significantly with the increase in the dimensions of the HP search space.
 Hence, restarting the training (from the saved surrogate model in our case) should improve our finetuned surrogate model.
 
 Because of these reasons,  we use the restart mechanism during the finetuning of our ranking loss surrogate (and baseline implementations).
