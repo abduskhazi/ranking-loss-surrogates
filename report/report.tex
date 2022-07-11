@@ -2105,14 +2105,14 @@ The  architecture of the surrogate $s_{\theta}$ with deep sets is given in Figur
 For the complete architecture of the Deep Set node, please refer~\ref{fig:DeepSetArchitecture}.
 We keep the node abstract for simplicity.
 
-To rank a batch of query HP configurations $\textbf{X}_q$, first, the data points in the support set $\textbf{X}_s$, $\textbf{y}_s$ are passed through the deep-set.
+To rank a batch of query HP configurations $\textbf{X}_q$, first, the data points in the support set $\textbf{X}_s$, $\textbf{y}_s$ are passed through the deep set.
 Each $X_s^i$, $y_s^i$ are concatenated to get a single vector for input into the deep set to obtain a vector $X_s^i : y_s^i$.
-This concatenation is passed through the deep-set,  and we obtain the latent output $O_l$.
-Please note that there is a single latent output from the deep-set,  and all the support HP configuration points need to be input to it in one shot.
+This concatenation is passed through the deep set,  and we obtain the latent output $O_l$.
+Please note that there is a single latent output from the deep set,  and all the support HP configuration points need to be input to it in one shot.
 
 It can be argued that we could use the concatenation $X_s^i : rank(y_s^i)$ instead of directly using the actual value of the objective function. This is a way to concatenate a value from the ranking space instead of the output space. However,  there are two significant issues with this approach. First, the size of the support set is undefined; hence the range of the ranks can vary drastically. Second, we already know that values in the ranking space are relative. So even if we use the same number of support set elements, the same HP configuration can have different ranks in different support batches. Hence we believe a deeper study of the ranking space is required before it can be employed in the concatenation.
 
-After obtaining the latent output $O_l$ from the deep-set,  it is concatenated with the query data points.
+After obtaining the latent output $O_l$ from the deep set,  it is concatenated with the query data points.
 The concatenated result is passed through a Deep Neural Network to get their respective scores and, subsequently, their ranks.
 For example if there is a batch of queries given by $\{X_{q_1},  X_{q_2},  X_{q_3} ...\}$,  and the latent output is given by $O_l$ then the concatenation yields
 $$
@@ -2122,7 +2122,7 @@ The whole batch of these concatenated vectors is then ranked using the rest of t
 
 \subsubsection{Meta training}
 
-Using the architecture with a deep-set during the HP optimization is very straightforward.
+Using the architecture with a deep set during the HP optimization is very straightforward.
 We can use the known HP configurations as a support set and the queried HP configurations as the query set.
 During meta-training,  however,  we have to divide the data into support and query sets.
 
@@ -2536,7 +2536,7 @@ Even though the difference in the average regret is not significant in the 4 cas
 
 \subsection{Does adding deep sets into the architecture improve performance?}
 
-We found in our research that our model could be improved by making it context-aware. We used an architecture with deep sets described in Section~\ref{sec:DeepSetWithModel}. As previously discussed, the latent result of the deep-set is used as a context for the scoring model. To meta-train this architecture,  we needed to change the training and sampling mechanisms.
+We found in our research that our model could be improved by making it context-aware. We used an architecture with deep sets described in Section~\ref{sec:DeepSetWithModel}. As previously discussed, the latent result of the deep set is used as a context for the scoring model. To meta-train this architecture,  we needed to change the training and sampling mechanisms.
 
 For sampling, we used a support set of data points, i.e., \{$X_s$, $y_s$\} that is 20\% of the actual batch size. The concept of double sampling is also used in this case. For each double sampling, we sample first the task.
 Then the support points are sampled without replacement from this task.
@@ -2787,7 +2787,7 @@ Next show the best results obtained by architecture.
 
 In this thesis, we studied how to use the concept of ranking with Sequential Model-Based Optimization (SMBO) to improve hyperparameter optimization. The HPO method we researched was a transfer learning method with two canonical parts: ranking loss functions and context-aware HPO surrogates. Firstly, we formulated the problem of selecting HP configurations within the SMBO algorithm as a ranking problem. Then, we researched the effects of using various ranking losses to train and finetune the HPO surrogate. We also studied the effect of adding weighting to the ranking loss. Finally, we integrated deep sets into the surrogate model architecture to make it context-aware.
 
-We found in our study that the loss function used to learn an HPO surrogate significantly affects its performance. Among the ranking loss functions, listwise ranking loss showed the best performance during the HPO optimizations. After adding weighting to the listwise ranking loss function, the proposed model's performance further improved. Adding deep-sets to the surrogate made its performance on par with the performance of state-of-the-art transfer HPO methods. However, the results were the best only when we used the ranking loss surrogate in the transfer learning scenario.
+We found in our study that the loss function used to learn an HPO surrogate significantly affects its performance. Among the ranking loss functions, listwise ranking loss showed the best performance during the HPO optimizations. After adding weighting to the listwise ranking loss function, the proposed model's performance further improved. Adding deep sets to the surrogate made its performance on par with the performance of state-of-the-art transfer HPO methods. However, the results were the best only when we used the ranking loss surrogate in the transfer learning scenario.
 
 One of the key takeaways of this thesis is that it is crucial to differentiate the ranking space from the output space. The ranking loss surrogates performed well because they learn and function in the ranking space rather than the output space. Hence we also conclude that working in the ranking space is better than working in the output space. Moreover, working in the ranking space is helpful in a problem domain like the HPO. The output ranges of the evaluated HPO objective functions may differ for different tasks. By working in the ranking space, we avoid normalizing meta-data values usually done by other transfer HPO methods.
 
