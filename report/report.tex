@@ -2751,14 +2751,14 @@ In the previous experiments, we used average rank as the acquisition function. T
 
 In the case of UCB, the integration is simple. We use the ranks obtained from the ensemble of rankers to calculate the mean and the standard deviation rank of each HP configuration. Using this mean and the standard deviation, we can calculate the UCB score. However, when we use the EI as an acquisition function, we must pass the incumbent HP configuration in both the support and query sets. It is important to note that the effect of passing the same configuration in the support and query set has not been studied in this thesis. A detailed analysis of acquisition functions in the ranking space is out of the scope for this thesis, as mentioned in section~\ref{sec:AcquisitionFunctionInRankingSpace}.
 
-We only use the state-of-the-art transfer HPO method (i.e., FSBO) for this ablation study as a reference. We compare the learned surrogates that use the Average (rank), UCB, and EI as acquisition functions.
+We compare the learned surrogates that use the Average (rank), UCB, and EI as acquisition functions with other state-of-the-art transfer HPO methods.
 Figure~\ref{fig:acqusitionRanking} shows the ranked graph comparing these models.
-All models in this figure~\ref{fig:acqusitionRanking} are meta-trained with weighted listwise ranking loss. Hence they are transfer HPO methods. They also use deep sets in their architecture.
-\textbf{We conclude that both UCB and EI acquisition functions are superior even in the ranking space. Further, the proposed surrogate model with EI  acquisition performs better than FSBO in all optimization steps.}
+All proposed ranking loss models in the figure~\ref{fig:acqusitionRanking} (i.e., Average-Rank, UCB-Rank, and EI-Rank) are meta-trained with weighted listwise ranking loss. Hence they are transfer HPO methods. They also use deep sets in their architecture.
+\textbf{We conclude that both UCB and EI acquisition functions are superior even in the ranking space. Further, the proposed surrogate model with EI  acquisition function performs better than FSBO in all optimization steps.}
 
 \begin{figure}[h]
   \centering
-    \includegraphics[scale=0.22]{images/acqusitionRanking}
+    \includegraphics[scale=0.25]{images/acqusitionRanking}
     \caption{Ablation of different acqusition functions in the ranking space.}
     \label{fig:acqusitionRanking}
 \end{figure}
