@@ -2441,14 +2441,14 @@ Due to the negative transfer learning issue, we could not employ an early stoppi
 \subsection{Which loss functions are better?}
 
 In this section, we discuss the following question - are ranking losses better for HPO than regression ones? Secondly, which ranking loss is better for HPO: pointwise,  pairwise, or listwise loss?
-For the regression case,  we use the Deep Ensemble baseline implementation proposed by Lakshminarayanan et al. ~\cite{DeepEnsemblePaper} as a reference. We use subset regression,  RankNet, and ListMLE loss functions for pointwise, pairwise, and listwise ranking losses, respectively. 
+We use the Deep Ensemble baseline implementation proposed by Lakshminarayanan et al. ~\cite{DeepEnsemblePaper} as a reference. We use subset regression,  RankNet, and ListMLE loss functions for pointwise, pairwise, and listwise ranking losses, respectively. 
 
 \subsubsection{Non-transfer HPO}
 We first test the non-transfer HPO case where the surrogate models are not meta-trained. We only do finetune (or training) during the evaluation phase. We also reinitialize the models before every evaluation step. We have discussed the reason for this in-depth in Section~\ref{sec:rlfinetune}.
 We train each neural network for 1000 epochs at every evaluation step. The learning rate is 0.02, and we do not use cosine annealing.
 Using cosine annealing here did not make sense since there is no guarantee that the randomly initialized model is near a local optimum.
-Hence, we need a bigger learning rate to find quicker optimization.
-We try to keep all the parameters the same as the best case of DE results (Our reference method for the non Transfer HPO case)
+Hence, we need a bigger learning rate to find the optima quickly.
+We try to keep all the parameters the same as the best case of DE results (Our reference method for the non-transfer HPO case).
 
 \begin{figure}[h]
   \centering
@@ -2458,8 +2458,7 @@ We try to keep all the parameters the same as the best case of DE results (Our r
 \end{figure}
 
 Firstly, we see that the average regret for both the regression losses is similar. This result is expected because the only significant difference between the two models is how uncertainty is modeled. Secondly,  we see from Figure~\ref{fig:Q1AblationNonTransfer} that the models trained with ranking losses are better at the beginning of the optimization steps cycle than the regression losses. This can be seen in the critical rank graphs of Figure~\ref{fig:Q1AblationNonTransferRank100} as well. However, the pointwise loss function very quickly deteriorates in performance in the long run. The pointwise loss function tries to learn the rank directly from the input. The learned ranks also depend on the other HP configurations in a given batch. Hence this loss function does not train the model to learn relative differences in the HP configurations.
-\textbf{In conclusion, we found that listwise ranking losses are better than the other ranking losses (i.e., pairwise and pointwise ranking losses) for the non-transfer HPO case.
-We also find that listwise ranking losses are better than the regression ones}.
+\textbf{In conclusion, we find that listwise ranking losses are better than other losses in the initial steps. However, their performance deteriorates at the later end of the optimization}.
 
 \begin{figure}[h]% [H] is so declass\'e!
 \centering
@@ -2505,7 +2504,7 @@ To check the overall performance of the listwise loss models, we compare this mo
 The random selection strategy is the worst performing,  whereas FSBO is the best performing SMBO surrogate. We use a GP surrogate to represent a surrogate with a medium performance.
 Figure~\ref{fig:Q1FinalAblation} shows this ablation.
 The listwise loss function functions better than the state-of-the-art transfer HPO model "FSBO" in the first 15 to 20 evaluation steps.
-\textbf{To conclude,  listwise ranking losses are superior to all other losses even in the transfer HPO case}.
+\textbf{We conclude that listwise ranking losses are superior to both the regression and the other ranking losses in the transfer HPO case.  However, the performance of the listwise loss surrogate is not on par with state-of-the-art transfer HPO methods like FSBO in the long run.}
 
 \begin{figure}[h]
   \centering
@@ -2524,8 +2523,7 @@ We use inverse log weighting for the weighting in our case.
 From Figure~\ref{fig:Q2Ablation}, we see that both in the case of transfer HPO and non-transfer HPO, the weighting positively impacted the performance. Moreover, the models trained with weighted listwise losses are better at every optimization cycle step.
 
 Even though the difference in the average regret is not significant in the 4 cases,  the ranking graph differences are pretty significant. One thing to note here is that when we use listwise loss,  we train and finetune with the same weighted loss. We do not use a different weighting (like the inverse linear weighting for training and inverse log weighting for the meta training). Moreover, we use the double sampling mechanism discussed above during meta-training.
-\textbf{To conclude,  adding weighting functionality to listwise losses improves the performance of the learned surrogate in the transfer HPO case.
-However,  the performance in the non-transfer HPO case only improves marginally.}
+\textbf{To conclude,  adding weighting functionality to listwise losses improves the performance of the learned surrogate both in the transfer and non-transfer HPO case.}
 
 
 \begin{figure}[h]
@@ -2677,7 +2675,7 @@ Hence it selects these HP configurations in the first evaluation steps.
 It makes intuitive sense because this behavior is shown by experts who try out the best HP configuration seen in their experience in the first evaluations. On average, this strategy works very well; hence the first evaluations were good for the non-finetuned surrogate model.
 However, as the optimization steps proceed, the surrogate can condition its selection on more data. This conditioning is only done when the model is finetuned. 
 
-\textbf{It can be concluded that finetuning plays a significant role in the improvement of transfer HPO performance. Even though not using finetuning may perform well in the first few steps of the optimization,  the finetuned surrogate works better in the long run.}
+\textbf{To conclude, we find that finetuning plays a significant role in the improvement of transfer HPO performance. Even though not using finetuning may perform well in the first few steps of the optimization,  the finetuned surrogate works better in the long run.}
 
 \subsection{How does the proposed model compare to SOTA surrogates?}
 After analyzing our proposed model, one natural question is how it performs against the state-of-the-art HPO surrogates. We compare our results with the best-performing transfer and non-transfer HPO surrogates to answer this question.
@@ -2733,6 +2731,8 @@ Figure~\ref{fig:TransferSOTA} compares the results with other state-of-the-art t
     \caption{Comparing critical rank graphs against SOTA transfer HPO surrogates.}
    \label{fig:SOTACriticalRankedGraph}
 \end{figure}
+
+\textbf{To conclude, using a listwise weighted surrogate with deep sets gives results on par with state-of-the-art HPO methods both in the transfer and non-transfer case in the initial optimization steps. Its performance, however, degrades in the later steps.}
 
 \subsection{Final ablation}
 Finally, in this section, we show the ablation of all the different ranking loss surrogates that were used in the previous ablations. Figure~\ref{fig:FinalAblation} shows this ablation. In this figure, we can see that making the model a transfer model, weighting the ranking loss, and adding deep sets all significantly improved the proposed model's performance. 
