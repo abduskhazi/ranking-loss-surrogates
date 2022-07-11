@@ -223,7 +223,7 @@ Hence this approach becomes intractability for large search spaces.
 \begin{figure}[htb]
   \centering
     \includegraphics[scale=0.8]{images/rsgsexample}
-    \caption{Illustrates Grid search and Random search in the case where 2 parameters are not equally important.  Adpated from~\cite{rshpoarticle}.}
+    \caption{Grid search and Random search in the case where 2 parameters are not equally important.  Adpated from~\cite{rshpoarticle}.}
     \label{fig:rshpofig}
 \end{figure}
 
@@ -470,7 +470,7 @@ DNNs can be viewed as models that pass inputs sequentially through multiple comp
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.5]{images/DeepNeuralNetwork}
-    \caption{A sample of a fully connected deep neural network~\cite{deepNeuralNetworksImage}.}
+    \caption{A sample of a fully connected Deep Neural Network~\cite{deepNeuralNetworksImage}.}
     \label{fig:DeepNeuralNetwork}
 \end{figure}
 
@@ -680,7 +680,7 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \draw[->] (Pool.east) -- (pho.west);
 \draw[->] (pho.east) -- (LatentOutput.west);
 \end{tikzpicture}
-\caption{Skeletal of the architecture proposed in deep sets}
+\caption{Skeleton of the architecture proposed by Zaheer et al.~\cite{deepSets}.}
 \label{fig:DeepSetArchitecture}
 \end{figure}
 
@@ -1403,7 +1403,7 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \draw[->] (FCn.east) -- (mean.west);
 \draw[->] (FCn.east) -- (variance.west);
 \end{tikzpicture}
-\caption{Example of an undivided Neural Network architecture.}
+\caption{Example of an undivided DNN architecture.}
 \label{fig:undividedarchitecture}
 \end{figure}
 
@@ -1433,7 +1433,7 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \draw[->] (FCn1.east) -- (mean.west);
 \draw[->] (FCn2.east) -- (variance.west);
 \end{tikzpicture}
-\caption{Example of a divided Neural Network architecture.}
+\caption{Example of a divided DNN architecture.}
 \label{fig:dividedarchitecture}
 \end{figure}
 
@@ -1977,7 +1977,7 @@ This is not possible in the sequential process of SMBO because, at every step, o
 \begin{figure}[htb]
   \centering
     \includegraphics[scale=0.45]{images/localMinima}
-    \caption{Figure showing changes in response surfaces and a stubborn local minimum.}
+    \caption{Illustration of changes in response surfaces and a stubborn local minimum.}
     \label{fig:localMinima}
 \end{figure}
 
@@ -2007,7 +2007,7 @@ Figure~\ref{fig:jitteryFTLoss} shows the finetuning loss for one of the search s
 \begin{figure}[htb]
   \centering
     \includegraphics[scale=0.45]{images/jitteryFTLoss}
-    \caption{Figure showing jittery loss function curve.}
+    \caption{Jittery loss curve.}
     \label{fig:jitteryFTLoss}
 \end{figure}
 
@@ -2024,7 +2024,7 @@ This helps the model get deep into the local minimum; hence, the probability of 
 \begin{figure}[htb]
   \centering
     \includegraphics[scale=0.45]{images/goodFTLoss}
-    \caption{Figure showing a loss curve obtained by using cosine annealing.}
+    \caption{Loss curve obtained when cosine annealing was used.}
     \label{fig:goodFTLoss}
 \end{figure}
 
@@ -2348,7 +2348,7 @@ Using these baseline results as a reference, we discuss how the ranking loss sur
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/FSBOBestPerformance}
-    \caption{Rank and regret graph of best performing of FSBO.}
+    \caption{Rank and regret graph of best performing FSBO.}
     \label{fig:FSBOBestPerformance}
 \end{figure}
 
@@ -2492,7 +2492,7 @@ Double sampling is not required during finetuning as we are finetuning only for 
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/Q1AblationTransfer}
-    \caption{Comparison of Ranking losses with regression losses (Transfer case).}
+    \caption{Comparison of Ranking losses with regression losses (Transfer HPO case).}
     \label{fig:Q1AblationTransfer}
 \end{figure}
 
@@ -2529,7 +2529,7 @@ Even though the difference in the average regret is not significant in the 4 cas
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/Q2Ablation}
-    \caption{Comparison of listwise losses with theg weighting strategy.}
+    \caption{Comparison of listwise losses with the weighting strategy.}
     \label{fig:Q2Ablation}
 \end{figure}
 
@@ -2581,7 +2581,7 @@ We also present in Figure~\ref{fig:Q3AblationFinalRank100} the critical rank gra
 \end{minipage}\par
 \vskip\floatsep% normal separation between figures
 \includegraphics[width=0.45\textwidth]{images/Q3AblationFinalRank@100}
-    \caption{Critical rank graph of the listwise weighted transfer learning with deep sets with sentinel performances}
+    \caption{Critical rank graph of the listwise weighted surrogate with FSBO, GP,  and Random surrogates.}
    \label{fig:Q3AblationFinalRank100}
 \end{figure}
 
@@ -2663,7 +2663,7 @@ If we do not use any finetuning, selecting the HP configurations for the evaluat
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/FineTuningAblation}
-    \caption{Effect of finetuning on surrogate performance.}
+    \caption{Effect of finetuning on the proposed surrogate's performance.}
     \label{fig:FineTuningAblation}
 \end{figure}
 
@@ -2690,7 +2690,7 @@ Since the average regret gives a biased estimation of the results and the rank g
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/NonTransferSOAT}
-    \caption{Comparing our results against SOTA non-transfer HPO surrogates.}
+    \caption{Comparing the results of the proposed model against SOTA non-transfer HPO surrogates.}
     \label{fig:NonTransferSOTA}
 \end{figure}
 
@@ -2704,7 +2704,7 @@ Since the average regret gives a biased estimation of the results and the rank g
 \end{minipage}\par
 \vskip\floatsep% normal separation between figures
 \includegraphics[width=0.45\textwidth]{images/NonTransferSOTARank@100}
-    \caption{Critical rank graphs of the proposed model with SOTA non-transfer HPO surrogates.}
+    \caption{Critical rank graphs of the proposed model and other SOTA non-transfer HPO surrogates.}
    \label{fig:SOTANonTransferCriticalRankedGraph}
 \end{figure}
 
@@ -2714,7 +2714,7 @@ Figure~\ref{fig:TransferSOTA} compares the results with other state-of-the-art t
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.25]{images/TransferSOAT}
-    \caption{Comparing results against SOTA transfer HPO surrogates.}
+    \caption{Comparing the results of the proposed model against SOTA transfer HPO surrogates.}
     \label{fig:TransferSOTA}
 \end{figure}
 
@@ -2728,7 +2728,7 @@ Figure~\ref{fig:TransferSOTA} compares the results with other state-of-the-art t
 \end{minipage}\par
 \vskip\floatsep% normal separation between figures
 \includegraphics[width=0.45\textwidth]{images/TransferSOATRank@100}
-    \caption{Comparing critical rank graphs against SOTA transfer HPO surrogates.}
+    \caption{Critical rank graphs of the proposed model and SOTA transfer HPO surrogates.}
    \label{fig:SOTACriticalRankedGraph}
 \end{figure}
 
@@ -2742,7 +2742,7 @@ The second strength of the model is that there is a possibility of reducing nega
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.22]{images/FinalAblation}
-    \caption{Ablation of all ranking loss surrogate models studied in this thesis.}
+    \caption{Ablation of all ranking loss surrogates studied in this thesis.}
     \label{fig:FinalAblation}
 \end{figure}
 
@@ -2821,7 +2821,7 @@ Negative transfer learning occurs when the source tasks set differs from the tar
 \begin{figure}[htb]
   \centering
     \includegraphics[scale=0.5]{images/NegativeLearning}
-    \caption{Training and validation loss curves obtained for the training of search space 5527.}
+    \caption{Training and validation loss curves obtained for the search space 5527.}
     \label{fig:NegativeLearning}
 \end{figure}
 
