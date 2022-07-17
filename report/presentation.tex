@@ -159,10 +159,10 @@ Various types of solutions to the HPO problem are proposed:
 \item \textbf{Blackbox HPO}: $f$ is treated as a blackbox function. E.g. Random Search, Grid search.
 \item \textbf{Online HPO}: Hyperparameters and parameters of an ML model are trained together. E.g., Interleaved updating of the HP and parameters. 
 \item \textbf{Multi-fidelity HPO}: Cheap approximations of the HPO objective functions called surrogates/fidelities are used.
-E.g. Successive halving.
+E.g. Successive halving~\cite{successivehalving}.
 \item \textbf{Transfer Learning HPO}: Cheap Surrogates are meta learned using existing metadata.
 The meta-knowledge is transferred to the target HPO task. 
-E.g.  Few Shot Bayesian Optimization (FSBO).
+E.g.  Few Shot Bayesian Optimization (FSBO)~\cite{fsbopaper}.
 \end{itemize}
 \end{frame}
 
@@ -356,7 +356,7 @@ $
 \end{frame}
 
 \begin{frame}[t]{Subset Regression: Pointwise Loss}
-Basic idea:
+Basic idea:~\cite{subsetregressionpaper}
 \begin{itemize}
 \item Learn the rank of the objects directly.
 \item Do not depend on intermediate score values.
@@ -380,7 +380,7 @@ $$
 \end{frame}
 
 \begin{frame}[t]{RankNet: Pairwise Loss}
-Basic Idea: Classify the 2 input objects - i.e answer which object is better?
+Basic Idea: Classify the 2 input objects - i.e answer which object is better?~\cite{ranknetpaper}
 
 Loss calculation steps:
 \begin{itemize}
@@ -409,7 +409,7 @@ $$
 
 
 \begin{frame}[t]{ListMLE: Listwise Loss}
-ListMLE - List Maximum Likelihood Estimation.
+ListMLE~\cite{listmlepaper} stands for List Maximum Likelihood Estimation.
 The basic idea is:
 \begin{itemize}
 \item Use the whole set/list of objects as a learning instance.
@@ -467,7 +467,7 @@ $$
 \item Hence,  using a weighting strategy during the calculation of distance metric makes sense.
 \end{itemize}
 
-If $c(j)$ gives the weight of the position $j$ then the loss becomes -
+If $c(j)$ gives the weight of the position $j$ then the loss becomes~\cite{TRLWO} -
 $$
 L_{mle} = -  \sum\limits_{j=1}^{k} c(j) \log \frac{\phi(s(\pi^*_j))}{ \sum\limits_{t=j}^k \phi(s(\pi^*_k))}
 $$
@@ -479,7 +479,7 @@ $$
 \begin{itemize}
 \item Inverse linear weighting given by $c(j) = \frac{1}{j}$.
 \item Inverse logarithmic weighting given by $c(j) = \frac{1}{\log (j+1)}$.
-\item Position dependent ranking given by $c(j) = \frac{k - j + 1}{\Sigma_{t=1}^k t}$ (Chen et. al).
+\item Position dependent ranking (scaled by 50 here) given by $c(j) = \frac{k - j + 1}{\Sigma_{t=1}^k t}$ (Chen et. al).
 \end{itemize}
 
 \begin{figure}[htb]
@@ -488,7 +488,6 @@ $$
     \caption{Different Weighting Functions.}
     \label{fig:weightingfunctions}
 \end{figure}
-We use Inverse logarithmic weighting.
 
 \end{frame}
 
@@ -646,31 +645,512 @@ $$
 
 \begin{frame}[t]{Making model context aware}
 
+The model is made context aware by using Deep Sets.
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[scale=0.42, transform shape,
+roundnode/.style={circle, draw=brown!60, fill=black!5, very thick, minimum size=7mm},
+roundnodey/.style={circle, draw=green!60, fill=black!5, very thick, minimum size=7mm},
+squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
+]
+%Nodes
+\node[roundnode]      (X1)                             {$\textbf{X}_1, y_1$};
+\node[roundnode]      (X2)                            [below=of X1]     {$\textbf{X}_2, y_2$};
+\node[roundnode]      (X3)                            [below=of X2]     {$\textbf{X}_3, y_3$};
+\node[squarednode]      (phi1)                      [right=of X1]        {DNN$_{\theta}$};
+\node[squarednode]      (phi2)                     [right=of X2]        {DNN$_{\theta}$};
+\node[squarednode]      (phi3)                     [right=of X3]        {DNN$_{\theta}$};
+\node[squarednode]      (Pool)                     [right=of phi2]     {Pool};
+\node[squarednode]      (pho)                      [right=of Pool]     {DNN$_{\phi}$};
+\node[roundnodey]      (LatentOutput)         [right=of pho]     {Latent Output};
+
+%Lines
+\draw[->] (X1.east) -- (phi1.west);
+\draw[->] (X2.east) -- (phi2.west);
+\draw[->] (X3.east) -- (phi3.west);
+\draw[->] (phi1.east) -- (Pool.west)    node[midway, right] {$I_1$};
+\draw[->] (phi2.east) -- (Pool.west)   node[midway, above] {$I_2$};
+\draw[->] (phi3.east) -- (Pool.west)   node[midway, right] {$I_3$};
+\draw[->] (Pool.east) -- (pho.west);
+\draw[->] (pho.east) -- (LatentOutput.west);
+\end{tikzpicture}
+\caption{Deep Set Architecture.}
+\label{fig:DeepSetArchitecture}
+\end{figure}
+
+\begin{itemize}
+\item The architecture consists of 3 separate components: DDN$_{\theta}$,  Pool,  and DNN$_{\phi}$.
+\item Pooling operator $\frac{ I_1 + I_2 + I_3}{3}$ takes care of:
+\begin{itemize}
+\item Permutation-Invariance constraint.
+\item Set cardinality invariance constraint.
+\end{itemize}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[t]{Making model context aware}
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[scale=0.45, transform shape,
+roundnode/.style={circle, draw=brown!60, fill=black!5, very thick, minimum size=7mm},
+roundnodey/.style={circle, draw=green!60, fill=black!5, very thick, minimum size=7mm},
+squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
+]
+%Nodes
+\node[roundnode]          (Xs)                                                     {$\textbf{X}_s$, $\textbf{y}_s$};
+\node[roundnode]          (Xq)                        [below=of Xs]     {$\textbf{X}_q$};
+\node[squarednode]      (DeepSet)              [right=of Xs]        {Deep Set};
+\node[squarednode]      (Concatenation)             [below=of DeepSet]        {Concatenation};
+\node[squarednode]      (DNN2)                      [right=of Concatenation]        {DNN$_2$};
+\node[squarednode]      (DNN1)                      [above=of DNN2]                    {DNN$_1$};
+\node[squarednode]      (DNN3)                      [below=of DNN2]                    {DNN$_3$};
+\node[roundnodey]        (s1)                             [right=of DNN1] {$\textbf{s}_1$};
+\node[roundnodey]        (s2)                             [right=of DNN2] {$\textbf{s}_2$};
+\node[roundnodey]        (s3)                             [right=of DNN3] {$\textbf{s}_3$};
+\node[squarednode]      (rank2)                             [right=of s2] {Rank$_2$};
+\node[squarednode]      (rank3)                             [below=of rank2] {Rank$_3$};
+\node[squarednode]      (rank1)                             [above=of rank2] {Rank$_1$};
+\node[squarednode]      (uncertainty)                             [right=of rank2] {Uncertainty};
+\node[roundnodey]        (mus)                             [right=of uncertainty] {$\mu_r$};
+\node[roundnodey]        (sigmas)                             [below=of mus] {$\sigma^2_r$};
+
+%Lines
+\draw[->] (Xs.east) -- (DeepSet.west);
+\draw[->] (DeepSet.south) -- (Concatenation.north) node[midway] {Latent Output};
+\draw[->] (Xq.east) -- (Concatenation.west);
+\draw[->] (Concatenation.east) -- (DNN1.west);
+\draw[->] (Concatenation.east) -- (DNN2.west);
+\draw[->] (Concatenation.east) -- (DNN3.west);
+\draw[->] (DNN1.east) -- (s1.west);
+\draw[->] (DNN2.east) -- (s2.west);
+\draw[->] (DNN3.east) -- (s3.west);
+\draw[->] (s1.east) -- (rank1.west);
+\draw[->] (s2.east) -- (rank2.west);
+\draw[->] (s3.east) -- (rank3.west);
+\draw[->] (rank1.east) -- (uncertainty.west);
+\draw[->] (rank2.east) -- (uncertainty.west);
+\draw[->] (rank3.east) -- (uncertainty.west);
+\draw[->] (uncertainty.east) -- (mus.west);
+\draw[->] (uncertainty.east) -- (sigmas.west);
+
+\end{tikzpicture}
+\caption{Skeleton of the proposed model with Deep Sets.}
+\label{fig:proposeModelDeepSets}
+\end{figure}
+
+\begin{itemize}
+\item Support set i.e know HP configurations and their evaluations are passed through Deep Set to get a latent output.
+\item The query HP configurations are concatenated with the latent output.
+\item The concatenation is passed through ensemble of \\
+deep rankers.
+\item During training/finetuning losses are aggregated in the\\
+ ranking space.
+\end{itemize}
+
+\end{frame}
+
+\section{Surrogate usage with HPO-B Benchmark}
+\begin{frame}
+
+\centering
+\LARGE{Surrogate Usage in HPO-B Benchmark}
+
+\end{frame}
+
+
+
+\begin{frame}[t]{HPO-B Benchmark}
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[scale=0.5, transform shape,
+% roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=7mm},
+squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
+]
+%Nodes
+\node[squarednode]      (ss2)                             {Search Space 2};
+\node[squarednode]      (main)                   [left=of ss2]           {MetaData};
+\node[squarednode]      (ss1)                    [above=of ss2]          {Search Space 1};
+\node[squarednode]      (ss_)                       [below=of ss2]        {...};
+\node[squarednode]      (ds2)                       [right=of ss1]        {Data Set 2};
+\node[squarednode]      (ds1)                       [above=of ds2]        {Data Set 1};
+\node[squarednode]      (ds_)                       [below=of ds2]        {...};
+\node[squarednode]      (Xy)                       [right=of ds2]        {\{\textbf{X},  \textbf{y}\},  \textrm{Seeds}};
+
+%Lines
+\draw[->] (main.east) -- (ss2.west);
+\draw[->] (main.east) -- (ss1.west);
+\draw[->] (main.east) -- (ss_.west);
+\draw[->] (ss1.east) -- (ds2.west);
+\draw[->] (ss1.east) -- (ds1.west);
+\draw[->] (ss1.east) -- (ds_.west);
+\draw[->] (ds2.east) -- (Xy.west);
+\end{tikzpicture}
+\caption{Structure of the metadata in the HPO-B benchmark.}
+\label{fig:metadataorganization}
+\end{figure}
+
+\begin{itemize}
+\item HPO-B is used for benchmarking blackbox HPO.
+\item It consists of multiple Search Spaces (SS).  An SS signifies a single ML model.
+\item Each SS consists of different Data Sets.
+\item A Data Set (task) contains HP configurations \& their\\
+evaluations for a single training instance of the model.
+\item Seeds specify different initial configurations to start the \\
+SMBO process.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Surrogate usage}
+
+\begin{itemize}
+\item The proposed surrogate is a transfer HPO surrogate used in SMBO.
+\item There are 2 stages of using it:
+\begin{itemize}
+\item Meta training before SMBO optimization cycle.
+\item Finetuning during the SMBO optimization cycle.
+\end{itemize}
+\end{itemize}
+
+\textbf{Meta-training}
+\begin{itemize}
+\item Goal: Learn the common characteristics of all tasks and transfer knowledge to the new task.
+\item Separate surrogate is learnt for each SS.
+\item Concept of double sampling is used i.e sample the task then from the task sample the meta data.
+\item Learning done using stochastic gradient descent for 5000 epochs.
+\item Used ADAM optimiser with learning rate of 0.0001. 
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[t]{Surrogate usage}
+
+\textbf{Finetuning}
+\begin{itemize}
+\item Fine tuning helps improve the HPO results.
+\item A full batch gradient is used with the ADAM optimiser to finetune for 1000 epochs.
+\item The finetuning is restarted at every SMBO evaluation step to get better performance.
+\item We use cosine annealing during the fine tuning process.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[t]{Restarting is necessary during finetuning}
+
+This idea is counter-intuitive because already trained model should converge faster to a local minima.  Reasons for this observations
+\begin{itemize}
+\item Model is biased towards already seen points.
+\end{itemize}
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/bias25}
+\caption{Bias at $25^{th}$ optimization cycle.}
+    \label{fig:bias25}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/bias50}
+\caption{Bias at $50^{th}$ optimization cycle.}
+    \label{fig:bias50}
+\end{minipage}\par
+\end{figure}
+
+\end{frame}
+
+\begin{frame}[t]{Restarting is necessary during finetuning}
+\begin{itemize}
+\item Stubborn local minima
+\begin{itemize}
+\item Response surface does not change significantly with the addition of only a single data point.
+\item Restarting the training can increase changes of reaching good optima.
+\end{itemize} 
+\end{itemize}
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.37]{images/localMinima}
+    \caption{Illustration of changes in response surfaces and a stubborn local minimum.}
+    \label{fig:localMinima}
+\end{figure}
+
+\end{frame}
+
+\section{Experiments and Results}
+\begin{frame}
+
+\centering
+\LARGE{Experiments and Results}
+
+\end{frame}
+
+\begin{frame}[t]{Q1: Which loss function is better?}
+
+We compare the following loss function types:
+\begin{itemize}
+\item Regression Loss (Ref.  RMSE)
+\item Pointwise ranking loss (Ref.  Subset Regression)
+\item Pairwise ranking loss (Ref.  RankNet)
+\item Listwise ranking loss (Ref.  ListMLE)
+\end{itemize}
+Baseline DE-M10-RS is used which stands for Deep Ensemble with 10 neural networks with restart mechanism.
+2 cases have to be compared separately.
+\begin{itemize}
+\item Non transfer HPO
+\item Transfer HPO
+\end{itemize}
 
 
 \end{frame}
 
-\section{Testing and Ablation study}
+\begin{frame}[t]{Q1: Which loss function is better? - Non transfer HPO}
 
-\begin{frame}[t]{Testing and Ablation study}
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.15]{images/Q1AblationNonTransfer}
+    \label{fig:Q1AblationNonTransfer}
+\end{figure}
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/Q1AblationNonTransferRank@25}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/Q1AblationNonTransferRank@50}
+\end{minipage}\par
+\vskip\floatsep% normal separation between figures
+\includegraphics[width=0.45\textwidth]{images/Q1AblationNonTransferRank@100}
+    \caption{Rank Graph \& Critical rank graph for non-transfer HPO.}
+   \label{fig:Q1AblationNonTransferRank100}
+\end{figure}
 
 \end{frame}
 
-\section{Results}
-\begin{frame}[t]{Results}
+
+\begin{frame}[t]{Q1: Which loss function is better? - Transfer HPO}
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.12]{images/Q1AblationTransfer} 
+     \caption{Loss comparison. "T" stands for transfer.}
+    \label{fig:Q1AblationTransfer}
+\end{figure}
+
+\textbf{Conclusion:  Listwise ranking loss on average performs better than other losses.}
+
+\end{frame}
+
+\begin{frame}[t]{Q1: Does weighting Listwise loss improve results?}
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.12]{images/Q2Ablation}
+    \caption{Listwise losses with and without weighting.}
+    \label{fig:Q2Ablation}
+\end{figure}
+
+\begin{itemize}
+\item Inverse logorithmic weighting used for both the transfer and non-transfer case.
+\item \textbf{Conclusion:} Weighting improves the results for both transfer and non-transfer HPO.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[t]{Q1: Does adding Deep Sets improve performance?}
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.12]{images/Q3Ablation}
+    \caption{Effect of adding deep sets into the architecture.}
+    \label{fig:Q3Ablation}
+\end{figure}
+
+\begin{itemize}
+\item 20\% of data is used as support set for both training and finetuning.
+\item \textbf{Conclusion}:
+\begin{itemize}
+\item Non-transfer HPO results become worse.  Reason is high complexity of the model.
+\item Transfer HPO results become very good in the initial steps.
+\end{itemize}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[t]{Q1: Does finetuning improve performance?}
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.12]{images/FineTuningAblation}
+    \caption{Effect of using finetuning.}
+    \label{fig:FineTuningAblation}
+\end{figure}
+
+\begin{itemize}
+\item Here,  "Raw" means a meta-trained model without finetuning.
+\item No finetuning amounts to ranking the complete list of HP configuration and evaluating it.
+\item Using finetuning means learning the new context.
+\item \textbf{Conclusion}:
+\begin{itemize}
+\item No fine-tuning performs well only in the first steps.
+\item Finetuning is required for better long term results.
+\end{itemize}
+\end{itemize}
+
 \end{frame}
 
 
-\section{Discussion}
-\begin{frame}[t]{Discussion}
+\begin{frame}[t]{Comparing with SOTA HPO models}
+\textbf{Non-transfer HPO}
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.12]{images/NonTransferSOAT}
+% \caption{Comparing the results of the proposed model against SOTA non-transfer HPO surrogates.}
+    \label{fig:NonTransferSOTA}
+\end{figure}
 
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/NonTransferSOTARank@25}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/NonTransferSOTARank@50}
+\end{minipage}\par
+\vskip\floatsep% normal separation between figures
+\includegraphics[width=0.45\textwidth]{images/NonTransferSOTARank@100}
+    \caption{Graphs of the proposed model with other SOTA non-transfer HPO surrogates.}
+   \label{fig:SOTANonTransferCriticalRankedGraph}
+\end{figure}
+
+\end{frame}
+
+
+\begin{frame}[t]{Comparing with SOTA HPO models}
+\textbf{Transfer HPO}
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.12]{images/TransferSOAT}
+%    \caption{Comparing the results of the proposed model against SOTA transfer HPO surrogates.}
+    \label{fig:TransferSOTA}
+\end{figure}
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/TransferSOATRank@25}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/TransferSOATRank@50}
+\end{minipage}\par
+\vskip\floatsep% normal separation between figures
+\includegraphics[width=0.45\textwidth]{images/TransferSOATRank@100}
+   \caption{Graphs of the proposed model and SOTA transfer HPO surrogates.}
+   \label{fig:SOTACriticalRankedGraph}
+\end{figure}
+\end{frame}
+
+\begin{frame}[t]{Comparing with SOTA HPO models}
+\textbf{Conclusion}
+\begin{itemize}
+\item Non transfer surrogate shows performance similar to the GP surrogate.
+\item Transfer surrogate performance is on par with the state-of-the-art FSBO model.
+\item Both transfer and non transfer version of the model perform very well in the initial evaluation steps.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{UCB and EI in the ranking space}
+\begin{itemize}
+\item Previous experiments used average rank acquisition function.
+\item Here we integrate UCB (Upper Confidence Bound) and EI (Expected Improvement) in the ranking space.
+\item UCB is calculated using the mean and standard deviations returned from the ensemble of rankers.
+\item EI is calculated by passing the HP incumbent in both the query and the support set.
+\item Comparison is made between Average-Rank,  UCB-Rank,  EI-Rank and all the transfer HPO models.
+\item \textbf{Conclusion}:
+\begin{itemize}
+\item UCB and EI acquisition functions are superior even in the ranking space. \item The proposed surrogate model with EI  acquisition function performs better than FSBO in all optimization steps.
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{UCB and EI in the Ranking space}
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/acqusitionRanking}
+    \caption{Ablation of Average-Rank, UCB-Rank, and EI-Rank with other SOTA transfer HPO methods.}
+    \label{fig:acqusitionRanking}
+\end{figure}
+
+\end{frame}
+
+\section{Conclusion}
+\begin{frame}
+\centering
+\LARGE{Conclusion}
+\end{frame}
+
+\begin{frame}[t]{Advantages and Limitations of the model.}
+\textbf{Advantages}:
+\begin{itemize}
+\item Being a transfer HPO surrogate,  it utilises already existing meta data.
+\item Sampling mechanism of listwise loss is superior.   For example,  from a set of known HP configurations there are ${100 \choose 15}$ ways to select a list of 15 items.
+\item Working in ranking space dampens uncertainty.  Slight noise in the HP evaluations does not have change the ranks of the configurations.
+\item Output ranges of HP evaluations across tasks does not have much effect on the HP rankings.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Advantages and Limitations of the model.}
+\textbf{Limitations}:
+\begin{itemize}
+\item We ignore the sorting functionality during the ranking loss formulation. Hence complete ranking problem is not optimized.
+\item We use exponentiation as the strictly increasing positive function. 
+Hence there is a potential for overflow or underflow during optimization.
+\item The learned surrogate may be biased towards tasks with lesser data due to the double sampling mechanism.
+\item Negative transfer learning was seen in some search spaces.
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.25]{images/NegativeLearning}
+    \caption{Negative transfer learning example.}
+    \label{fig:NegativeLearning}
+\end{figure}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Further Research Directions}
+\begin{itemize}
+\item More research needs to be done for acquisition functions in the ranking space.
+\item Study needs to be conducted for incorporating sorting functionality into the ranking loss.  E.g.  Using model proposed by Swezey et. al ~\cite{PiRank}.
+\item One could explore how to incorporate the learning mean and variance of the rank directly from the loss function instead of explicit calculation.
+\item The proposed ranking surrogate only works in the discrete HP search space.  We need to study how to do incorporate this in the continuous HP Search Space.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{Conclusion}
+\begin{itemize}
+\item The proposed model is a SMBO surrogate in the transfer HPO domain.
+\item The study consisted of 2 canonical parts:
+\begin{itemize}
+\item Ranking loss functions
+\item Surrogate design
+\end{itemize}
+\item Our results showed that listwise ranking losses perform the best compared to other losses.
+\item After adding weighting \& Deep sets,  the surrogate performs comparable to FSBO (SOTA transfer HPO model).
+\item \textbf{Key takeaway - For HPO,  working in the ranking space is better than the output space!}
+\end{itemize}
 \end{frame}
 
 \section{Q \& A}
 
-\begin{frame}[t]{Q \& A}
-  \centering \Huge
-  \emph{Q \& A}
+\begin{frame}
+\centering
+\LARGE{Q \& A}
 \end{frame}
 
 \section{References}
@@ -679,17 +1159,46 @@ $$
 
 \begin{thebibliography}{1}
 
-\bibitem{DeepEnsemblesPaper}
-\alert{Balaji Lakshminarayanan and Alexander Pritzel and Charles Blundell; Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles (2017)}
+\bibitem{listmlepaper}
+\alert{Xia et.  al; Listwise approach to learning to rank: theory and algorithm (2008)}
+
+\bibitem{ranknetpaper}
+\alert{Burges et.  al; Learning to rank using gradient descent (2005)}
+
+\bibitem{TRLWO}
+\alert{Chen et.  al; Top-Rank Enhanced Listwise Optimization for Statistical Machine Translation (2017)}
+
+\bibitem{subsetregressionpaper}
+\alert{Cossock et. al ; Statistical Analysis of Bayes Optimal Subset Ranking (2008)}
+
+\bibitem{fsbopaper}
+\alert{Wistuba et.  al; Few-Shot Bayesian Optimization with Deep Kernel Surrogates (2021)}
+
+\bibitem{successivehalving}
+\alert{Jamieson et.  al;  Non-stochastic Best Arm Identification and Hyperparameter Optimization (2015)}
 
 \end{thebibliography}
 
 \end{frame}
 
-\section{Appendix}
+\begin{frame}[t]{References}
 
-\begin{frame}[t]{Appendix}
+\begin{thebibliography}{1}
+
+\bibitem{DeepEnsemblesPaper}
+\alert{Lakshminarayanan et.  al; Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles (2017)}
+
+\bibitem{PiRank}
+\alert{Swezey et.  al ;  PiRank: Scalable Learning To Rank via Differentiable Sorting (2020).}
+
+\end{thebibliography}
 
 \end{frame}
+
+\iffalse
+\section{Appendix}
+\begin{frame}[t]{Appendix}
+\end{frame}
+\fi
 
 \end{document}
