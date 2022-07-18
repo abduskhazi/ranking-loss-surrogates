@@ -130,21 +130,6 @@ where
 \end{frame}
 % \fi
 
-\begin{frame}[t]{HPO Constraints}
-
-HPO problem has the following unique constraints:
-
-\begin{itemize}
-\item It is a non-convex optimization problem.
-\item The HP evaluation and hence HPO objective is stochastic.
-\item Variables (dimensions) may be conditionally dependent on others. E.g.,  neurons in a layer are conditioned on the existence of the layer.
-\item Variables (dimensions) maybe discrete or continuous.
-\end{itemize}
-
-% We target HPO of discrete HP search spaces.
-
-\end{frame}
-
 \section{Related Work}
 
 \begin{frame}
@@ -358,62 +343,6 @@ $
 
 \end{frame}
 
-\begin{frame}[t]{Subset Regression: Pointwise Loss}
-Basic idea:~\cite{subsetregressionpaper}
-\begin{itemize}
-\item Learn the rank of the objects directly.
-\item Avoid intermediate relevance score.
-\item Similar to RMSE.
-$$
-L_{\texttt{SubsetRegression}} = \frac{1}{N} \sum\limits_{i=1}^{N} (s(a_i) - \texttt{rank}(y_i))^2
-$$
-\end{itemize}
-
-% Given a batch of size $N$ containing objects $a_i$ and their corresponding ground truth values $y_i$ such that $0 \leq i \leq N$,  the loss function is:
-
-For example,  ranking for the following ground truth values is, 
-$$
-\{y_1 = 0.8, y_2 = 0.9, y_3 = 0.1\}
-$$
-$$
-\texttt{rank}(y_1) = 2,  \texttt{rank}(y_2) = 1,  \texttt{rank}(y_3) = 3
-$$
-
-\end{frame}
-
-\begin{frame}[t]{RankNet: Pairwise Loss}
-
-\begin{itemize}
-\item Classify the 2 input objects.
-\item Answer the question: which object is better?
-\item From all possible pairs of inputs $\{s(a_1), s(a_2), y_1, y_2\}$,  calculate loss.
-$$
-L_{\texttt{RankNet}} = \texttt{C.E.Loss} = -P^*\log P - (1 - P^*)\log(1-P)
-$$
-where $P$ and $P^*$ are given by:
-$$
-P(a_1 \succ a_2) = \frac{e^{s(a_1) - s(a_2)}}{1 + e^{s(a_1) - s(a_2)} }
-$$
-$$
-P^*(a_1 \succ a_2) =
-\begin{cases}
-      1 & \text{if} \quad y_1 \geq y_2 \\
-      0 &  \text{otherwise}
-\end{cases}       
-$$
-
-Basically,  RankNet loss is the binary cross entropy loss.
-\end{itemize}
-
-% Loss calculation steps:
-% \begin{itemize}
-% \item Consider we are given $\{a_1, a_2, a_3..., a_n\}$ to rank.
-% \item Scores of all the objects are calculated $\{s(a_1), s(a_2), s(a_3)..., s(a_n)\}$.
-% \item 
-% \end{itemize}
-
-\end{frame}
-
 
 \begin{frame}[t]{ListMLE: Listwise Loss}
 ListMLE~\cite{listmlepaper} stands for List Maximum Likelihood Estimation.
@@ -479,27 +408,11 @@ $$
 L_{mle} = -  \sum\limits_{j=1}^{k} c(j) \log \frac{\phi(s(\pi^*_j))}{ \sum\limits_{t=j}^k \phi(s(\pi^*_k))}
 $$
 
-\end{frame}
-
-\begin{frame}[t]{Weighting Strategy}
-3 different weighting strategies:
 \begin{itemize}
-\item Inverse linear weighting given by $c(j) = \frac{1}{j}$.
-\item Inverse logarithmic weighting given by $c(j) = \frac{1}{\log (j+1)}$.
-\item Position dependent ranking (scaled by 50 here) given by $c(j) = \frac{k - j + 1}{\Sigma_{t=1}^k t}$ (Chen et. al).
+\item We use inverse logarithmic weighting given by $c(j) = \frac{1}{\log (j+1)}$.
 \end{itemize}
 
-\begin{figure}[htb]
-  \centering
-    \includegraphics[scale=0.3]{images/weightingfunctions}
-    \caption{Different Weighting Functions.}
-    \label{fig:weightingfunctions}
-\end{figure}
-
 \end{frame}
-
-
-
 
 
 \section{Proposed Method: Surrogate Design}
@@ -825,7 +738,7 @@ Baseline DE-M10-RS is used, which stands for Deep Ensemble with 10 neural networ
 
 \end{frame}
 
-\begin{frame}[t]{Q1: Does weighting Listwise loss improve results?}
+\begin{frame}[t]{Q2: Does weighting Listwise loss improve results?}
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.12]{images/Q2Ablation}
@@ -840,7 +753,7 @@ Baseline DE-M10-RS is used, which stands for Deep Ensemble with 10 neural networ
 
 \end{frame}
 
-\begin{frame}[t]{Q1: Does adding Deep Sets improve performance?}
+\begin{frame}[t]{Q3: Does adding Deep Sets improve performance?}
 
 \begin{figure}[h]
   \centering
@@ -860,7 +773,7 @@ Baseline DE-M10-RS is used, which stands for Deep Ensemble with 10 neural networ
 
 \end{frame}
 
-\begin{frame}[t]{Q1: Does finetuning improve performance?}
+\begin{frame}[t]{Q4: Does finetuning improve performance?}
 
 \begin{figure}[h]
   \centering
@@ -1205,6 +1118,95 @@ This idea is counter-intuitive because an already trained model should converge 
     \caption{Illustration of changes in response surfaces and a stubborn local minimum.}
     \label{fig:localMinima}
 \end{figure}
+
+\end{frame}
+
+
+\begin{frame}[t]{Subset Regression: Pointwise Loss}
+Basic idea:~\cite{subsetregressionpaper}
+\begin{itemize}
+\item Learn the rank of the objects directly.
+\item Avoid intermediate relevance score.
+\item Similar to RMSE.
+$$
+L_{\texttt{SubsetRegression}} = \frac{1}{N} \sum\limits_{i=1}^{N} (s(a_i) - \texttt{rank}(y_i))^2
+$$
+\end{itemize}
+
+% Given a batch of size $N$ containing objects $a_i$ and their corresponding ground truth values $y_i$ such that $0 \leq i \leq N$,  the loss function is:
+
+For example,  ranking for the following ground truth values is, 
+$$
+\{y_1 = 0.8, y_2 = 0.9, y_3 = 0.1\}
+$$
+$$
+\texttt{rank}(y_1) = 2,  \texttt{rank}(y_2) = 1,  \texttt{rank}(y_3) = 3
+$$
+
+\end{frame}
+
+\begin{frame}[t]{RankNet: Pairwise Loss}
+
+\begin{itemize}
+\item Classify the 2 input objects.
+\item Answer the question: which object is better?
+\item From all possible pairs of inputs $\{s(a_1), s(a_2), y_1, y_2\}$,  calculate loss.
+$$
+L_{\texttt{RankNet}} = \texttt{C.E.Loss} = -P^*\log P - (1 - P^*)\log(1-P)
+$$
+where $P$ and $P^*$ are given by:
+$$
+P(a_1 \succ a_2) = \frac{e^{s(a_1) - s(a_2)}}{1 + e^{s(a_1) - s(a_2)} }
+$$
+$$
+P^*(a_1 \succ a_2) =
+\begin{cases}
+      1 & \text{if} \quad y_1 \geq y_2 \\
+      0 &  \text{otherwise}
+\end{cases}       
+$$
+
+Basically,  RankNet loss is the binary cross entropy loss.
+\end{itemize}
+
+% Loss calculation steps:
+% \begin{itemize}
+% \item Consider we are given $\{a_1, a_2, a_3..., a_n\}$ to rank.
+% \item Scores of all the objects are calculated $\{s(a_1), s(a_2), s(a_3)..., s(a_n)\}$.
+% \item 
+% \end{itemize}
+
+\end{frame}
+
+\begin{frame}[t]{Weighting Strategies}
+3 different weighting strategies:
+\begin{itemize}
+\item Inverse linear weighting given by $c(j) = \frac{1}{j}$.
+\item Inverse logarithmic weighting given by $c(j) = \frac{1}{\log (j+1)}$.
+\item Position dependent ranking (scaled by 50 here) given by $c(j) = \frac{k - j + 1}{\Sigma_{t=1}^k t}$ (Chen et. al).
+\end{itemize}
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.3]{images/weightingfunctions}
+    \caption{Different Weighting Functions.}
+    \label{fig:weightingfunctions}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}[t]{HPO Constraints}
+
+HPO problem has the following unique constraints:
+
+\begin{itemize}
+\item It is a non-convex optimization problem.
+\item The HP evaluation and hence HPO objective is stochastic.
+\item Variables (dimensions) may be conditionally dependent on others. E.g.,  neurons in a layer are conditioned on the existence of the layer.
+\item Variables (dimensions) maybe discrete or continuous.
+\end{itemize}
+
+% We target HPO of discrete HP search spaces.
 
 \end{frame}
 
