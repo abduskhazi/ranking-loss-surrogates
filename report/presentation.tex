@@ -759,81 +759,6 @@ deep rankers.
 
 \end{frame}
 
-\begin{frame}[t]{Surrogate usage}
-
-\begin{itemize}
-\item The proposed surrogate is a transfer HPO surrogate used in SMBO.
-\item There are 2 stages of using it:
-\begin{itemize}
-\item Meta training before SMBO optimization cycle.
-\item Finetuning during the SMBO optimization cycle.
-\end{itemize}
-\end{itemize}
-
-\textbf{Meta-training}
-\begin{itemize}
-\item Goal: Learn the common characteristics of all tasks and transfer knowledge to the new task.
-\item Separate surrogate is learned for each SS.
-\item Concept of double sampling is used, i.e., sample the task then from the task sample the metadata.
-\item Learning done using stochastic gradient descent for 5000 epochs.
-\item Used ADAM optimizer with a learning rate of 0.0001. 
-\end{itemize}
-
-\end{frame}
-
-
-\begin{frame}[t]{Surrogate usage}
-
-\textbf{Finetuning}
-\begin{itemize}
-\item Finetuning helps improve the HPO results.
-\item A full batch gradient is used with the ADAM optimizer to finetune for 1000 epochs.
-\item The finetuning is restarted at every SMBO evaluation step to get better performance.
-\item We use cosine annealing during the finetuning process.
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}[t]{Restarting is necessary during finetuning}
-
-This idea is counter-intuitive because an already trained model should converge faster to a local optimum. Reasons for this observation are:
-\begin{itemize}
-\item Model is biased towards already seen points.
-\end{itemize}
-
-\begin{figure}[h]% [H] is so declass\'e!
-\centering
-\begin{minipage}{0.45\textwidth}
-\includegraphics[width=\textwidth]{images/bias25}
-\caption{Bias at $25^{th}$ optimization cycle.}
-    \label{fig:bias25}
-\end{minipage}\hfill
-\begin{minipage}{0.45\textwidth}
-\includegraphics[width=\textwidth]{images/bias50}
-\caption{Bias at $50^{th}$ optimization cycle.}
-    \label{fig:bias50}
-\end{minipage}\par
-\end{figure}
-
-\end{frame}
-
-\begin{frame}[t]{Restarting is necessary during finetuning}
-\begin{itemize}
-\item Stubborn local minima
-\begin{itemize}
-\item Response surface does not change significantly with the addition of only a single data point.
-\item Restarting the training can increase changes of reaching good optima.
-\end{itemize} 
-\end{itemize}
-
-\begin{figure}[htb]
-  \centering
-    \includegraphics[scale=0.37]{images/localMinima}
-    \caption{Illustration of changes in response surfaces and a stubborn local minimum.}
-    \label{fig:localMinima}
-\end{figure}
-
-\end{frame}
 
 \section{Experiments and Results}
 \begin{frame}
@@ -1143,7 +1068,7 @@ Hence there is a potential for overflow or underflow during optimization.
 
 \begin{frame}[t]{UCB and EI in the ranking space}
 \begin{itemize}
-\item Experiments in our study used the average rank acquisition function.
+\item Experiments in our used the average rank acquisition function.
 \item Here, we integrate UCB (Upper Confidence Bound) and EI (Expected Improvement) in the ranking space.
 \item UCB is calculated using the mean and standard deviations returned from the ensemble of rankers.
 \item EI is calculated by passing the HP incumbent in both the query and the support set.
@@ -1204,6 +1129,83 @@ evaluations for a single training instance of the model.
 \item Seeds specify different initial configurations to start the \\
 SMBO process.
 \end{itemize}
+\end{frame}
+
+
+\begin{frame}[t]{Surrogate usage}
+
+\begin{itemize}
+\item The proposed surrogate is a transfer HPO surrogate used in SMBO.
+\item There are 2 stages of using it:
+\begin{itemize}
+\item Meta training before SMBO optimization cycle.
+\item Finetuning during the SMBO optimization cycle.
+\end{itemize}
+\end{itemize}
+
+\textbf{Meta-training}
+\begin{itemize}
+\item Goal: Learn the common characteristics of all tasks and transfer knowledge to the new task.
+\item Separate surrogate is learned for each SS.
+\item Concept of double sampling is used, i.e., sample the task then from the task sample the metadata.
+\item Learning done using stochastic gradient descent for 5000 epochs.
+\item Used ADAM optimizer with a learning rate of 0.0001. 
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[t]{Surrogate usage}
+
+\textbf{Finetuning}
+\begin{itemize}
+\item Finetuning helps improve the HPO results.
+\item A full batch gradient is used with the ADAM optimizer to finetune for 1000 epochs.
+\item The finetuning is restarted at every SMBO evaluation step to get better performance.
+\item We use cosine annealing during the finetuning process.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[t]{Restarting is necessary during finetuning}
+
+This idea is counter-intuitive because an already trained model should converge faster to a local optimum. Reasons for this observation are:
+\begin{itemize}
+\item Model is biased towards already seen points.
+\end{itemize}
+
+\begin{figure}[h]% [H] is so declass\'e!
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/bias25}
+\caption{Bias at $25^{th}$ optimization cycle.}
+    \label{fig:bias25}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=\textwidth]{images/bias50}
+\caption{Bias at $50^{th}$ optimization cycle.}
+    \label{fig:bias50}
+\end{minipage}\par
+\end{figure}
+
+\end{frame}
+
+\begin{frame}[t]{Restarting is necessary during finetuning}
+\begin{itemize}
+\item Stubborn local minima
+\begin{itemize}
+\item Response surface does not change significantly with the addition of only a single data point.
+\item Restarting the training can increase changes of reaching good optima.
+\end{itemize} 
+\end{itemize}
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.37]{images/localMinima}
+    \caption{Illustration of changes in response surfaces and a stubborn local minimum.}
+    \label{fig:localMinima}
+\end{figure}
+
 \end{frame}
 
 \end{document}
