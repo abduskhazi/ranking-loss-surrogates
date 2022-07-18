@@ -108,7 +108,7 @@ Why is HPO important?
 
 \end{frame}
 
-
+%\iffalse
 \begin{frame}[t]{HPO Definition}
 
 HPO can be seen as selecting a hyperparameter setting to obtain the best (lowest) validation error during ML training.
@@ -128,6 +128,7 @@ where
 \end{itemize}
 
 \end{frame}
+% \fi
 
 \begin{frame}[t]{HPO Constraints}
 
@@ -135,7 +136,7 @@ HPO problem has the following unique constraints:
 
 \begin{itemize}
 \item It is a non-convex optimization problem.
-\item The objective function $f$ is stochastic.
+\item The HP evaluation and hence HPO objective is stochastic.
 \item Variables (dimensions) may be conditionally dependent on others. E.g.,  neurons in a layer are conditioned on the existence of the layer.
 \item Variables (dimensions) maybe discrete or continuous.
 \end{itemize}
@@ -276,10 +277,14 @@ Consider a set:
 $$
 \mathbb{A} = \{a_1,  a_2,  a_3, ... ,  a_n\}
 $$
-If a lower rank is better, then ranking defines an ordering of the elements in $\mathbb{A}$ such that:
+
+\begin{itemize}
+\item Ranking means ordering elements of set $\mathbb{A}$.
+\item We consider that lower rank is better than higher rank,  hence
 $$
 \texttt{Rank}(a_i) < \texttt{Rank}(a_j) \iff a_i  \succ a_j
 $$
+\end{itemize}
 
 Ranking can be divided into the following components:
 \begin{itemize}
@@ -329,7 +334,7 @@ Types of ranking:
 \begin{itemize}
 \item \textbf{Pointwise} - The model directly predicts the rank and not the score.
 \item \textbf{Pairwise} - The model predicts which of the 2 inputs is better.
-\item \textbf{Listwise} - Predicts the relevance scores given a list/set of inputs.
+\item \textbf{Listwise} - Deals with a full set as 1 instance.
 \end{itemize}
 
 Types of Ranking Losses:
@@ -381,7 +386,7 @@ $$
 \begin{itemize}
 \item Classify the 2 input objects.
 \item Answer the question: which object is better?
-\item From all possible pairs of inputs $\{s(a_i), s(a_j), y_i, y_j\}$,  calculate loss.
+\item From all possible pairs of inputs $\{s(a_1), s(a_2), y_1, y_2\}$,  calculate loss.
 $$
 L_{\texttt{RankNet}} = \texttt{C.E.Loss} = -P^*\log P - (1 - P^*)\log(1-P)
 $$
@@ -1014,30 +1019,6 @@ Baseline DE-M10-RS is used, which stands for Deep Ensemble with 10 neural networ
 \end{itemize}
 \end{frame}
 
-\begin{frame}[t]{UCB and EI in the ranking space}
-\begin{itemize}
-\item Previous experiments used the average rank acquisition function.
-\item Here, we integrate UCB (Upper Confidence Bound) and EI (Expected Improvement) in the ranking space.
-\item UCB is calculated using the mean and standard deviations returned from the ensemble of rankers.
-\item EI is calculated by passing the HP incumbent in both the query and the support set.
-\item Comparison is made between Average-Rank,  UCB-Rank,  EI-Rank, and all the transfer HPO models.
-\item \textbf{Conclusion}:
-\begin{itemize}
-\item UCB and EI acquisition functions are superior even in the ranking space. \item The proposed surrogate model with EI  acquisition function performs better than FSBO in all optimization steps.
-\end{itemize}
-\end{itemize}
-\end{frame}
-
-\begin{frame}[t]{UCB and EI in the Ranking space}
-\begin{figure}[h]
-  \centering
-    \includegraphics[scale=0.20]{images/acqusitionRanking}
-    \caption{Ablation of Average-Rank, UCB-Rank, and EI-Rank with other SOTA transfer HPO methods.}
-    \label{fig:acqusitionRanking}
-\end{figure}
-
-\end{frame}
-
 \section{Conclusion}
 \begin{frame}
 \centering
@@ -1159,6 +1140,30 @@ Hence there is a potential for overflow or underflow during optimization.
 \LARGE{Surrogate Usage in HPO-B Benchmark}
 \end{frame}
 \fi
+
+\begin{frame}[t]{UCB and EI in the ranking space}
+\begin{itemize}
+\item Experiments in our study used the average rank acquisition function.
+\item Here, we integrate UCB (Upper Confidence Bound) and EI (Expected Improvement) in the ranking space.
+\item UCB is calculated using the mean and standard deviations returned from the ensemble of rankers.
+\item EI is calculated by passing the HP incumbent in both the query and the support set.
+\item Comparison is made between Average-Rank,  UCB-Rank,  EI-Rank, and all the transfer HPO models.
+\item \textbf{Conclusion}:
+\begin{itemize}
+\item UCB and EI acquisition functions are superior even in the ranking space. \item The proposed surrogate model with EI  acquisition function performs better than FSBO in all optimization steps.
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{UCB and EI in the Ranking space}
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/acqusitionRanking}
+    \caption{Ablation of Average-Rank, UCB-Rank, and EI-Rank with other SOTA transfer HPO methods.}
+    \label{fig:acqusitionRanking}
+\end{figure}
+
+\end{frame}
 
 \begin{frame}[t]{HPO-B Benchmark}
 \begin{figure}[htb]
