@@ -80,20 +80,20 @@
 \tableofcontents
 \end{frame}
 
-\section{Introduction}
+\section{Introduction - HPO}
 \begin{frame}
 
 \centering
-\LARGE{Introduction}
+\LARGE{Introduction - HPO}
 
 \end{frame}
 
 \begin{frame}[t]{Hyperparameter Optimization (HPO)}
 What is HPO?
 \begin{itemize}
-\item Machine Learning (ML) is a method of learning a parametric model to approximate an unknown function with the help of data.
-\item Learning an ML model is the process of learning the parameters of the parametric model.
-\item Hyperparameters are variables that help in the process of learning. E.g., Learning rate,  regularization type.
+\item Machine Learning (ML) is a method of learning a parametric model that best describes some given data.
+\item Learning an ML model is the process of finding the best parameters of the model.
+\item Hyperparameters are variables that help in the process of learning or defining the ML model.  E.g., Learning rate,  regularization type,  model architecture etc.
 \item Optimization of the hyperparameters is called HPO.
 \end{itemize}
 
@@ -112,7 +112,7 @@ Why is HPO important?
 \begin{frame}[t]{HPO Definition}
 
 HPO can be seen as selecting a hyperparameter setting to obtain the best (lowest) validation error during ML training.
-Mathematically,  HPO is defined as:
+Mathematically,  HPO objective is defined as:
 
 $$
 \underset{\rm \textbf{x}}{\rm argmin} \;\; f(m^{trained}_{\textbf{x}}(\textrm{Data}_{\textrm{val}})) \mapsto \mathbb{R}  \;\;  \forall \textbf{x} \in \mathbb{S}
@@ -120,11 +120,11 @@ $$
 
 where
 \begin{itemize}
-\item $\textbf{x}$ is a HP configuration.
-\item $\mathbb{S}$ is the HP search space.
 \item $f$ is the evaluation criterion. (Different for Regression,  Classification, etc.)
+\item $\textbf{x}$ is a HP configuration.
 \item $m^{trained}_{\textbf{x}}$ is a model trained with '$\textbf{x}$' HP configuration.
 \item $\textrm{Data}_{\textrm{val}}$ is the validation split of the data.
+\item $\mathbb{S}$ is the HP search space.
 \end{itemize}
 
 \end{frame}
@@ -140,7 +140,7 @@ HPO problem has the following unique constraints:
 \item Variables (dimensions) maybe discrete or continuous.
 \end{itemize}
 
-We target HPO of discrete HP search spaces.
+% We target HPO of discrete HP search spaces.
 
 \end{frame}
 
@@ -158,7 +158,7 @@ Various types of solutions to the HPO problem are proposed:
 \begin{itemize}
 \item \textbf{Blackbox HPO}: $f$ is treated as a blackbox function. E.g. Random Search, Grid search.
 \item \textbf{Online HPO}: Hyperparameters and parameters of an ML model are trained together. E.g., Interleaved updating of the HP and parameters. 
-\item \textbf{Multi-fidelity HPO}: Cheap approximations of the HPO objective functions called surrogates/fidelities are used.
+\item \textbf{Multi-fidelity HPO}: Cheap approximations of the HPO objective function $f$ called surrogates/fidelities are used.
 E.g., Successive halving~\cite{successivehalving}.
 \item \textbf{Transfer Learning HPO}: Cheap Surrogates are meta learned using existing metadata.
 The meta-knowledge is transferred to the target HPO task. 
@@ -176,12 +176,12 @@ E.g.  Few Shot Bayesian Optimization (FSBO)~\cite{fsbopaper}.
 \item Append $(x', f(x'))$ to $D$ and repeat the process.
 \end{itemize}
 
-\textbf{Our Research}:
+\textbf{Our Target}:
 
 \begin{itemize}
-\item We propose the usage of the concept of ranking when learning a surrogate using $D$.
-\item We propose a context-aware surrogate design.
-\item Our proposed method is a Transfer HPO method.
+\item Design a surrogate that uses the concept of ranking to learn the objective function.
+% \item We propose a context-aware surrogate design.
+% \item Our proposed method is a Transfer HPO method.
 \end{itemize}
 \end{frame}
 
@@ -229,12 +229,12 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 
 \begin{itemize}
 \item Training can be done in parallel.
-\item They are reinitialized at every SMBO step.
+% \item They are reinitialized at every SMBO step.
 \item Loss function used to train the neural networks ($\sigma^2$ is variance and $\mu$ is the mean):
 \end{itemize}
 
 $$
-L_{de} = \frac{\log \sigma^2 }{2} + \frac{(y - \mu)^2}{2\sigma^2} + k
+L_{de} = -\log p(y | x) = \frac{\log \sigma^2 }{2} + \frac{(y - \mu)^2}{2\sigma^2} + \text{constant}
 $$
 
 \end{frame}
@@ -250,11 +250,11 @@ k(\phi(\textbf{x}, \textbf{w})  ,   \phi(\textbf{x'}, \textbf{w}) |  \mathbf{\th
 $$
 where $\textbf{x}$ and $\textbf{x'}$ are HP configurations. $\mathbf{\theta}$ and $\textbf{w}$ are parameters of kernel $k$ and the neural network $\phi$ respectively.
 
-\item The following are done in chronological steps
-\begin{itemize}
-\item Meta-training using existing metadata.
-\item Fine-tuning for a few epochs, i.e., few-shot learning.
-\end{itemize}
+%\item The following are done in chronological steps
+%\begin{itemize}
+%\item Meta-training using existing metadata.
+%\item Fine-tuning for a few epochs, i.e., few-shot learning.
+%\end{itemize}
 \item The loss function maximizes the following log probability
 $$
 \log p( \textbf{y}^{(1)}...\textbf{y}^{(T)} | \textbf{X}^{(1)}...\textbf{X}^{(T)}, \mathbf{\theta}, \textbf{w})
@@ -264,13 +264,11 @@ $$
 
 \end{frame}
 
-\section{Proposed Method: Background}
+\section{Proposed Method: Ranking Losses}
 
 \begin{frame}
-
 \centering
-\LARGE{Proposed Method: Background}
-
+\LARGE{Proposed Method: Ranking Losses}
 \end{frame}
 
 \begin{frame}[t]{Understanding Ranking}
@@ -359,20 +357,19 @@ $
 Basic idea:~\cite{subsetregressionpaper}
 \begin{itemize}
 \item Learn the rank of the objects directly.
-\item Do not depend on intermediate score values.
+\item Avoid intermediate relevance score.
 \item Similar to RMSE.
-\end{itemize}
-
-Given a batch of size $N$ containing objects $a_i$ and their corresponding ground truth values $y_i$ such that $0 \leq i \leq N$,  the loss function is:
 $$
 L_{\texttt{SubsetRegression}} = \frac{1}{N} \sum\limits_{i=1}^{N} (s(a_i) - \texttt{rank}(y_i))^2
 $$
+\end{itemize}
 
-Consider we have 3 ground truth values and that a higher $y$ value is better, 
+% Given a batch of size $N$ containing objects $a_i$ and their corresponding ground truth values $y_i$ such that $0 \leq i \leq N$,  the loss function is:
+
+For example,  ranking for the following ground truth values is, 
 $$
 \{y_1 = 0.8, y_2 = 0.9, y_3 = 0.1\}
 $$
-
 $$
 \texttt{rank}(y_1) = 2,  \texttt{rank}(y_2) = 1,  \texttt{rank}(y_3) = 3
 $$
@@ -380,16 +377,11 @@ $$
 \end{frame}
 
 \begin{frame}[t]{RankNet: Pairwise Loss}
-Basic Idea: Classify the 2 input objects, i.e., answer which object is better?~\cite{ranknetpaper}
 
-Loss calculation steps:
 \begin{itemize}
-\item Consider we are given $\{a_1, a_2, a_3..., a_n\}$ to rank.
-\item Scores of all the objects are calculated $\{s(a_1), s(a_2), s(a_3)..., s(a_n)\}$.
-\item Form all possible pairs of inputs of the form $\{s(a_i), s(a_j), y_i, y_j\}$.
-\end{itemize}
-
-RankNet loss is the binary cross entropy loss.
+\item Classify the 2 input objects.
+\item Answer the question: which object is better?
+\item From all possible pairs of inputs $\{s(a_i), s(a_j), y_i, y_j\}$,  calculate loss.
 $$
 L_{\texttt{RankNet}} = \texttt{C.E.Loss} = -P^*\log P - (1 - P^*)\log(1-P)
 $$
@@ -404,6 +396,16 @@ P^*(a_1 \succ a_2) =
       0 &  \text{otherwise}
 \end{cases}       
 $$
+
+Basically,  RankNet loss is the binary cross entropy loss.
+\end{itemize}
+
+% Loss calculation steps:
+% \begin{itemize}
+% \item Consider we are given $\{a_1, a_2, a_3..., a_n\}$ to rank.
+% \item Scores of all the objects are calculated $\{s(a_1), s(a_2), s(a_3)..., s(a_n)\}$.
+% \item 
+% \end{itemize}
 
 \end{frame}
 
@@ -750,58 +752,6 @@ deep rankers.
  ranking space.
 \end{itemize}
 
-\end{frame}
-
-\section{Surrogate usage with HPO-B Benchmark}
-\begin{frame}
-
-\centering
-\LARGE{Surrogate Usage in HPO-B Benchmark}
-
-\end{frame}
-
-
-
-\begin{frame}[t]{HPO-B Benchmark}
-
-\begin{figure}[htb]
-\centering
-\begin{tikzpicture}[scale=0.5, transform shape,
-% roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=7mm},
-squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
-]
-%Nodes
-\node[squarednode]      (ss2)                             {Search Space 2};
-\node[squarednode]      (main)                   [left=of ss2]           {MetaData};
-\node[squarednode]      (ss1)                    [above=of ss2]          {Search Space 1};
-\node[squarednode]      (ss_)                       [below=of ss2]        {...};
-\node[squarednode]      (ds2)                       [right=of ss1]        {Data Set 2};
-\node[squarednode]      (ds1)                       [above=of ds2]        {Data Set 1};
-\node[squarednode]      (ds_)                       [below=of ds2]        {...};
-\node[squarednode]      (Xy)                       [right=of ds2]        {\{\textbf{X},  \textbf{y}\},  \textrm{Seeds}};
-
-%Lines
-\draw[->] (main.east) -- (ss2.west);
-\draw[->] (main.east) -- (ss1.west);
-\draw[->] (main.east) -- (ss_.west);
-\draw[->] (ss1.east) -- (ds2.west);
-\draw[->] (ss1.east) -- (ds1.west);
-\draw[->] (ss1.east) -- (ds_.west);
-\draw[->] (ds2.east) -- (Xy.west);
-\end{tikzpicture}
-\caption{Structure of the metadata in the HPO-B benchmark.}
-\label{fig:metadataorganization}
-\end{figure}
-
-\begin{itemize}
-\item HPO-B is used for benchmarking BlackBox HPO.
-\item It consists of multiple Search Spaces (SS). An SS signifies a single ML model.
-\item Each SS consists of different Data Sets.
-\item A Data Set (task) contains HP configurations \& their\\
-evaluations for a single training instance of the model.
-\item Seeds specify different initial configurations to start the \\
-SMBO process.
-\end{itemize}
 \end{frame}
 
 \begin{frame}[t]{Surrogate usage}
@@ -1195,11 +1145,61 @@ Hence there is a potential for overflow or underflow during optimization.
 
 \end{frame}
 
-\iffalse
+
 \section{Appendix}
-\begin{frame}[t]{Appendix}
+\begin{frame}
+\centering
+\LARGE{Appendix}
+\end{frame}
+
+\iffalse
+\section{Surrogate usage with HPO-B Benchmark}
+\begin{frame}
+\centering
+\LARGE{Surrogate Usage in HPO-B Benchmark}
 \end{frame}
 \fi
+
+\begin{frame}[t]{HPO-B Benchmark}
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}[scale=0.5, transform shape,
+% roundnode/.style={circle, draw=green!60, fill=green!5, very thick, minimum size=7mm},
+squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum size=5mm},
+]
+%Nodes
+\node[squarednode]      (ss2)                             {Search Space 2};
+\node[squarednode]      (main)                   [left=of ss2]           {MetaData};
+\node[squarednode]      (ss1)                    [above=of ss2]          {Search Space 1};
+\node[squarednode]      (ss_)                       [below=of ss2]        {...};
+\node[squarednode]      (ds2)                       [right=of ss1]        {Data Set 2};
+\node[squarednode]      (ds1)                       [above=of ds2]        {Data Set 1};
+\node[squarednode]      (ds_)                       [below=of ds2]        {...};
+\node[squarednode]      (Xy)                       [right=of ds2]        {\{\textbf{X},  \textbf{y}\},  \textrm{Seeds}};
+
+%Lines
+\draw[->] (main.east) -- (ss2.west);
+\draw[->] (main.east) -- (ss1.west);
+\draw[->] (main.east) -- (ss_.west);
+\draw[->] (ss1.east) -- (ds2.west);
+\draw[->] (ss1.east) -- (ds1.west);
+\draw[->] (ss1.east) -- (ds_.west);
+\draw[->] (ds2.east) -- (Xy.west);
+\end{tikzpicture}
+\caption{Structure of the metadata in the HPO-B benchmark.}
+\label{fig:metadataorganization}
+\end{figure}
+
+\begin{itemize}
+\item HPO-B is used for benchmarking BlackBox HPO.
+\item It consists of multiple Search Spaces (SS). An SS signifies a single ML model.
+\item Each SS consists of different Data Sets.
+\item A Data Set (task) contains HP configurations \& their\\
+evaluations for a single training instance of the model.
+\item Seeds specify different initial configurations to start the \\
+SMBO process.
+\end{itemize}
+\end{frame}
 
 \end{document}
 
