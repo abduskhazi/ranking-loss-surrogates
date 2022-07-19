@@ -110,7 +110,7 @@ $$
 where
 \begin{itemize}
 \item $f$ is the evaluation criterion. (Different for Regression,  Classification, etc.)
-\item $\textbf{x}$ is a HP configuration.
+\item $\textbf{x}$ is an HP configuration.
 \item $m^{trained}_{\textbf{x}}$ is a model trained with '$\textbf{x}$' HP configuration.
 \item $\textrm{Data}_{\textrm{val}}$ is the validation split of the data.
 \item $\mathbb{S}$ is the HP search space.
@@ -134,7 +134,7 @@ where
 \item \textbf{SMBO} (Sequential Model-Based Optimization) algorithm for HPO has given good results.
 \item Transfer learning has shown good results in the HPO domain due to the availability of metadata to train.
 \item \textbf{Thesis target: Propose a transfer HPO surrogate for the SMBO process using the concept of ranking.}
-\item The results are compared against SOTA HPO models like RGPE,  TAF,  TST, and FSBO.
+\item The results are compared against SOTA HPO models like RGPE,  TAF,  TST, and FSBO for transfer case and GP,  BOHAMIANN, and DNGO for the non-transfer case.
 \end{itemize}
 
 
@@ -274,7 +274,7 @@ Consider that data is given in the following format:
 \label {tab:dataformat}
 \end{table}
 
-How do learn the scoring function $s$?
+How to learn the scoring function $s$?
 \begin{itemize}
 \item Use a parametrized model $s_{\theta}$.
 \item Use a (ranking) loss function to get the optimum $\theta^*$.
@@ -288,7 +288,7 @@ Types of ranking:
 \begin{itemize}
 \item \textbf{Pointwise} - The model directly predicts the rank and not the score.  E.g.,  Subset Regression.
 \item \textbf{Pairwise} - The model predicts which of the 2 inputs is better.  E.g.,  Ranknet.
-\item \textbf{Listwise} - Deals with a full input set as 1 instance.  E.g.,  ListMLE.
+\item \textbf{Listwise} - Deals with a full input set as 1 learning instance.  E.g.,  ListMLE.
 \end{itemize}
 
 Types of Ranking Losses:
@@ -325,7 +325,7 @@ The basic idea is:
 
 \textbf{Finding Distance}:
 
-Probability of selecting an item
+Probability of selecting an item can be written as:
 $$
 P = \frac{\phi(s(a))}{\Sigma_i \phi(s(a_i))} 
 $$
@@ -372,7 +372,7 @@ $$
 \item Hence,  using a weighting strategy during the calculation of distance metric makes sense.
 \end{itemize}
 
-If $c(j)$ gives the weight of the position $j$, then the loss becomes~\cite{TRLWO} -
+If $c(j)$ gives the weight of the position $j$, then the loss becomes:
 $$
 L_{mle} = -  \sum\limits_{j=1}^{k} c(j) \log \frac{\phi(s(\pi^*_j))}{ \sum\limits_{t=j}^k \phi(s(\pi^*_k))}
 $$
@@ -423,8 +423,8 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 
 Given a set of inputs $\textbf{X}$,  the ranker outputs the following values
 \begin{itemize}
-\item Output (or) relevance scores of input elements. The values are in the \textbf{Output Space}.
-\item Ranks of the input elements. The values are in the \textbf{Ranking Space}.
+\item Output (or) relevance scores of input elements. These values are in the \textbf{Output Space}.
+\item Ranks of the input elements. These values are in the \textbf{Ranking Space}.
 \end{itemize}
 
 Note:
@@ -629,9 +629,9 @@ squarednode/.style={rectangle, draw=black!60, fill=black!5, very thick, minimum 
 \end{figure}
 
 \begin{itemize}
-\item Support set, i.e., know HP configurations and their evaluations are passed through Deep Set to get a latent output.
+\item Support set, i.e., known HP configurations and their evaluations are passed through Deep Set to get a latent output.
 \item The query HP configurations are concatenated with the latent output.
-\item The concatenation is passed through the ensemble of \\
+\item This concatenation is passed through the ensemble of \\
 deep rankers.
 \item During training/finetuning, losses are aggregated in the\\
  ranking space.
@@ -667,8 +667,8 @@ We compare the following loss function types:
 \item Pairwise ranking loss (Ref.  RankNet)
 \item Listwise ranking loss (Ref.  ListMLE)
 \end{itemize}
-Baseline DE-M10-RS is used, which stands for Deep Ensemble with 10 neural networks with restart mechanism.
-2 cases have to be compared separately.
+Deep Ensemble baseline with a legend,  "DE-M10-RS",  is used as a reference.
+2 cases have to be compared separately:
 \begin{itemize}
 \item Non-transfer HPO
 \item Transfer HPO
@@ -677,7 +677,7 @@ Baseline DE-M10-RS is used, which stands for Deep Ensemble with 10 neural networ
 
 \end{frame}
 
-\begin{frame}[t]{Q1: Which loss function is better? - Non transfer HPO}
+\begin{frame}[t]{Q1: Which loss function is better? - Non-transfer HPO}
 
 \begin{figure}[h]
   \centering
@@ -695,7 +695,7 @@ Baseline DE-M10-RS is used, which stands for Deep Ensemble with 10 neural networ
 \end{minipage}\par
 \vskip\floatsep% normal separation between figures
 \includegraphics[width=0.45\textwidth]{images/Q1AblationNonTransferRank@100}
-    \caption{Rank Graph \& Critical rank graph for non-transfer HPO.}
+    \caption{Loss comparisons for non-transfer HPO.}
    \label{fig:Q1AblationNonTransferRank100}
 \end{figure}
 
@@ -707,7 +707,7 @@ Baseline DE-M10-RS is used, which stands for Deep Ensemble with 10 neural networ
 \begin{figure}[h]
   \centering
     \includegraphics[scale=0.12]{images/Q1AblationTransfer} 
-     \caption{Loss comparison. "T" stands for transfer.}
+     \caption{Loss comparison for transfer HPO. "T" stands for transfer.}
     \label{fig:Q1AblationTransfer}
 \end{figure}
 
@@ -825,9 +825,22 @@ is the high complexity of the model}.
 \begin{frame}[t]{Comparing with SOTA HPO models}
 \textbf{Conclusion}
 \begin{itemize}
-\item Non transfer surrogate shows performance similar to the GP surrogate.
+\item Non-transfer surrogate shows performance similar to the GP surrogate.
 \item Transfer surrogate performance is on par with the state-of-the-art FSBO model.
-\item Both transfer and non transfer version of the model perform very well in the initial evaluation steps.
+\item Both transfer and non-transfer version of the model perform very well in the initial evaluation steps.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{UCB and EI in the ranking space}
+\begin{itemize}
+\item All previous experiments in our thesis used the average rank acquisition function.
+% \item Here, we integrate UCB (Upper Confidence Bound) and EI (Expected Improvement) in the ranking space.
+\item UCB (Upper Confidence Bound) is calculated using the mean and standard deviations returned from the ensemble of rankers.
+\item EI (Expected Improvement) is calculated by passing the incumbent HP in both the query and the support set.
+\item \textbf{Conclusion}:
+\begin{itemize}
+\item UCB and EI acquisition functions are superior even in the ranking space. \item The proposed surrogate model with EI  acquisition function performs better than FSBO in all optimization steps.
+\end{itemize}
 \end{itemize}
 \end{frame}
 
@@ -841,24 +854,23 @@ is the high complexity of the model}.
 
 \end{frame}
 
-
 \section{Conclusion}
 \begin{frame}
 \centering
 \LARGE{Conclusion}
 \end{frame}
 
-\begin{frame}[t]{Advantages and Limitations of the model.}
+\begin{frame}[t]{Advantages and Limitations of the model}
 \textbf{Advantages}:
 \begin{itemize}
-\item Being a transfer HPO surrogate,  it utilises already existing meta data.
-\item Sampling mechanism of listwise loss is superior.   For example,  from a set of 100 known HP configurations, there are ${100 \choose 15}$ ways to select a list of 15 items.
+\item Being a transfer HPO surrogate,  it utilises already existing metadata.
+\item Sampling mechanism of listwise loss is superior.   For example,  from a set of 100 known HP configurations, there are ${100 \choose 15}$ ways to select a set of 15 items.
 \item Working in ranking space dampens uncertainty. Slight noise in the HP evaluations does not change the ranks of the configurations.
 \item Output ranges of HP evaluations across tasks do not affect the HP rankings.
 \end{itemize}
 \end{frame}
 
-\begin{frame}[t]{Advantages and Limitations of the model.}
+\begin{frame}[t]{Advantages and Limitations of the model}
 \textbf{Limitations}:
 \begin{itemize}
 \item We ignore the sorting functionality during the ranking loss formulation. Hence the complete ranking problem is not optimized.
@@ -880,8 +892,9 @@ Hence there is a potential for overflow or underflow during optimization.
 \begin{frame}[t]{Further Research Directions}
 \begin{itemize}
 \item More research needs to be done for acquisition functions in the ranking space.
-\item Study needs to be conducted to incorporate sorting functionality into the ranking loss. E.g., Using the model proposed by Swezey et al. ~\cite{PiRank}.
-\item One could explore how to incorporate the learning mean and variance of the rank directly from the loss function instead of explicit calculation.
+\item Study needs to be conducted to incorporate sorting functionality into the ranking losses.
+% E.g., Using the PiRank model proposed by Swezey et al. ~\cite{PiRank}.
+\item One could explore how to incorporate learning the mean and the variance of the rank directly in the ranking loss functions instead of explicit calculation.
 \item The proposed ranking surrogate only works in the discrete HP search space. We need to study how to incorporate this in the continuous HP Search Space.
 \end{itemize}
 \end{frame}
@@ -962,14 +975,14 @@ Hence there is a potential for overflow or underflow during optimization.
 \centering
 \LARGE{Surrogate Usage in HPO-B Benchmark}
 \end{frame}
-\fi
+
 
 \begin{frame}[t]{UCB and EI in the ranking space}
 \begin{itemize}
-\item Experiments in our used the average rank acquisition function.
+\item Experiments in our thesis used the average rank acquisition function.
 \item Here, we integrate UCB (Upper Confidence Bound) and EI (Expected Improvement) in the ranking space.
 \item UCB is calculated using the mean and standard deviations returned from the ensemble of rankers.
-\item EI is calculated by passing the HP incumbent in both the query and the support set.
+\item EI is calculated by passing the incumbent HP in both the query and the support set.
 \item Comparison is made between Average-Rank,  UCB-Rank,  EI-Rank, and all the transfer HPO models.
 \item \textbf{Conclusion}:
 \begin{itemize}
@@ -987,6 +1000,8 @@ Hence there is a potential for overflow or underflow during optimization.
 \end{figure}
 
 \end{frame}
+
+\fi
 
 \begin{frame}[t]{HPO-B Benchmark}
 \begin{figure}[htb]
@@ -1093,7 +1108,7 @@ This idea is counter-intuitive because an already trained model should converge 
 \item Stubborn local minima
 \begin{itemize}
 \item Response surface does not change significantly with the addition of only a single data point.
-\item Restarting the training can increase changes of reaching good optima.
+\item Restarting the training can increase chances of reaching good optima.
 \end{itemize} 
 \end{itemize}
 
@@ -1108,7 +1123,7 @@ This idea is counter-intuitive because an already trained model should converge 
 
 
 \begin{frame}[t]{Subset Regression: Pointwise Loss}
-Basic idea:~\cite{subsetregressionpaper}
+Basic idea:
 \begin{itemize}
 \item Learn the rank of the objects directly.
 \item Avoid intermediate relevance score.
@@ -1164,7 +1179,7 @@ Basically,  RankNet loss is the binary cross entropy loss.
 \end{frame}
 
 \begin{frame}[t]{Weighting Strategies}
-3 different weighting strategies:
+3 different weighting strategies were considered:
 \begin{itemize}
 \item Inverse linear weighting given by $c(j) = \frac{1}{j}$.
 \item Inverse logarithmic weighting given by $c(j) = \frac{1}{\log (j+1)}$.
