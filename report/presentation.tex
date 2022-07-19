@@ -81,39 +81,27 @@
 \tableofcontents
 \end{frame}
 
-\section{Introduction - HPO}
+\section{Motivation}
 \begin{frame}
-
 \centering
-\LARGE{Introduction - HPO}
-
+\LARGE{Motivation}
 \end{frame}
 
-\begin{frame}[t]{Hyperparameter Optimization (HPO)}
-What is HPO?
+\begin{frame}[t]{Motivation}
 \begin{itemize}
-\item Machine Learning (ML) is a method of learning a parametric model that best describes some given data.
-\item Learning an ML model is the process of finding the best parameters of the model.
-\item Hyperparameters are variables that help in the process of learning or defining the ML model.  E.g., Learning rate,  regularization type,  model architecture etc.
-\item Optimization of the hyperparameters is called HPO.
-\end{itemize}
-
-Why is HPO important?
-\begin{itemize}
-\item ML models are sensitive to their Hyperparameters (HP).
-\item Selecting a good HP configuration is essential to\\
- squeeze out most of the performance from the \\
- ML model.
-
+\item Machine Learning models are very sensitive to their hyperparameters (HP).
+\item Tuning hyperparameters is essential to get the most performance out of a given ML model.
+\item \textbf{Aim of the thesis: Improve Hyperparameter Optimization (HPO) process.}
+\item Let us define HPO first!
 \end{itemize}
 
 \end{frame}
 
 %\iffalse
-\begin{frame}[t]{HPO Definition}
+\begin{frame}[t]{Problem Definition}
 
 HPO can be seen as selecting a hyperparameter setting to obtain the best (lowest) validation error during ML training.
-Mathematically,  HPO objective is defined as:
+Mathematically,  the HPO objective function is defined as:
 
 $$
 \underset{\rm \textbf{x}}{\rm argmin} \;\; f(m^{trained}_{\textbf{x}}(\textrm{Data}_{\textrm{val}})) \mapsto \mathbb{R}  \;\;  \forall \textbf{x} \in \mathbb{S}
@@ -131,47 +119,27 @@ where
 \end{frame}
 % \fi
 
+\iffalse
 \section{Related Work}
-
 \begin{frame}
-
 \centering
 \LARGE{Related Work}
-
 \end{frame}
+\fi
 
-\begin{frame}[t]{HPO Solutions}
-Various types of solutions to the HPO problem are proposed:
-\begin{itemize}
-\item \textbf{Blackbox HPO}: $f$ is treated as a blackbox function. E.g. Random Search, Grid search.
-\item \textbf{Online HPO}: Hyperparameters and parameters of an ML model are trained together. E.g., Interleaved updating of the HP and parameters. 
-\item \textbf{Multi-fidelity HPO}: Cheap approximations of the HPO objective function $f$ called surrogates/fidelities are used.
-E.g., Successive halving~\cite{successivehalving}.
-\item \textbf{Transfer Learning HPO}: Cheap Surrogates are meta learned using existing metadata.
-The meta-knowledge is transferred to the target HPO task. 
-E.g.  Few Shot Bayesian Optimization (FSBO)~\cite{fsbopaper}.
-\end{itemize}
-\end{frame}
-
-\begin{frame}[t]{HPO Solutions - SMBO}
-
-\textbf{SMBO} - Sequential Model based Optimization. The following steps are performed in a chronologically:
+\begin{frame}[t]{Related Works}
 
 \begin{itemize}
-\item From known data $D = {(x_1, f(x_1)), (x_2, f(x_2)), (x_3, f(x_3)) .... }$, build a probabilistic surrogate model of the objective function.
-\item Use the surrogate and an acquisition function to sample the next best HP configuration $x'$. Evaluate $f(x')$.
-\item Append $(x', f(x'))$ to $D$ and repeat the process.
+\item Various classes of HPO solutions have been proposed - Blackbox HPO,  Online HPO,  and Multi-fidelity HPO.
+\item \textbf{SMBO} (Sequential Model-Based Optimization) algorithm for HPO has given good results.
+\item Transfer learning has shown good results in the HPO domain due to the availability of metadata to train.
+\item \textbf{Thesis target: Propose a transfer HPO surrogate for the SMBO process using the concept of ranking.}
+\item The results are compared against SOTA HPO models like RGPE,  TAF,  TST, and FSBO.
 \end{itemize}
 
-\textbf{Our Target}:
 
-\begin{itemize}
-\item Design a surrogate that uses the concept of ranking to learn the objective function.
-% \item We propose a context-aware surrogate design.
-% \item Our proposed method is a Transfer HPO method.
-\end{itemize}
+
 \end{frame}
-
 
 \section{Baselines}
 \begin{frame}
@@ -251,11 +219,11 @@ $$
 
 \end{frame}
 
-\section{Proposed Method: Ranking Losses}
+\section{Background: Ranking Losses}
 
 \begin{frame}
 \centering
-\LARGE{Proposed Method: Ranking Losses}
+\LARGE{Background: Ranking Losses}
 \end{frame}
 
 \begin{frame}[t]{Understanding Ranking}
@@ -265,7 +233,7 @@ $$
 $$
 
 \begin{itemize}
-\item Ranking means ordering elements of set $\mathbb{A}$.
+\item Ranking means ordering elements of the set $\mathbb{A}$.
 \item We consider that lower rank is better than higher rank,  hence
 $$
 \texttt{Rank}(a_i) < \texttt{Rank}(a_j) \iff a_i  \succ a_j
@@ -294,7 +262,7 @@ Consider that data is given in the following format:
 \centering
 \begin{tabular}{ | c | c | c | }
   \toprule
-  Instance & Object Set & Ground Truth \\ \midrule
+  Instance & Object Set & Ground Truth (Scores) \\ \midrule
 % \hline \hline
   1 & $\{a_1, a_2, a_3, ... , a_{10}\}$  & $\{y_1, y_2, y_3, ... , y_{10}\}$  \\
   2 & $\{a'_1, a'_2, a'_3, ... , a'_{15}\}$ & $\{y'_1, y'_2, y'_3, ... , y'_{15}\}$  \\
@@ -318,9 +286,9 @@ How do learn the scoring function $s$?
 \begin{frame}[t]{Understanding Ranking Losses}
 Types of ranking:
 \begin{itemize}
-\item \textbf{Pointwise} - The model directly predicts the rank and not the score.
-\item \textbf{Pairwise} - The model predicts which of the 2 inputs is better.
-\item \textbf{Listwise} - Deals with a full set as 1 instance.
+\item \textbf{Pointwise} - The model directly predicts the rank and not the score.  E.g.,  Subset Regression.
+\item \textbf{Pairwise} - The model predicts which of the 2 inputs is better.  E.g.,  Ranknet.
+\item \textbf{Listwise} - Deals with a full input set as 1 instance.  E.g.,  ListMLE.
 \end{itemize}
 
 Types of Ranking Losses:
@@ -416,13 +384,11 @@ $$
 \end{frame}
 
 
-\section{Proposed Method: Surrogate Design}
+\section{Proposed Method}
 
 \begin{frame}
-
 \centering
-\LARGE{Proposed Method: Surrogate Design}
-
+\LARGE{Proposed Method}
 \end{frame}
 
 \begin{frame}[t]{Basic Ranker}
@@ -673,6 +639,16 @@ deep rankers.
 
 \end{frame}
 
+\begin{frame}[t]{Meta-training the surrogate}
+
+\begin{figure}[htb]
+  \centering
+    \includegraphics[scale=0.30]{images/FinalAlgorithm}
+    % \caption{Negative transfer learning example.}
+    \label{fig:FinalAlgorithm}
+\end{figure}
+
+\end{frame}
 
 \section{Experiments and Results}
 \begin{frame}
@@ -748,8 +724,8 @@ Baseline DE-M10-RS is used, which stands for Deep Ensemble with 10 neural networ
 \end{figure}
 
 \begin{itemize}
-\item Inverse logorithmic weighting used for both the transfer and non-transfer case.
-\item \textbf{Conclusion:} Weighting improves the results for both transfer and non-transfer HPO.
+\item Inverse logarithmic weighting was used for both the transfer and non-transfer cases.
+\item \textbf{Conclusion: Weighting improves the results for both transfer and non-transfer HPO}.
 \end{itemize}
 
 \end{frame}
@@ -767,8 +743,9 @@ Baseline DE-M10-RS is used, which stands for Deep Ensemble with 10 neural networ
 \item 20\% of data is used as support set for both training and finetuning.
 \item \textbf{Conclusion}:
 \begin{itemize}
-\item Non-transfer HPO results become worse.  Reason is high complexity of the model.
-\item Transfer HPO results become very good in the initial steps.
+\item \textbf{Non-transfer HPO results become worse.  Reason \\
+is the high complexity of the model}.
+\item \textbf{Transfer HPO results become very good in the initial steps}.
 \end{itemize}
 \end{itemize}
 
@@ -787,11 +764,7 @@ Baseline DE-M10-RS is used, which stands for Deep Ensemble with 10 neural networ
 \item Here,  "Raw" means a meta-trained model without finetuning.
 \item Not doing finetuning amounts to ranking the complete list of HP configuration and evaluating it.
 \item Using finetuning means learning the new context.
-\item \textbf{Conclusion}:
-\begin{itemize}
-\item No finetuning performs well only in the first steps.
-\item Finetuning is required for better long-term results.
-\end{itemize}
+\item \textbf{Conclusion: Finetuning is required for better long-term results.}
 \end{itemize}
 
 \end{frame}
@@ -857,6 +830,17 @@ Baseline DE-M10-RS is used, which stands for Deep Ensemble with 10 neural networ
 \item Both transfer and non transfer version of the model perform very well in the initial evaluation steps.
 \end{itemize}
 \end{frame}
+
+\begin{frame}[t]{UCB and EI in the Ranking space}
+\begin{figure}[h]
+  \centering
+    \includegraphics[scale=0.20]{images/acqusitionRanking}
+    \caption{Ablation of Average-Rank, UCB-Rank, and EI-Rank with other SOTA transfer HPO methods.}
+    \label{fig:acqusitionRanking}
+\end{figure}
+
+\end{frame}
+
 
 \section{Conclusion}
 \begin{frame}
@@ -1208,6 +1192,39 @@ HPO problem has the following unique constraints:
 \end{itemize}
 
 % We target HPO of discrete HP search spaces.
+
+\end{frame}
+
+
+\begin{frame}[t]{HPO Solutions}
+Various types of solutions to the HPO problem are proposed:
+\begin{itemize}
+\item \textbf{Blackbox HPO}: $f$ is treated as a blackbox function. E.g. Random Search, Grid search.
+\item \textbf{Online HPO}: Hyperparameters and parameters of an ML model are trained together. E.g., Interleaved updating of the HP and parameters. 
+\item \textbf{Multi-fidelity HPO}: Cheap approximations of the HPO objective function $f$ called surrogates/fidelities are used.
+E.g., Successive halving~\cite{successivehalving}.
+\item \textbf{Transfer Learning HPO}: Cheap Surrogates are meta learned using existing metadata.
+The meta-knowledge is transferred to the target HPO task. 
+E.g.  Few Shot Bayesian Optimization (FSBO)~\cite{fsbopaper}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]{SMBO}
+\textbf{SMBO} - Sequential Model based Optimization. The following steps are performed in a chronologically:
+
+\begin{itemize}
+\item From known data $D = {(x_1, f(x_1)), (x_2, f(x_2)), (x_3, f(x_3)) .... }$, build a probabilistic surrogate model of the objective function.
+\item Use the surrogate and an acquisition function to sample the next best HP configuration $x'$. Evaluate $f(x')$.
+\item Append $(x', f(x'))$ to $D$ and repeat the process.
+\end{itemize}
+
+\textbf{Our Target}:
+
+\begin{itemize}
+\item Design a surrogate that uses the concept of ranking to learn the objective function.
+\item We propose a context-aware surrogate design.
+\item Our proposed method is a Transfer HPO method.
+\end{itemize}
 
 \end{frame}
 
