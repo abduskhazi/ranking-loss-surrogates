@@ -135,8 +135,8 @@ Computer vision, marketing, customer service, and cybersecurity are some of the 
 Even though most machine learning models can work out of the box, their performance does not come for free. Their performance is sensitive to the hyperparameters used during the model training. Some examples of hyperparameters are the learning rate, the type of optimizer, the architecture of the neural networks, and the regularization parameter.
 One needs to tune the model's hyperparameters to get the most performance. Tuning the hyperparameters to get the best performing machine learning model is called Hyperparameter Optimization (HPO in short).
 
-A brute force method for an HPO would be to try out all possible configurations. This method is intractable because the space of hyperparameter configurations may be continuous. Even if the space is discrete, the number of combinations may be prohibitively large. Moreover, evaluating even one hyperparameter configuration may take many days. This task of evaluating an HP configuration is called the HPO objective function. Considering the cost of the HPO objective function, more sophisticated methods have been developed over the past decades. Sequential Model-Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab} is one method that has been used successfully for HPO. This method uses cheap approximations of the actual HPO's objective function to predict good HP configurations. These cheap approximations are called surrogates which need to be learned using the available hyperparameters configurations and their evaluations. This thesis proposes using the concept of ranking to learn the surrogates in SMBO. It proves that using this ranking surrogate in SMBO is a viable alternative to other methods.
-Hence, the proposed idea in this thesis is called \textbf{Hyperparamter Optimization using Ranking Loss Surrogates}.
+A brute force method for an HPO would be to try out all possible configurations. This method is intractable because the space of hyperparameter configurations may be continuous. Even if the space is discrete, the number of combinations may be prohibitively large. Moreover, evaluating even one hyperparameter configuration may take many days. This task of evaluating an HP configuration is called the HPO objective function. Considering the cost of the HPO objective function, more sophisticated methods have been developed over the past decades. Sequential Model-Based Optimization (SMBO)~\cite{NIPS2011_86e8f7ab} is one method that has been used successfully for HPO. This method uses cheap approximations of the actual HPO's objective function to predict good HP configurations. These cheap approximations are called surrogates which need to be learned using the available hyperparameter configurations and their evaluations. This thesis proposes using the concept of ranking to learn the surrogates in SMBO. It proves that using this ranking surrogate in SMBO is a viable alternative to other methods.
+Hence, the proposed idea in this thesis is called \textbf{Hyperparameter Optimization using Ranking Loss Surrogates}.
 
 
 \section{Objective}
@@ -2336,7 +2336,7 @@ Finally, we also do restarts for the FSBO domain with the restart mechanism disc
 Figure~\ref{fig:FSBOPerformance} shows the rank graph of FSBO compared to the best performing models of random search, GP and DE surrogates.
 There is a slight difference in ranking graphs of previous surrogates because a few HPO optimizations were unsuccessful for the FSBO due to non-positive definite Matrix exceptions obtained during meta-training and finetuning (The GPytorch implementation threw this).
 As we can see,  our implementation could not give us state-of-the-art results for FSBO.
-Since these results are a correct yardstick to measure the ranking loss surrogate model, we used the results obtained by the FSBO implementation provided by Pineda et al. ~\cite{pineda2021hpob} in the rest of the thesis.
+Since these results are not a correct yardstick to measure the ranking loss surrogate model, we used the results obtained by the FSBO implementation provided by Pineda et al. ~\cite{pineda2021hpob} in the rest of the thesis.
 
 
 Figure~\ref{fig:FSBOBestPerformance} compares the best performing FSBO surrogate against the performance of other baseline surrogates.
@@ -2805,7 +2805,7 @@ We can also increase the surrogate model's complexity without worrying much abou
 
 Another significant advantage of the proposed method is that training using ranking losses inherently dampens any uncertainty of the HPO objective function's output.
 This is because ranking losses work in the ranking space. The range of the actual scores in the metadata is irrelevant to the training procedure.
-As the order of the known evaluations is the only relevant thing, minor variations in the objective function's output do not affect the loss's training. This also allows us to manipulate the range of our surrogate's scores based on our requirements.
+As the order of the known evaluations is the only relevant thing, minor variations in the objective function's output do not affect the training. This also allows us to manipulate the range of our surrogate's scores based on our requirements.
 
 
 \section{Limitations}
