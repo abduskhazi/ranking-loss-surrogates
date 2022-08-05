@@ -1,0 +1,13 @@
+#!/bin/bash
+#MSUB -l nodes=1:ppn=1
+#MSUB -l walltime=01:00:00
+#MSUB -N ListTransferWeightedDeepSetEvalDE_NoFt
+#MSUB -e $HOME/thesis/ranking-loss-surrogates/Q4_Research/ListWise_transfer_Weighted_DeepSet_no_ft/1/logs/eval_${MOAB_JOBID}.e
+#MSUB -o $HOME/thesis/ranking-loss-surrogates/Q4_Research/ListWise_transfer_Weighted_DeepSet_no_ft/1/logs/eval_${MOAB_JOBID}.o
+#MSUB -v DESCRIPTION="Transfer DE ListWise Weighted DeepSet No Fine Tuning(Evaluate)"
+
+source $HOME/miniconda3/etc/profile.d/conda.sh 
+conda activate thesis
+echo $DESCRIPTION
+cd $HOME/thesis/ranking-loss-surrogates/Q4_Research/ListWise_transfer_Weighted_DeepSet_no_ft/
+python listwise_transfer_weighted_deepset_no_ft.py $MOAB_JOBARRAYINDEX 1 evaluate
