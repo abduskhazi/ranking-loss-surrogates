@@ -248,7 +248,7 @@ def non_transfer_ListWise(i, run):
     print("Evaluating", i, "of ", len(keys))
     keys = keys[i:i + 1]  # Only executing the required keys.
     performance = evaluate_DE_list(hpob_hdlr, keys_to_evaluate=keys)
-    store_object(performance, "./" + str(run) + "/results/DE_LIST_32x32x10_E1000_l0_02_OPT" + str(i))
+    store_object(performance, "./" + str(run) + "/results/LIST_OPT" + str(i))
 
 if __name__ == '__main__':
     i = int(sys.argv[1])

@@ -586,7 +586,7 @@ def transfer_eval(i, run):
     print("Evaluating", i, "of ", len(keys))
     keys = keys[i:i + 1]  # Only executing the required keys.
     performance = evaluate_transfer_rl(hpob_hdlr, keys_to_evaluate=keys)
-    store_object(performance, "./" + str(run) + "/results/DE_LIST_32x32x10_E1000_l0_02_OPT" + str(i))
+    store_object(performance, "./" + str(run) + "/results/LIST_OPT" + str(i))
 
 def meta_train_on_HPOB(i):
     hpob_hdlr = HPOBHandler(root_dir="../../HPO_B/hpob-data/", mode="v3")
