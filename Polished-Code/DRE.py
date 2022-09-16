@@ -13,12 +13,6 @@ from HPO_B.hpob_handler import HPOBHandler
 from utility import store_object, get_input_dim, convert_meta_data_to_np_dictionary
 from utility import get_all_combinations, evaluate_combinations
 
-# =======================================================================================
-# Quick Configuration
-non_transfer = False
-transfer = True
-# =======================================================================================
-
 # The following function has been extended using the implementation of:
 # https://github.com/allegro/allRank/blob/master/allrank/models/losses/listMLE.py
 DEFAULT_EPS = 1e-10
@@ -524,7 +518,7 @@ class RankingLossSurrogate(nn.Module):
 
         return idx
 
-def evaluate_transfer_rl(hpob_hdlr, keys_to_evaluate):
+def evaluate_key(hpob_hdlr, keys_to_evaluate):
     performance = []
     for key in keys_to_evaluate:
         search_space, dataset, _, _ = key
@@ -535,12 +529,12 @@ def evaluate_transfer_rl(hpob_hdlr, keys_to_evaluate):
 
     return performance
 
-def transfer_eval(i):
+def evaluate_search_space_id(i):
     hpob_hdlr = HPOBHandler(root_dir="./HPO_B/hpob-data/", mode="v3-test")
     keys = get_all_combinations(hpob_hdlr, 100)
     print("Evaluating", i, "of ", len(keys))
     keys = keys[i:i + 1]  # Only executing the required keys.
-    performance = evaluate_transfer_rl(hpob_hdlr, keys_to_evaluate=keys)
+    performance = evaluate_key(hpob_hdlr, keys_to_evaluate=keys)
     store_object(performance, "./results/LIST_OPT" + str(i))
 
 def meta_train_on_HPOB(i):
@@ -579,23 +573,30 @@ def meta_train_on_HPOB(i):
 
 
 if __name__ == '__main__':
+    # Setting the command line options first
     parser = argparse.ArgumentParser()
-    parser.parse_args()
+    parser.add_argument("--train", action="store_true",
+                        help="Specify this to train the DRE.")
+    parser.add_argument("--evaluate", action="store_true",
+                        help="Specify this to evaluate the DRE.")
+    parser.add_argument("--non_transfer", action="store_true",
+                        help="Run a non-transfer version of DRE.")
+    parser.add_argument("--eval_index", type=int, default=0,
+                        help="Specify the index of key to evaluate [0-429].")
+    parser.add_argument("--train_index", type=int, default=0,
+                        help="Specify the training index / search space index [0-15]."
+                             " Only for transfer mode.")
+    args = parser.parse_args()
 
-    i = int(sys.argv[1])
-    run = int(sys.argv[2])
+    if args.non_transfer:
+        prefix = "DRE Non Transfer:"
+    else:
+        prefix = "DRE Transfer:"
 
-    if non_transfer:
-        print("Non Transfer: Evaluating DE with List-Wise loss");
-        non_transfer_ListWise(i, run)
+    if args.train and not args.non_transfer:
+        print(prefix, "Meta-training", args.train_index)
+        meta_train_on_HPOB(args.train_index)
 
-    if transfer:
-        print("HPO Transfer: Evaluating DE with List-Wise loss");
-        if sys.argv[3] == "train":
-            print("Meta training", i)
-            meta_train_on_HPOB(i)
-        elif sys.argv[3] == "evaluate":
-            print("Evaluating", i)
-            transfer_eval(i, run)
-        else:
-            print("Unknown option specified")
+    if args.evaluate:
+        print(prefix, "Evaluating", args.eval_index)
+        evaluate_search_space_id(args.eval_index)
