@@ -316,7 +316,7 @@ class RankingLossSurrogate(nn.Module):
         self.save_folder = dict["save_folder"]
 
         # Creating and initializing the scorer and embedder
-        self.sc, self.ds_embedder = self.create_embedder_scorers_uncertainty(self.input_dim)
+        self.sc, self.ds_embedder = self.create_embedder_scorers_uncertainty(self.input_dim, self.M)
         self.sc.load_state_dict(state_dict["scorer"])
         self.ds_embedder.load_state_dict(state_dict["ds_embedder"])
 
@@ -549,7 +549,7 @@ def evaluate_search_space_id(i):
     print("Evaluating", i, "of ", len(keys))
     keys = keys[i:i + 1]  # Only executing the required keys.
     performance = evaluate_keys(hpob_hdlr, keys_to_evaluate=keys)
-    store_object(performance, "./results/LIST_OPT" + str(i))
+    store_object(performance, "./results/LIST_PART_" + str(i))
 
 def meta_train_on_HPOB(i):
     hpob_hdlr = HPOBHandler(root_dir="./HPO_B/hpob-data/", mode="v3")
