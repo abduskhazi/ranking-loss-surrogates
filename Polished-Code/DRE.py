@@ -518,7 +518,7 @@ class RankingLossSurrogate(nn.Module):
 
         return idx
 
-def evaluate_key(hpob_hdlr, keys_to_evaluate):
+def evaluate_keys(hpob_hdlr, keys_to_evaluate):
     performance = []
     for key in keys_to_evaluate:
         search_space, dataset, _, _ = key
@@ -534,7 +534,7 @@ def evaluate_search_space_id(i):
     keys = get_all_combinations(hpob_hdlr, 100)
     print("Evaluating", i, "of ", len(keys))
     keys = keys[i:i + 1]  # Only executing the required keys.
-    performance = evaluate_key(hpob_hdlr, keys_to_evaluate=keys)
+    performance = evaluate_keys(hpob_hdlr, keys_to_evaluate=keys)
     store_object(performance, "./results/LIST_OPT" + str(i))
 
 def meta_train_on_HPOB(i):
