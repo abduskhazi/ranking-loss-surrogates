@@ -572,9 +572,10 @@ def meta_train_on_HPOB(i):
         plt.savefig(rl_surrogate.save_folder + "loss_" + search_space_id + ".png")
 
 
+parser = argparse.ArgumentParser()
+
 if __name__ == '__main__':
     # Setting the command line options first
-    parser = argparse.ArgumentParser()
     parser.add_argument("--train", action="store_true",
                         help="Specify this to train the DRE.")
     parser.add_argument("--evaluate", action="store_true",
