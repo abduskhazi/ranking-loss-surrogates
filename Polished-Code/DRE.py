@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import argparse
 
 # Local functionality imports
-from acquisitions import EI_rank_deep_set
+from acquisitions import get_acuisition_func
 from HPO_B.hpob_handler import HPOBHandler
 from utility import store_object, get_input_dim, convert_meta_data_to_np_dictionary
 from utility import get_all_combinations, evaluate_combinations
@@ -521,7 +521,9 @@ class RankingLossSurrogate(nn.Module):
                                                ssid=self.ssid,
                                                loading=self.loading)
         restarted_model.fine_tune_together(X_obs, y_obs, epochs=1000, lr=learning_rate)
-        scores = EI_rank_deep_set((X_obs, y_obs, X_pen), self.incumbent, restarted_model)
+
+        f = get_acuisition_func(parser.parse_args().acq_func)
+        scores = f((X_obs, y_obs, X_pen), self.incumbent, restarted_model)
         idx = np.argmax(scores)
         self.incumbent = X_pen[idx]
 
@@ -604,6 +606,8 @@ if __name__ == '__main__':
     parser.add_argument("--train_index", type=int, default=0,
                         help="Specify the training index / search space index [0-15]."
                              " Only for transfer mode.")
+    parser.add_argument("--acq_func", type=str, default="ei",
+                        help="Specify the acquisition function to use")
     args = parser.parse_args()
 
     if args.non_transfer:

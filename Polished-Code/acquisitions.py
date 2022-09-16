@@ -3,7 +3,15 @@ import torch
 import numpy as np
 from scipy.stats import norm
 
-def average_rank_deep_set(input, DRE):
+def get_acuisition_func(name):
+    if name.lower() == "avg":
+        return average_rank_deep_set
+    if name.lower() == "ucb":
+        return UCB_rank_deep_set
+    if name.lower() == "ei":
+        return EI_rank_deep_set
+
+def average_rank_deep_set(input, incumbent, DRE):
     score_list = []
     for s in DRE.forward_separate_deep_set(input):
         score_list += [s.detach().numpy().flatten()]
@@ -14,9 +22,9 @@ def average_rank_deep_set(input, DRE):
     mean_rank = np.mean(ranks, axis=0)
     return mean_rank
 
-def UCB_rank_deep_set(input, rl_model):
+def UCB_rank_deep_set(input, incumbent, DRE):
     score_list = []
-    for sl in rl_model.forward_separate_deep_set(input):
+    for sl in DRE.forward_separate_deep_set(input):
         score_list += [sl.detach().numpy().flatten()]
 
     # Rank the score list and return the UCB acquisition score.
