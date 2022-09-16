@@ -48,11 +48,12 @@ def listMLE(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_VAL
 
     observation_loss[mask] = 0.0
 
-    # Weighted ranking because it is more important to get the the first ranks right than the rest.
-    weight = np.log(np.arange(observation_loss.shape[-1]) + 2) # Adding 2 to prevent using log(0) & log(1) as weights.
-    weight = np.array(weight, dtype=np.float32)
-    weight = torch.from_numpy(weight)[None, :]
-    observation_loss = observation_loss / weight
+    if parser.parse_args().weighted:
+        # Weighted ranking because it is more important to get the the first ranks right than the rest.
+        weight = np.log(np.arange(observation_loss.shape[-1]) + 2) # Adding 2 to prevent using log(0) & log(1) as weights.
+        weight = np.array(weight, dtype=np.float32)
+        weight = torch.from_numpy(weight)[None, :]
+        observation_loss = observation_loss / weight
 
     return torch.mean(torch.sum(observation_loss, dim=1))
 
@@ -596,6 +597,8 @@ if __name__ == '__main__':
                         help="Specify this to evaluate the DRE.")
     parser.add_argument("--non_transfer", action="store_true",
                         help="Run a non-transfer version of DRE.")
+    parser.add_argument("--weighted", action="store_true",
+                        help="Specify if the loss is weighted or not.")
     parser.add_argument("--eval_index", type=int, default=0,
                         help="Specify the index of key to evaluate [0-429].")
     parser.add_argument("--train_index", type=int, default=0,
