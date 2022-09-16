@@ -1,5 +1,6 @@
 import gc
 import pickle
+import numpy as np
 
 def store_object(obj, obj_name):
     with open(obj_name, "wb") as fp:
