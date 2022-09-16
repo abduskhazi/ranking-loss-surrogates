@@ -4,3 +4,6 @@
 [submodule "deep_kernel_transfer"]
 	path = deep_kernel_transfer
 	url = https://github.com/abduskhazi/deep-kernel-transfer.git
+[submodule "Polished-Code/HPO_B"]
+	path = Polished-Code/HPO_B
+	url = https://github.com/abduskhazi/HPO-B.git
