@@ -1,5 +1,6 @@
-import numpy as np
 import scipy
+import torch
+import numpy as np
 from scipy.stats import norm
 
 def average_rank_deep_set(input, DRE):
