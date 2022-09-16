@@ -268,17 +268,18 @@ class DeepSet(nn.Module):
 
 
 class RankingLossSurrogate(nn.Module):
-    def __init__(self, input_dim, ssid, load=False):
+    def __init__(self, input_dim, ssid, loading=False):
         super(RankingLossSurrogate, self).__init__()
         self.ssid = ssid
         self.M = 10
+        self.loading = loading
         self.incumbent = None
 
         self.save_folder = "./results/";
         if not os.path.isdir(self.save_folder):
             os.makedirs(self.save_folder)
 
-        if load:
+        if self.loading:
             self.load()
         else:
             self.input_dim = input_dim
@@ -493,7 +494,8 @@ class RankingLossSurrogate(nn.Module):
         legend = ["Fine tune Loss for listwise Ranking loss"]
         plt.legend(legend)
         plt.title("SSID: " + self.ssid + "; Input dim: " + str(self.input_dim))
-        plt.savefig(self.save_folder + self.ssid + "_" + sys.argv[1] + "_fine_tune_loss.png")
+        plt.savefig(self.save_folder + self.ssid + "_" +
+                    str(parser.parse_args().eval_index) + "_fine_tune_loss.png")
         plt.close()
 
     def observe_and_suggest(self, X_obs, y_obs, X_pen):
@@ -508,11 +510,17 @@ class RankingLossSurrogate(nn.Module):
             inc_idx = np.argmax(y_obs)
             self.incumbent = X_obs[inc_idx]
 
-        # Doing reloads from the saved model for every fine tuning.
-        self.load()
-        self.fine_tune_together(X_obs, y_obs, epochs=1000, lr=0.001)
-        scores = EI_rank_deep_set((X_obs, y_obs, X_pen), self.incumbent, self)
+        learning_rate = 0.001
+        if not self.loading:
+            # A slightly higher learning rate for non transfer case.
+            learning_rate = 0.02
 
+        # Doing reloads from the saved model for every fine tuning.
+        restarted_model = RankingLossSurrogate(input_dim=self.input_dim,
+                                               ssid=self.ssid,
+                                               loading=self.loading)
+        restarted_model.fine_tune_together(X_obs, y_obs, epochs=1000, lr=learning_rate)
+        scores = EI_rank_deep_set((X_obs, y_obs, X_pen), self.incumbent, restarted_model)
         idx = np.argmax(scores)
         self.incumbent = X_pen[idx]
 
@@ -520,10 +528,16 @@ class RankingLossSurrogate(nn.Module):
 
 def evaluate_keys(hpob_hdlr, keys_to_evaluate):
     performance = []
+
+    if parser.parse_args().non_transfer:
+        loading = False
+    else:
+        loading = True
+
     for key in keys_to_evaluate:
         search_space, dataset, _, _ = key
-        input_dim = hpob_hdlr.get_input_dim(search_space, dataset)
-        method = RankingLossSurrogate(input_dim=input_dim, ssid=search_space, load=True)
+        input_dim = get_input_dim(hpob_hdlr.meta_test_data[search_space])
+        method = RankingLossSurrogate(input_dim=input_dim, ssid=search_space, loading=loading)
         res = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=[key])
         performance += res
 
