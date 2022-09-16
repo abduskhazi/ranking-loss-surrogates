@@ -138,8 +138,10 @@ def get_batch_HPBO_single_DeepSet(meta_train_data, list_size):
     query_y = []
     X = data["X"]
     y = data["y"]
-    if support_size > X.shape[0] // 2:
-        support_size = X.shape[0] // 2
+    if support_size > X.shape[0] // 5:
+    # if support_size > X.shape[0] // 2:
+        # support_size = X.shape[0] // 2
+        support_size = X.shape[0] // 5
     idx_support = np.random.choice(X.shape[0], size=support_size, replace=False)
     support_X += [torch.from_numpy(X[idx_support])]
     support_y += [torch.from_numpy(y[idx_support])]
@@ -593,10 +595,36 @@ def meta_train_on_HPOB(i):
         plt.title("SSID: " + search_space_id + "; Input dim: " + str(input_dim))
         plt.savefig(rl_surrogate.save_folder + "loss_" + search_space_id + ".png")
 
+def generate_box_plot_on_HPOB(i):
+    hpob_hdlr = HPOBHandler(root_dir="../../HPO_B/hpob-data/", mode="v3")
+    # Generate for a single search spaces i
+    for search_space_id in hpob_hdlr.get_search_spaces()[i:i + 1]:
+        meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
+        meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
+
+        input_dim = get_input_dim(meta_train_data)
+        print("Input dim of", search_space_id, "=", input_dim)
+
+        meta_val_data = convert_meta_data_to_np_dictionary(meta_val_data)
+        rl_surrogate = RankingLossSurrogate(input_dim=input_dim, ssid=search_space_id)
+
+        s_ft_X, s_ft_y, q_ft_X, q_ft_y = get_batch_HPBO_single_DeepSet(meta_val_data, 10000)
+
+        predictions = rl_surrogate.forward_separate_deep_set((s_ft_X, s_ft_y, q_ft_X))
+        predictions = [p.flatten().detach().numpy() for p in predictions]
+
+        plt.boxplot(predictions, showfliers=False)
+        plt.title("Score distribution (Before ranking); SSID - " + str(search_space_id))
+
+        #for p in predictions:
+        #    losses += [self.generate_loss_DeepSet(p, q_ft_y)]
+        #loss = torch.stack(losses).mean()
 
 if __name__ == '__main__':
     i = int(sys.argv[1])
     run = int(sys.argv[2])
+
+    # generate_box_plot_on_HPOB(10)
 
     if non_transfer:
         print("Non Transfer: Evaluating DE with List-Wise loss");
