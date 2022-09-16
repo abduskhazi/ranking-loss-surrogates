@@ -1,10 +1,11 @@
 import os
 import sys
 import torch
-import scipy
 import numpy as np
 import torch.nn as nn
 import matplotlib.pyplot as plt
+
+import argparse
 
 # Local functionality imports
 from acquisitions import EI_rank_deep_set
@@ -578,6 +579,9 @@ def meta_train_on_HPOB(i):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.parse_args()
+
     i = int(sys.argv[1])
     run = int(sys.argv[2])
 
