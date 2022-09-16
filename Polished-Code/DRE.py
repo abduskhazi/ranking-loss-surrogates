@@ -288,13 +288,13 @@ class RankingLossSurrogate(nn.Module):
             self.load()
         else:
             self.input_dim = input_dim
-            self.sc, self.ds_embedder = self.create_embedder_scorers_uncertainty(self.input_dim)
+            self.sc, self.ds_embedder = self.create_embedder_scorers_uncertainty(self.input_dim, self.M)
 
 
-    def create_embedder_scorers_uncertainty(self, in_dim):
+    def create_embedder_scorers_uncertainty(self, in_dim, M):
         ds_embedder = DeepSet(input_dim=in_dim + 1, latent_dim=32, output_dim=16)
         sc_list = []
-        for i in range(10):
+        for i in range(M):
             sc_list += [Scorer(input_dim=16 + in_dim)]
         # For easing saving and loading from hard disk
         return nn.ModuleList(sc_list), ds_embedder
