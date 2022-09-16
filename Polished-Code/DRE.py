@@ -277,10 +277,9 @@ class RankingLossSurrogate(nn.Module):
         super(RankingLossSurrogate, self).__init__()
         self.ssid = ssid
         self.M = 10
-
         self.incumbent = None
 
-        self.save_folder = "./" + str(sys.argv[2]) + "/results/";
+        self.save_folder = "./results/";
         if not os.path.isdir(self.save_folder):
             os.makedirs(self.save_folder)
 
@@ -535,13 +534,13 @@ def evaluate_transfer_rl(hpob_hdlr, keys_to_evaluate):
 
     return performance
 
-def transfer_eval(i, run):
+def transfer_eval(i):
     hpob_hdlr = HPOBHandler(root_dir="./HPO_B/hpob-data/", mode="v3-test")
     keys = get_all_combinations(hpob_hdlr, 100)
     print("Evaluating", i, "of ", len(keys))
     keys = keys[i:i + 1]  # Only executing the required keys.
     performance = evaluate_transfer_rl(hpob_hdlr, keys_to_evaluate=keys)
-    store_object(performance, "./" + str(run) + "/results/DE_LIST_32x32x10_E1000_l0_02_OPT" + str(i))
+    store_object(performance, "./results/LIST_OPT" + str(i))
 
 def meta_train_on_HPOB(i):
     hpob_hdlr = HPOBHandler(root_dir="./HPO_B/hpob-data/", mode="v3")
