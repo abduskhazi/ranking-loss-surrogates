@@ -536,7 +536,7 @@ def evaluate_transfer_rl(hpob_hdlr, keys_to_evaluate):
     return performance
 
 def transfer_eval(i, run):
-    hpob_hdlr = HPOBHandler(root_dir="../../HPO_B/hpob-data/", mode="v3-test")
+    hpob_hdlr = HPOBHandler(root_dir="./HPO_B/hpob-data/", mode="v3-test")
     keys = get_all_combinations(hpob_hdlr, 100)
     print("Evaluating", i, "of ", len(keys))
     keys = keys[i:i + 1]  # Only executing the required keys.
@@ -544,7 +544,7 @@ def transfer_eval(i, run):
     store_object(performance, "./" + str(run) + "/results/DE_LIST_32x32x10_E1000_l0_02_OPT" + str(i))
 
 def meta_train_on_HPOB(i):
-    hpob_hdlr = HPOBHandler(root_dir="../../HPO_B/hpob-data/", mode="v3")
+    hpob_hdlr = HPOBHandler(root_dir="./HPO_B/hpob-data/", mode="v3")
 
     # Pretrain Ranking loss surrogate with a single search spaces i
     for search_space_id in hpob_hdlr.get_search_spaces()[i:i+1]:
