@@ -569,9 +569,11 @@ def meta_train_on_HPOB(i):
         epochs = 5000
         batch_size = 100
         list_size = 100
+        lr = parser.parse_args().lr_training
+
         rl_surrogate = RankingLossSurrogate(input_dim=input_dim, ssid=search_space_id)
         loss_list, val_loss_list = \
-            rl_surrogate.train_model_together(meta_train_data, meta_val_data, epochs, batch_size, list_size, 0.001)
+            rl_surrogate.train_model_together(meta_train_data, meta_val_data, epochs, batch_size, list_size, lr)
 
         rl_surrogate.save()
         rl_surrogate.load()
@@ -608,6 +610,8 @@ if __name__ == '__main__':
                         help="Specify the acquisition function to use")
     parser.add_argument("--layers", type=int, default=4,
                         help="The number of layers in the neural network.")
+    parser.add_argument("--lr_training", type=float, default=0.001,
+                        help="The learning rate for the meta-training.")
     args = parser.parse_args()
 
     if args.non_transfer:
