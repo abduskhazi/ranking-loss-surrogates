@@ -1,5 +1,4 @@
 import os
-import sys
 import torch
 import numpy as np
 import torch.nn as nn
@@ -132,17 +131,16 @@ class Scorer(nn.Module):
     def __init__(self, input_dim=1):
         super(Scorer, self).__init__()
         self.input_dim = input_dim
-        self.model = nn.Sequential(
-            nn.Linear(input_dim, 32),
-            nn.ReLU(),
-            nn.Linear(32, 32),
-            nn.ReLU(),
-            nn.Linear(32, 32),
-            nn.ReLU(),
-            nn.Linear(32, 32),
-            nn.ReLU(),
-            nn.Linear(32, 1)
-        )
+
+        # Creating the required neural networks with RELU activation function.
+        n_h_layers = parser.parse_args().layers - 1
+
+        p = (nn.Linear(input_dim, 32), nn.ReLU(), )
+        for _ in range(n_h_layers):
+            p = p + (nn.Linear(32, 32), nn.ReLU(), )
+        p = p + (nn.Linear(32, 1), )
+
+        self.model = nn.Sequential(*p)
 
     def forward(self, x):
         x = self.model(x)
@@ -608,6 +606,8 @@ if __name__ == '__main__':
                              " Only for transfer mode.")
     parser.add_argument("--acq_func", type=str, default="ei",
                         help="Specify the acquisition function to use")
+    parser.add_argument("--layers", type=int, default=4,
+                        help="The number of layers in the neural network.")
     args = parser.parse_args()
 
     if args.non_transfer:
