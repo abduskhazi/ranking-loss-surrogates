@@ -124,6 +124,38 @@ def get_batch_HPBO_single_DeepSet(meta_train_data, list_size):
     return torch.stack(support_X), torch.stack(support_y), torch.stack(query_X), torch.stack(query_y)
 
 
+def get_batch_HPBO(meta_data, batch_size, list_size, random_state=None):
+    query_X = []
+    query_y = []
+
+    rand_num_gen = np.random.RandomState(seed=random_state)  # As of now unused
+
+    # Sample all tasks and form a high dimensional tensor of size
+    #   (tasks, batch_size, list_size, input_dim)
+    #   Suggestion : Take a tensor batch_size, list_size, input_dim for one gradient step.
+    #   For segregation. https://numpy.org/doc/stable/reference/generated/numpy.setdiff1d.html
+    for data_task_id in meta_data.keys():
+        data = meta_data[data_task_id]
+        X = data["X"]
+        y = data["y"]
+        idx_query = rand_num_gen.choice(X.shape[0], size=(batch_size, list_size), replace=True)
+        query_X += [torch.from_numpy(X[idx_query])]
+        query_y += [torch.from_numpy(y[idx_query][..., 0])]
+
+    return torch.stack(query_X), torch.stack(query_y)
+
+def get_batch_HPBO_single(meta_train_data, batch_size, slate_length):
+    query_X = []
+    query_y = []
+    for i in range(batch_size):
+        data = meta_train_data[np.random.choice(list(meta_train_data.keys()))]
+        X = data["X"]
+        y = data["y"]
+        idx = np.random.choice(X.shape[0], size=slate_length, replace=True)
+        query_X += [torch.from_numpy(X[idx])]
+        query_y += [torch.from_numpy(y[idx].flatten())]
+    return torch.stack(query_X), torch.stack(query_y)
+
 # Defining our ranking model as a DNN.
 # Keeping the model simple for now.
 class Scorer(nn.Module):
@@ -195,38 +227,6 @@ def flatten_for_loss_list(pred, y):
     y = torch.flatten(y, start_dim=flatten_from_dim)
     return pred, y
 
-def get_batch_HPBO(meta_data, batch_size, list_size, random_state=None):
-    query_X = []
-    query_y = []
-
-    rand_num_gen = np.random.RandomState(seed=random_state)  # As of now unused
-
-    # Sample all tasks and form a high dimensional tensor of size
-    #   (tasks, batch_size, list_size, input_dim)
-    #   Suggestion : Take a tensor batch_size, list_size, input_dim for one gradient step.
-    #   For segregation. https://numpy.org/doc/stable/reference/generated/numpy.setdiff1d.html
-    for data_task_id in meta_data.keys():
-        data = meta_data[data_task_id]
-        X = data["X"]
-        y = data["y"]
-        idx_query = rand_num_gen.choice(X.shape[0], size=(batch_size, list_size), replace=True)
-        query_X += [torch.from_numpy(X[idx_query])]
-        query_y += [torch.from_numpy(y[idx_query][..., 0])]
-
-    return torch.stack(query_X), torch.stack(query_y)
-
-def get_batch_HPBO_single(meta_train_data, batch_size, slate_length):
-    query_X = []
-    query_y = []
-    for i in range(batch_size):
-        data = meta_train_data[np.random.choice(list(meta_train_data.keys()))]
-        X = data["X"]
-        y = data["y"]
-        idx = np.random.choice(X.shape[0], size=slate_length, replace=True)
-        query_X += [torch.from_numpy(X[idx])]
-        query_y += [torch.from_numpy(y[idx].flatten())]
-    return torch.stack(query_X), torch.stack(query_y)
-
 class DeepSet(nn.Module):
     def __init__(self, input_dim=1, latent_dim=1, output_dim=1):
         super(DeepSet, self).__init__()
@@ -286,10 +286,16 @@ class RankingLossSurrogate(nn.Module):
 
 
     def create_embedder_scorers_uncertainty(self, in_dim, M):
-        ds_embedder = DeepSet(input_dim=in_dim + 1, latent_dim=32, output_dim=16)
+        ds_embedder = nn.Identity()
         sc_list = []
         for i in range(M):
-            sc_list += [Scorer(input_dim=16 + in_dim)]
+            sc_list += [Scorer(input_dim=in_dim)]
+        # Re-structure our module if deep set is enabled.
+        if parser.parse_args().deep_set:
+            ds_embedder = DeepSet(input_dim=in_dim + 1, latent_dim=32, output_dim=16)
+            sc_list = []
+            for i in range(M):
+                sc_list += [Scorer(input_dim=16 + in_dim)]
         # For easing saving and loading from hard disk
         return nn.ModuleList(sc_list), ds_embedder
 
@@ -387,6 +393,21 @@ class RankingLossSurrogate(nn.Module):
 
         return loss_list, val_loss_list
 
+    def train_model_separate(self, meta_train_data, meta_val_data, epochs, batch_size, list_size, lr):
+        loss_list = []
+        val_loss_list = []
+        for nn in self.sc:
+            l, vl = nn.meta_train(meta_train_data, meta_val_data, epochs, batch_size, list_size, lr)
+            loss_list += [l]
+            val_loss_list += [vl]
+
+        loss_list = np.array(loss_list, dtype=np.float32)
+        val_loss_list = np.array(val_loss_list, dtype=np.float32)
+        loss_list = np.mean(loss_list, axis=0).tolist()
+        val_loss_list = np.mean(val_loss_list, axis=0).tolist()
+
+        return loss_list, val_loss_list
+
     def get_fine_tune_batch(self, X_obs, y_obs):
 
         idx_support = np.random.choice(X_obs.shape[0], size=support_size, replace=False)
@@ -423,7 +444,7 @@ class RankingLossSurrogate(nn.Module):
         plt.savefig(self.save_folder + self.ssid + "_fine_tune_loss.png")
         plt.close()
 
-    def fine_tune(self, X_obs, y_obs, epochs, lr):
+    def fine_tune_separate(self, X_obs, y_obs, epochs, lr):
         for nn in self.sc:
             self.fine_tune_single(nn, X_obs, y_obs, epochs, lr)
 
@@ -518,9 +539,12 @@ class RankingLossSurrogate(nn.Module):
         restarted_model = RankingLossSurrogate(input_dim=self.input_dim,
                                                ssid=self.ssid,
                                                loading=self.loading)
-        restarted_model.fine_tune_together(X_obs, y_obs, epochs=1000, lr=learning_rate)
+        if parser.parse_args().deep_set:
+            restarted_model.fine_tune_together(X_obs, y_obs, epochs=1000, lr=learning_rate)
+        else:
+            restarted_model.fine_tune_separate(X_obs, y_obs, epochs=1000, lr=learning_rate)
 
-        f = get_acuisition_func(parser.parse_args().acq_func)
+        f = get_acuisition_func(parser.parse_args().acq_func, parser.parse_args().deep_set)
         scores = f((X_obs, y_obs, X_pen), self.incumbent, restarted_model)
         idx = np.argmax(scores)
         self.incumbent = X_pen[idx]
@@ -572,8 +596,12 @@ def meta_train_on_HPOB(i):
         lr = parser.parse_args().lr_training
 
         rl_surrogate = RankingLossSurrogate(input_dim=input_dim, ssid=search_space_id)
-        loss_list, val_loss_list = \
-            rl_surrogate.train_model_together(meta_train_data, meta_val_data, epochs, batch_size, list_size, lr)
+        if parser.parse_args().deep_set:
+            loss_list, val_loss_list = \
+                rl_surrogate.train_model_together(meta_train_data, meta_val_data, epochs, batch_size, list_size, lr)
+        else:
+            loss_list, val_loss_list = \
+                rl_surrogate.train_model_separate(meta_train_data, meta_val_data, epochs, batch_size, list_size, lr)
 
         rl_surrogate.save()
         rl_surrogate.load()
@@ -607,11 +635,13 @@ if __name__ == '__main__':
                         help="Specify the training index / search space index [0-15]."
                              " Only for transfer mode.")
     parser.add_argument("--acq_func", type=str, default="ei",
-                        help="Specify the acquisition function to use")
+                        help="Specify the acquisition function to use ['avg', 'ucb', 'ei']")
     parser.add_argument("--layers", type=int, default=4,
                         help="The number of layers in the neural network.")
     parser.add_argument("--lr_training", type=float, default=0.001,
                         help="The learning rate for the meta-training.")
+    parser.add_argument("--deep_set", action="store_true", default=False,
+                        help="Switch to enable deep set in our model.")
     args = parser.parse_args()
 
     if args.non_transfer:
