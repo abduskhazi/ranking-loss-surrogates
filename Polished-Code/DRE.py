@@ -570,30 +570,30 @@ def meta_train_on_HPOB(i):
 
 if __name__ == '__main__':
     # Setting the command line options first
-    parser.add_argument("--result_folder", type=str, default="./results/",
-                        help="Folder where all result files are stored.")
     parser.add_argument("--train", action="store_true",
                         help="Specify this to train the DRE.")
     parser.add_argument("--evaluate", action="store_true",
                         help="Specify this to evaluate the DRE.")
-    parser.add_argument("--non_transfer", action="store_true",
-                        help="Run a non-transfer version of DRE.")
-    parser.add_argument("--eval_index", type=int, default=0,
-                        help="Specify the index of key to evaluate [0-429].")
     parser.add_argument("--train_index", type=int, default=0,
-                        help="Specify the training index / search space index [0-15]."
+                        help="Index of the search space to train [0-15]."
                              " Only for transfer mode.")
+    parser.add_argument("--eval_index", type=int, default=0,
+                        help="Index of key to evaluate [0-429].")
+    parser.add_argument("--non_transfer", action="store_true",
+                        help="Specify this to run a non-transfer version of DRE.")
     parser.add_argument("--acq_func", type=str, default="ei",
-                        help="Specify the acquisition function to use during BO iteration ['avg', 'ucb', 'ei'].")
+                        help="Acquisition function to use during BO iteration ['avg', 'ucb', 'ei'].")
     parser.add_argument("--loss_func", type=str, default="listwise-weighted",
-                        help="Specify the loss function to use during training / fine-tuning ['listwise-weighted', "
+                        help="Ranking loss to use ['listwise-weighted', "
                              "'listwise', 'pairwise', 'pointwise'].")
     parser.add_argument("--layers", type=int, default=4,
                         help="The number of layers in the neural network.")
     parser.add_argument("--lr_training", type=float, default=0.001,
                         help="The learning rate for the meta-training.")
     parser.add_argument("--deep_set", action="store_true", default=False,
-                        help="Switch to enable deep set in our model.")
+                        help="Switch to enable deep set in the model.")
+    parser.add_argument("--result_folder", type=str, default="./results/",
+                        help="Folder where all result files are stored.")
     args = parser.parse_args()
 
     result_folder = args.result_folder
