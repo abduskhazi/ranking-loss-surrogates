@@ -14,7 +14,7 @@ from utility import store_object, get_input_dim, convert_meta_data_to_np_diction
 from utility import get_all_combinations, evaluate_combinations
 
 parser = argparse.ArgumentParser()
-
+result_folder = "./results/"
 
 def flatten_for_loss(pred, y):
     flatten_from_dim = len(pred.shape) - 2
@@ -242,7 +242,7 @@ class RankingLossSurrogate(nn.Module):
         self.loading = loading
         self.incumbent = None
 
-        self.save_folder = "./results/";
+        self.save_folder = result_folder
         if not os.path.isdir(self.save_folder):
             os.makedirs(self.save_folder)
 
@@ -524,7 +524,7 @@ def evaluate_search_space_id(i):
     print("Evaluating", i, "of ", len(keys))
     keys = keys[i:i + 1]  # Only executing the required keys.
     performance = evaluate_keys(hpob_hdlr, keys_to_evaluate=keys)
-    store_object(performance, "./results/EVAL_KEY_" + str(i))
+    store_object(performance, result_folder + "/EVAL_KEY_" + str(i))
 
 
 def meta_train_on_HPOB(i):
