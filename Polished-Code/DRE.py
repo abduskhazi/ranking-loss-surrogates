@@ -14,7 +14,7 @@ from utility import store_object, get_input_dim, convert_meta_data_to_np_diction
 from utility import get_all_combinations, evaluate_combinations
 
 parser = argparse.ArgumentParser()
-result_folder = "./results/"
+result_folder = None
 
 def flatten_for_loss(pred, y):
     flatten_from_dim = len(pred.shape) - 2
@@ -570,6 +570,8 @@ def meta_train_on_HPOB(i):
 
 if __name__ == '__main__':
     # Setting the command line options first
+    parser.add_argument("--result_folder", type=str, default="./results/",
+                        help="Folder where all result files are stored.")
     parser.add_argument("--train", action="store_true",
                         help="Specify this to train the DRE.")
     parser.add_argument("--evaluate", action="store_true",
@@ -593,6 +595,8 @@ if __name__ == '__main__':
     parser.add_argument("--deep_set", action="store_true", default=False,
                         help="Switch to enable deep set in our model.")
     args = parser.parse_args()
+
+    result_folder = args.result_folder
 
     if args.non_transfer:
         prefix = "DRE Non Transfer:"
