@@ -4,13 +4,16 @@ import pickle
 import gpytorch
 import numpy as np
 
+
 def store_object(obj, obj_name):
     with open(obj_name, "wb") as fp:
         pickle.dump(obj, fp)
 
+
 def load_object(obj_name):
     with open(obj_name, "rb") as fp:
         return pickle.load(fp)
+
 
 def get_all_combinations(hpob_hdlr, n_trials):
     # A total of 430 combinations are present in the HPO-B dataset if all seeds are used.
@@ -23,10 +26,12 @@ def get_all_combinations(hpob_hdlr, n_trials):
 
     return evaluation_list
 
+
 def get_input_dim(meta_data):
     dataset_key = list(meta_data.keys())[0]
     dim = np.array(meta_data[dataset_key]["X"]).shape[1]
     return dim
+
 
 def convert_meta_data_to_np_dictionary(meta_data):
     temp_meta_data = {}
@@ -57,6 +62,7 @@ def evaluation_worker(hpob_hdlr, method, args):
         print("NotPSDError (Not Positive Semi Definite Error) encountered while evaluating. Not recording this as a valid evaluation combination.")
         res = []
     return (search_space, dataset, seed, n_trials), res
+
 
 def evaluate_combinations(hpob_hdlr, method, keys_to_evaluate):
     print("Evaluating for", method)
