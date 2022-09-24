@@ -35,7 +35,7 @@ def generate_loss(prediction, y_true):
     return loss
 
 
-def get_fine_tune_batch(X_obs, y_obs):
+def get_fine_tune_batch_DeepSet(X_obs, y_obs):
     # Taking 20% of the data as the support set.
     support_size = int(0.2 * X_obs.shape[0])
     idx_support = np.random.choice(X_obs.shape[0], size=support_size, replace=False)
@@ -368,18 +368,6 @@ class RankingLossSurrogate(nn.Module):
 
         return loss_list, val_loss_list
 
-    def get_fine_tune_batch(self, X_obs, y_obs):
-
-        idx_support = np.random.choice(X_obs.shape[0], size=support_size, replace=False)
-        idx_query = np.delete(np.arange(X_obs.shape[0]), idx_support)
-
-        s_ft_X = X_obs[idx_support]
-        s_ft_y = y_obs[idx_support]
-        q_ft_X = X_obs[idx_query]
-        q_ft_y = y_obs[idx_query]
-
-        return s_ft_X, s_ft_y, q_ft_X, q_ft_y
-
     def fine_tune_single(self, nn, X_obs, y_obs, epochs, lr):
         epochs = epochs
         loss_list = []
@@ -455,7 +443,7 @@ class RankingLossSurrogate(nn.Module):
             self.train()
             optimizer.zero_grad()
 
-            s_ft_X, s_ft_y, q_ft_X, q_ft_y = get_fine_tune_batch(X_obs, y_obs)
+            s_ft_X, s_ft_y, q_ft_X, q_ft_y = get_fine_tune_batch_DeepSet(X_obs, y_obs)
 
             losses = []
             predictions = self.forward_separate_deep_set((s_ft_X, s_ft_y, q_ft_X))
