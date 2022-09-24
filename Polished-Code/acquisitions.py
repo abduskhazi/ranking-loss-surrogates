@@ -23,13 +23,13 @@ def get_acuisition_func(name, deep_set=False):
 # AVERAGE RANKS
 ########################################################################
 
-def average_rank(input, incumbent, rl_model):
+def average_rank(input, incumbent, DRE):
 
     _, _, X_query = input[0], input[1], input[2]
 
     # Calculating the average rank of all inputs.
     score_list = []
-    for nn in rl_model.sc:
+    for nn in DRE.sc:
         score_list += [nn(X_query).detach().numpy().flatten()]
 
     # Rank the score list and return the mean rank as the acquisition score.
@@ -54,13 +54,13 @@ def average_rank_deep_set(input, incumbent, DRE):
 # UPPER CONFIDENCE BOUND
 ########################################################################
 
-def UCB_rank(input, incumbent, rl_model):
+def UCB_rank(input, incumbent, DRE):
 
     _, _, X_query = input[0], input[1], input[2]
 
     # Calculating the UCB of all all inputs.
     score_list = []
-    for nn in rl_model.sc:
+    for nn in DRE.sc:
         score_list += [nn(X_query).detach().numpy().flatten()]
 
     # Rank them and return the UCB score.
