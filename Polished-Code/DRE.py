@@ -7,54 +7,31 @@ import matplotlib.pyplot as plt
 import argparse
 
 # Local functionality imports
+from ranking_losses import get_ranking_loss
 from acquisitions import get_acuisition_func
 from HPO_B.hpob_handler import HPOBHandler
 from utility import store_object, get_input_dim, convert_meta_data_to_np_dictionary
 from utility import get_all_combinations, evaluate_combinations
 
-# The following function has been extended using the implementation of:
-# https://github.com/allegro/allRank/blob/master/allrank/models/losses/listMLE.py
-DEFAULT_EPS = 1e-10
-PADDED_Y_VALUE = -1
-def listMLE(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_VALUE):
-    """
-    ListMLE loss introduced in "Listwise Approach to Learning to Rank - Theory and Algorithm".
-    :param y_pred: predictions from the model, shape [batch_size, slate_length]
-    :param y_true: ground truth labels, shape [batch_size, slate_length]
-    :param eps: epsilon value, used for numerical stability
-    :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
-    :return: loss value, a torch.Tensor
-    """
-    # shuffle for randomised tie resolution
-    random_indices = torch.randperm(y_pred.shape[-1])
-    y_pred_shuffled = y_pred[:, random_indices]
-    y_true_shuffled = y_true[:, random_indices]
+parser = argparse.ArgumentParser()
 
-    y_true_sorted, indices = y_true_shuffled.sort(descending=True, dim=-1)
 
-    mask = y_true_sorted == padded_value_indicator
+def flatten_for_loss(pred, y):
+    flatten_from_dim = len(pred.shape) - 2
+    pred = torch.flatten(pred, start_dim=flatten_from_dim)
+    y = torch.flatten(y, start_dim=flatten_from_dim)
+    return pred, y
 
-    preds_sorted_by_true = torch.gather(y_pred_shuffled, dim=1, index=indices)
-    preds_sorted_by_true[mask] = float("-inf")
 
-    max_pred_values, _ = preds_sorted_by_true.max(dim=1, keepdim=True)
+def generate_loss(prediction, y_true):
+    prediction, y_true = flatten_for_loss(prediction, y_true)
+    # Viewing everything as a 2D tensor.
+    y_true = y_true.view(-1, y_true.shape[-1])
+    prediction = prediction.view(-1, prediction.shape[-1])
+    f = get_ranking_loss(parser.parse_args().loss_func)
+    loss = f(prediction, y_true)
+    return loss
 
-    preds_sorted_by_true_minus_max = preds_sorted_by_true - max_pred_values
-
-    cumsums = torch.cumsum(preds_sorted_by_true_minus_max.exp().flip(dims=[1]), dim=1).flip(dims=[1])
-
-    observation_loss = torch.log(cumsums + eps) - preds_sorted_by_true_minus_max
-
-    observation_loss[mask] = 0.0
-
-    if parser.parse_args().weighted:
-        # Weighted ranking because it is more important to get the the first ranks right than the rest.
-        weight = np.log(np.arange(observation_loss.shape[-1]) + 2) # Adding 2 to prevent using log(0) & log(1) as weights.
-        weight = np.array(weight, dtype=np.float32)
-        weight = torch.from_numpy(weight)[None, :]
-        observation_loss = observation_loss / weight
-
-    return torch.mean(torch.sum(observation_loss, dim=1))
 
 def get_fine_tune_batch(X_obs, y_obs):
     # Taking 20% of the data as the support set.
@@ -180,14 +157,6 @@ class Scorer(nn.Module):
         x = self.model(x)
         return x
 
-    def generate_loss(self, prediction, y_true):
-        prediction, y_true = flatten_for_loss_list(prediction, y_true)
-        # Viewing everything as a 2D tensor.
-        y_true = y_true.view(-1, y_true.shape[-1])
-        prediction = prediction.view(-1, prediction.shape[-1])
-        loss = listMLE(prediction, y_true)
-        return loss
-
     def meta_train(self, meta_train_data, meta_val_data, epochs, batch_size, list_size, lr):
         optimizer = torch.optim.Adam([{'params': self.parameters(), 'lr': lr}, ])  # 0.0001 giving good results
         loss_list = []
@@ -199,7 +168,7 @@ class Scorer(nn.Module):
 
                 train_X, train_y = get_batch_HPBO_single(meta_train_data, 1, list_size)
                 prediction = self.forward(train_X)
-                loss = self.generate_loss(prediction, train_y)
+                loss = generate_loss(prediction, train_y)
 
                 loss.backward()
                 optimizer.step()
@@ -210,12 +179,12 @@ class Scorer(nn.Module):
                 # Calculating full training loss
                 train_X, train_y = get_batch_HPBO(meta_train_data, batch_size, list_size)
                 prediction = self.forward(train_X)
-                loss = self.generate_loss(prediction, train_y)
+                loss = generate_loss(prediction, train_y)
 
                 # Calculating validation loss
                 val_X, val_y = get_batch_HPBO(meta_val_data, batch_size, list_size)
                 pred_val = self.forward(val_X)
-                val_loss = self.generate_loss(pred_val, val_y)
+                val_loss = generate_loss(pred_val, val_y)
 
             print("Epoch[", _, "] ==> Loss =", loss.item(), "; Val_loss =", val_loss.item())
             loss_list += [loss.item()]
@@ -223,11 +192,6 @@ class Scorer(nn.Module):
 
         return loss_list, val_loss_list
 
-def flatten_for_loss_list(pred, y):
-    flatten_from_dim = len(pred.shape) - 2
-    pred = torch.flatten(pred, start_dim=flatten_from_dim)
-    y = torch.flatten(y, start_dim=flatten_from_dim)
-    return pred, y
 
 class DeepSet(nn.Module):
     def __init__(self, input_dim=1, latent_dim=1, output_dim=1):
@@ -341,13 +305,6 @@ class RankingLossSurrogate(nn.Module):
 
         return loss_list, val_loss_list
 
-    def generate_loss_DeepSet(self, prediction, y_true):
-        prediction, y_true = flatten_for_loss_list(prediction, y_true)
-        # Viewing everything as a 2D tensor.
-        y_true = y_true.view(-1, y_true.shape[-1])
-        prediction = prediction.view(-1, prediction.shape[-1])
-        loss = listMLE(prediction, y_true)
-        return loss
 
     def train_model_together(self, meta_train_data, meta_val_data, epochs, batch_size, list_size, lr):
         optimizer = torch.optim.Adam([{'params': self.parameters(), 'lr': lr}, ])
@@ -363,7 +320,7 @@ class RankingLossSurrogate(nn.Module):
                 losses = []
                 predictions = self.forward_separate_deep_set((s_ft_X, s_ft_y, q_ft_X))
                 for p in predictions:
-                    losses += [self.generate_loss_DeepSet(p, q_ft_y)]
+                    losses += [generate_loss(p, q_ft_y)]
                 loss = torch.stack(losses).mean()
 
                 loss.backward()
@@ -377,7 +334,7 @@ class RankingLossSurrogate(nn.Module):
                 losses = []
                 predictions = self.forward_separate_deep_set((s_ft_X, s_ft_y, q_ft_X))
                 for p in predictions:
-                    losses += [self.generate_loss_DeepSet(p, q_ft_y)]
+                    losses += [generate_loss(p, q_ft_y)]
                 loss = torch.stack(losses).mean()
 
                 # Calculating validation loss
@@ -385,7 +342,7 @@ class RankingLossSurrogate(nn.Module):
                 losses = []
                 predictions = self.forward_separate_deep_set((s_ft_X, s_ft_y, q_ft_X))
                 for p in predictions:
-                    losses += [self.generate_loss_DeepSet(p, q_ft_y)]
+                    losses += [generate_loss(p, q_ft_y)]
                 val_loss = torch.stack(losses).mean()
 
             print("Epoch[", _, "] ==> Loss =", loss.item(), "; Val_loss =", val_loss.item())
@@ -501,7 +458,7 @@ class RankingLossSurrogate(nn.Module):
             losses = []
             predictions = self.forward_separate_deep_set((s_ft_X, s_ft_y, q_ft_X))
             for p in predictions:
-                losses += [self.generate_loss_DeepSet(p, q_ft_y)]
+                losses += [generate_loss(p, q_ft_y)]
             loss = torch.stack(losses).mean()
 
             loss.backward()
@@ -621,8 +578,6 @@ def meta_train_on_HPOB(i):
         plt.savefig(rl_surrogate.save_folder + "loss_" + search_space_id + ".png")
 
 
-parser = argparse.ArgumentParser()
-
 if __name__ == '__main__':
     # Setting the command line options first
     parser.add_argument("--train", action="store_true",
@@ -631,15 +586,16 @@ if __name__ == '__main__':
                         help="Specify this to evaluate the DRE.")
     parser.add_argument("--non_transfer", action="store_true",
                         help="Run a non-transfer version of DRE.")
-    parser.add_argument("--weighted", action="store_true",
-                        help="Specify if the loss is weighted or not.")
     parser.add_argument("--eval_index", type=int, default=0,
                         help="Specify the index of key to evaluate [0-429].")
     parser.add_argument("--train_index", type=int, default=0,
                         help="Specify the training index / search space index [0-15]."
                              " Only for transfer mode.")
     parser.add_argument("--acq_func", type=str, default="ei",
-                        help="Specify the acquisition function to use ['avg', 'ucb', 'ei']")
+                        help="Specify the acquisition function to use during BO iteration ['avg', 'ucb', 'ei']")
+    parser.add_argument("--loss_func", type=str, default="listwise-weighted",
+                        help="Specify the loss function to use during training / fine-tuning ['listwise-weighted', "
+                             "'listwise', 'pairwise', 'pointwise']")
     parser.add_argument("--layers", type=int, default=4,
                         help="The number of layers in the neural network.")
     parser.add_argument("--lr_training", type=float, default=0.001,
