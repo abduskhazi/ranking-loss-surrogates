@@ -28,8 +28,10 @@ def generate_loss(prediction, y_true):
     # Viewing everything as a 2D tensor.
     y_true = y_true.view(-1, y_true.shape[-1])
     prediction = prediction.view(-1, prediction.shape[-1])
+
     f = get_ranking_loss(parser.parse_args().loss_func)
     loss = f(prediction, y_true)
+
     return loss
 
 
