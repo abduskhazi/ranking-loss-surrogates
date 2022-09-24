@@ -13,7 +13,7 @@ from HPO_B.hpob_handler import HPOBHandler
 from utility import store_object, get_input_dim, convert_meta_data_to_np_dictionary
 from utility import get_all_combinations, evaluate_combinations
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 result_folder = None
 
 def flatten_for_loss(pred, y):
@@ -586,12 +586,14 @@ if __name__ == '__main__':
     parser.add_argument("--loss_func", type=str, default="listwise-weighted",
                         help="Ranking loss to use ['listwise-weighted', "
                              "'listwise', 'pairwise', 'pointwise'].")
-    parser.add_argument("--layers", type=int, default=4,
-                        help="The number of layers in the neural network.")
     parser.add_argument("--lr_training", type=float, default=0.001,
                         help="The learning rate for the meta-training.")
     parser.add_argument("--deep_set", action="store_true", default=False,
                         help="Switch to enable deep set in the model.")
+    parser.add_argument("--layers", type=int, default=4,
+                        help="The number of layers in the neural network.")
+    parser.add_argument("--M", type=int, default=10,
+                        help="The number of neural networks in the ensemble.")
     parser.add_argument("--result_folder", type=str, default="./results/",
                         help="Folder where all result files are stored.")
     args = parser.parse_args()
