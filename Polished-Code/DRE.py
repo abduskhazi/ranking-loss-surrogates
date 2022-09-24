@@ -57,7 +57,6 @@ def listMLE(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PADDED_Y_VAL
     return torch.mean(torch.sum(observation_loss, dim=1))
 
 def get_fine_tune_batch(X_obs, y_obs):
-
     # Taking 20% of the data as the support set.
     support_size = int(0.2 * X_obs.shape[0])
     idx_support = np.random.choice(X_obs.shape[0], size=support_size, replace=False)
@@ -69,6 +68,7 @@ def get_fine_tune_batch(X_obs, y_obs):
     q_ft_y = y_obs[idx_query]
 
     return s_ft_X, s_ft_y, q_ft_X, q_ft_y
+
 
 def get_batch_HPBO_DeepSet(meta_data, batch_size, list_size, random_state=None):
     support_X = []
@@ -144,6 +144,7 @@ def get_batch_HPBO(meta_data, batch_size, list_size, random_state=None):
 
     return torch.stack(query_X), torch.stack(query_y)
 
+
 def get_batch_HPBO_single(meta_train_data, batch_size, slate_length):
     query_X = []
     query_y = []
@@ -156,6 +157,7 @@ def get_batch_HPBO_single(meta_train_data, batch_size, slate_length):
         query_y += [torch.from_numpy(y[idx].flatten())]
     return torch.stack(query_X), torch.stack(query_y)
 
+
 # Defining our ranking model as a DNN.
 # Keeping the model simple for now.
 class Scorer(nn.Module):
@@ -167,10 +169,10 @@ class Scorer(nn.Module):
         # Creating the required neural networks with RELU activation function.
         n_h_layers = parser.parse_args().layers - 1
 
-        p = (nn.Linear(input_dim, 32), nn.ReLU(), )
+        p = (nn.Linear(input_dim, 32), nn.ReLU(),)
         for _ in range(n_h_layers):
-            p = p + (nn.Linear(32, 32), nn.ReLU(), )
-        p = p + (nn.Linear(32, 1), )
+            p = p + (nn.Linear(32, 32), nn.ReLU(),)
+        p = p + (nn.Linear(32, 1),)
 
         self.model = nn.Sequential(*p)
 
@@ -186,7 +188,7 @@ class Scorer(nn.Module):
         loss = listMLE(prediction, y_true)
         return loss
 
-    def meta_train(self,meta_train_data, meta_val_data, epochs, batch_size, list_size, lr):
+    def meta_train(self, meta_train_data, meta_val_data, epochs, batch_size, list_size, lr):
         optimizer = torch.optim.Adam([{'params': self.parameters(), 'lr': lr}, ])  # 0.0001 giving good results
         loss_list = []
         val_loss_list = []
@@ -283,7 +285,6 @@ class RankingLossSurrogate(nn.Module):
         else:
             self.input_dim = input_dim
             self.sc, self.ds_embedder = self.create_embedder_scorers_uncertainty(self.input_dim, self.M)
-
 
     def create_embedder_scorers_uncertainty(self, in_dim, M):
         ds_embedder = nn.Identity()
@@ -423,7 +424,7 @@ class RankingLossSurrogate(nn.Module):
     def fine_tune_single(self, nn, X_obs, y_obs, epochs, lr):
         epochs = epochs
         loss_list = []
-        optimizer = torch.optim.Adam([{'params': nn.parameters(), 'lr': lr},])
+        optimizer = torch.optim.Adam([{'params': nn.parameters(), 'lr': lr}, ])
         for i in range(epochs):
             nn.train()
             optimizer.zero_grad()
@@ -457,7 +458,7 @@ class RankingLossSurrogate(nn.Module):
 
         # Creating an input for the scorer.
         s_X = s_X[..., None, :]
-        repeat_tuple = (1,) * (len(s_X.shape)-2) + (q_X.shape[-2], 1)
+        repeat_tuple = (1,) * (len(s_X.shape) - 2) + (q_X.shape[-2], 1)
         s_X = s_X.repeat(repeat_tuple)
         q_X = torch.cat((s_X, q_X), dim=-1)
 
@@ -477,7 +478,7 @@ class RankingLossSurrogate(nn.Module):
 
         # Creating an input for the scorer.
         s_X = s_X[..., None, :]
-        repeat_tuple = (1,) * (len(s_X.shape)-2) + (q_X.shape[-2], 1)
+        repeat_tuple = (1,) * (len(s_X.shape) - 2) + (q_X.shape[-2], 1)
         s_X = s_X.repeat(repeat_tuple)
         q_X = torch.cat((s_X, q_X), dim=-1)
 
@@ -551,6 +552,7 @@ class RankingLossSurrogate(nn.Module):
 
         return idx
 
+
 def evaluate_keys(hpob_hdlr, keys_to_evaluate):
     performance = []
 
@@ -568,6 +570,7 @@ def evaluate_keys(hpob_hdlr, keys_to_evaluate):
 
     return performance
 
+
 def evaluate_search_space_id(i):
     hpob_hdlr = HPOBHandler(root_dir="./HPO_B/hpob-data/", mode="v3-test")
     keys = get_all_combinations(hpob_hdlr, 100)
@@ -576,11 +579,12 @@ def evaluate_search_space_id(i):
     performance = evaluate_keys(hpob_hdlr, keys_to_evaluate=keys)
     store_object(performance, "./results/LIST_PART_" + str(i))
 
+
 def meta_train_on_HPOB(i):
     hpob_hdlr = HPOBHandler(root_dir="./HPO_B/hpob-data/", mode="v3")
 
     # Pretrain Ranking loss surrogate with a single search spaces i
-    for search_space_id in hpob_hdlr.get_search_spaces()[i:i+1]:
+    for search_space_id in hpob_hdlr.get_search_spaces()[i:i + 1]:
         meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
         meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
 
