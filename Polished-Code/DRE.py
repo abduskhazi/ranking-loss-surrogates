@@ -524,7 +524,7 @@ def evaluate_search_space_id(i):
     print("Evaluating", i, "of ", len(keys))
     keys = keys[i:i + 1]  # Only executing the required keys.
     performance = evaluate_keys(hpob_hdlr, keys_to_evaluate=keys)
-    store_object(performance, "./results/LIST_PART_" + str(i))
+    store_object(performance, "./results/EVAL_KEY_" + str(i))
 
 
 def meta_train_on_HPOB(i):
