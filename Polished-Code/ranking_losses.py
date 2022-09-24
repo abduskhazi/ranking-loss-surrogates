@@ -154,7 +154,7 @@ def rankNet(y_pred, y_true, padded_value_indicator=PADDED_Y_VALUE, weight_by_dif
     return BCEWithLogitsLoss(weight=weight)(pred_diffs, true_diffs)
 
 
-def pointwise_rmse(y_pred, y_true, no_of_levels, padded_value_indicator=PADDED_Y_VALUE):
+def pointwise_rmse(y_pred, y_true, no_of_levels=None, padded_value_indicator=PADDED_Y_VALUE):
     """
     Pointwise RMSE loss.
     :param y_pred: predictions from the model, shape [batch_size, slate_length]
@@ -163,6 +163,13 @@ def pointwise_rmse(y_pred, y_true, no_of_levels, padded_value_indicator=PADDED_Y
     :param padded_value_indicator: an indicator of the y_true index containing a padded item, e.g. -1
     :return: loss value, a torch.Tensor
     """
+
+    ####### This section of code is an extension tailor made for our purpose
+    if no_of_levels is None:
+        # Assuming that all values in the y_true are distinct.
+        no_of_levels = y_true.shape[-1]
+    #######
+
     y_pred = y_pred.clone()
     y_true = y_true.clone()
 
