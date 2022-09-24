@@ -234,9 +234,9 @@ class DeepSet(nn.Module):
         return x
 
 
-class RankingLossSurrogate(nn.Module):
+class DeepRankingEnsemble(nn.Module):
     def __init__(self, input_dim, ssid, loading=False):
-        super(RankingLossSurrogate, self).__init__()
+        super(DeepRankingEnsemble, self).__init__()
         self.ssid = ssid
         self.M = 10
         self.loading = loading
@@ -484,7 +484,7 @@ class RankingLossSurrogate(nn.Module):
             learning_rate = 0.02
 
         # Doing reloads from the saved model for every fine tuning.
-        restarted_model = RankingLossSurrogate(input_dim=self.input_dim,
+        restarted_model = DeepRankingEnsemble(input_dim=self.input_dim,
                                                ssid=self.ssid,
                                                loading=self.loading)
         if parser.parse_args().deep_set:
@@ -511,7 +511,7 @@ def evaluate_keys(hpob_hdlr, keys_to_evaluate):
     for key in keys_to_evaluate:
         search_space, dataset, _, _ = key
         input_dim = get_input_dim(hpob_hdlr.meta_test_data[search_space])
-        method = RankingLossSurrogate(input_dim=input_dim, ssid=search_space, loading=loading)
+        method = DeepRankingEnsemble(input_dim=input_dim, ssid=search_space, loading=loading)
         res = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=[key])
         performance += res
 
@@ -546,7 +546,7 @@ def meta_train_on_HPOB(i):
         list_size = 100
         lr = parser.parse_args().lr_training
 
-        rl_surrogate = RankingLossSurrogate(input_dim=input_dim, ssid=search_space_id)
+        rl_surrogate = DeepRankingEnsemble(input_dim=input_dim, ssid=search_space_id)
         if parser.parse_args().deep_set:
             loss_list, val_loss_list = \
                 rl_surrogate.train_model_together(meta_train_data, meta_val_data, epochs, batch_size, list_size, lr)
