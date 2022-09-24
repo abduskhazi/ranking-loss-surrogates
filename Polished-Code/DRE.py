@@ -1,4 +1,5 @@
 import os
+import time
 import torch
 import numpy as np
 import torch.nn as nn
@@ -538,6 +539,8 @@ def meta_train_on_HPOB(i):
 
     # Pretrain Ranking loss surrogate with a single search spaces i
     for search_space_id in hpob_hdlr.get_search_spaces()[i:i + 1]:
+        t_start = time.time()
+
         meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
         meta_val_data = hpob_hdlr.meta_validation_data[search_space_id]
 
@@ -577,6 +580,9 @@ def meta_train_on_HPOB(i):
         plt.legend(legend)
         plt.title("SSID: " + search_space_id + "; Input dim: " + str(input_dim))
         plt.savefig(rl_surrogate.save_folder + "loss_" + search_space_id + ".png")
+
+        t_end = time.time()
+        print("SSID:", search_space_id, "Completed in", t_end - t_start, "s")
 
 
 if __name__ == '__main__':
