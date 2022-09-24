@@ -582,10 +582,10 @@ if __name__ == '__main__':
                         help="Specify the training index / search space index [0-15]."
                              " Only for transfer mode.")
     parser.add_argument("--acq_func", type=str, default="ei",
-                        help="Specify the acquisition function to use during BO iteration ['avg', 'ucb', 'ei']")
+                        help="Specify the acquisition function to use during BO iteration ['avg', 'ucb', 'ei'].")
     parser.add_argument("--loss_func", type=str, default="listwise-weighted",
                         help="Specify the loss function to use during training / fine-tuning ['listwise-weighted', "
-                             "'listwise', 'pairwise', 'pointwise']")
+                             "'listwise', 'pairwise', 'pointwise'].")
     parser.add_argument("--layers", type=int, default=4,
                         help="The number of layers in the neural network.")
     parser.add_argument("--lr_training", type=float, default=0.001,
