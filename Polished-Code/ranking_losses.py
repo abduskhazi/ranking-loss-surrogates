@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from itertools import product
 from torch.nn import BCEWithLogitsLoss
 
 DEFAULT_EPS = 1e-10
