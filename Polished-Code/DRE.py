@@ -235,10 +235,10 @@ class DeepSet(nn.Module):
 
 
 class DeepRankingEnsemble(nn.Module):
-    def __init__(self, input_dim, ssid, loading=False):
+    def __init__(self, input_dim, ssid, M, loading=False):
         super(DeepRankingEnsemble, self).__init__()
         self.ssid = ssid
-        self.M = 10
+        self.M = M
         self.loading = loading
         self.incumbent = None
 
@@ -478,21 +478,25 @@ class DeepRankingEnsemble(nn.Module):
             inc_idx = np.argmax(y_obs)
             self.incumbent = X_obs[inc_idx]
 
+        cli_args = parser.parse_args()
+
         learning_rate = 0.001
         if not self.loading:
             # A slightly higher learning rate for non transfer case.
             learning_rate = 0.02
 
         # Doing reloads from the saved model for every fine tuning.
+        # For non transfer case loading = false ==> DRE randomly initialized.
         restarted_model = DeepRankingEnsemble(input_dim=self.input_dim,
-                                               ssid=self.ssid,
-                                               loading=self.loading)
-        if parser.parse_args().deep_set:
+                                              ssid=self.ssid,
+                                              M=self.M,
+                                              loading=self.loading)
+        if cli_args.deep_set:
             restarted_model.fine_tune_together(X_obs, y_obs, epochs=1000, lr=learning_rate)
         else:
             restarted_model.fine_tune_separate(X_obs, y_obs, epochs=1000, lr=learning_rate)
 
-        f = get_acuisition_func(parser.parse_args().acq_func, parser.parse_args().deep_set)
+        f = get_acuisition_func(cli_args.acq_func, cli_args.deep_set)
         scores = f((X_obs, y_obs, X_pen), self.incumbent, restarted_model)
         idx = np.argmax(scores)
         self.incumbent = X_pen[idx]
@@ -503,15 +507,17 @@ class DeepRankingEnsemble(nn.Module):
 def evaluate_keys(hpob_hdlr, keys_to_evaluate):
     performance = []
 
-    if parser.parse_args().non_transfer:
-        loading = False
-    else:
-        loading = True
+    cli_args = parser.parse_args()
+
+    loading = not cli_args.non_transfer
 
     for key in keys_to_evaluate:
         search_space, dataset, _, _ = key
         input_dim = get_input_dim(hpob_hdlr.meta_test_data[search_space])
-        method = DeepRankingEnsemble(input_dim=input_dim, ssid=search_space, loading=loading)
+        method = DeepRankingEnsemble(input_dim=input_dim,
+                                     ssid=search_space,
+                                     M=cli_args.M,
+                                     loading=loading)
         res = evaluate_combinations(hpob_hdlr, method, keys_to_evaluate=[key])
         performance += res
 
@@ -541,13 +547,18 @@ def meta_train_on_HPOB(i):
         meta_train_data = convert_meta_data_to_np_dictionary(meta_train_data)
         meta_val_data = convert_meta_data_to_np_dictionary(meta_val_data)
 
+        cli_args = parser.parse_args()
+
         epochs = 5000
         batch_size = 100
         list_size = 100
-        lr = parser.parse_args().lr_training
+        lr = cli_args.lr_training
 
-        rl_surrogate = DeepRankingEnsemble(input_dim=input_dim, ssid=search_space_id)
-        if parser.parse_args().deep_set:
+        rl_surrogate = DeepRankingEnsemble(input_dim=input_dim,
+                                           ssid=search_space_id,
+                                           M=cli_args.M,
+                                           loading=False)
+        if cli_args.deep_set:
             loss_list, val_loss_list = \
                 rl_surrogate.train_model_together(meta_train_data, meta_val_data, epochs, batch_size, list_size, lr)
         else:
