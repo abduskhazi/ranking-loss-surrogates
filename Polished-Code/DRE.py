@@ -230,9 +230,9 @@ class DeepSet(nn.Module):
         return x
 
 
-class DeepRankingEnsemble(nn.Module):
+class DeepRankerEnsemble(nn.Module):
     def __init__(self, input_dim, ssid, M, loading=False):
-        super(DeepRankingEnsemble, self).__init__()
+        super(DeepRankerEnsemble, self).__init__()
         self.ssid = ssid
         self.M = M
         self.loading = loading
@@ -488,7 +488,7 @@ class DeepRankingEnsemble(nn.Module):
 
         # Doing reloads from the saved model for every fine tuning.
         # For non transfer case loading = false ==> DRE randomly initialized.
-        restarted_model = DeepRankingEnsemble(input_dim=self.input_dim,
+        restarted_model = DeepRankerEnsemble(input_dim=self.input_dim,
                                               ssid=self.ssid,
                                               M=self.M,
                                               loading=self.loading)
@@ -515,7 +515,7 @@ def evaluate_keys(hpob_hdlr, keys_to_evaluate):
     for key in keys_to_evaluate:
         search_space, dataset, _, _ = key
         input_dim = get_input_dim(hpob_hdlr.meta_test_data[search_space])
-        method = DeepRankingEnsemble(input_dim=input_dim,
+        method = DeepRankerEnsemble(input_dim=input_dim,
                                      ssid=search_space,
                                      M=cli_args.M,
                                      loading=loading)
@@ -557,7 +557,7 @@ def meta_train_on_HPOB(i):
         list_size = 100
         lr = cli_args.lr_training
 
-        rl_surrogate = DeepRankingEnsemble(input_dim=input_dim,
+        rl_surrogate = DeepRankerEnsemble(input_dim=input_dim,
                                            ssid=search_space_id,
                                            M=cli_args.M,
                                            loading=False)
