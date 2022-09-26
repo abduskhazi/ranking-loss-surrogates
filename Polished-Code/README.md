@@ -3,9 +3,9 @@ Repository for Deep Ranking Ensembles for Hyperparameter Optimization (ICLR 2023
 
 # Setup
 ## Data Download
-* Download the HPO\_B data from [HERE](https://rewind.tf.uni-freiburg.de/index.php/s/xdrJQPCTNi2zbfL/download/hpob-data.zip).
-* Extract the `hpob-data.zip` folder to `./HPO\_B/hpob-data/` folder.
-* After this all required json files will be present in the `./HPO\_B/hpob-data/` folder.
+* Download the HPO\_B data from [HERE](https://rewind.tf.uni-freiburg.de/index.php/s/xdrJQPCTNi2zbfL/download/hpob-data.zip). A file named `hpob-data.zip` will be downloaded.
+* Extract the `hpob-data.zip` to the location `./HPO_B/hpob-data/`.
+* After successful extraction, all the required files (in the json format) will be present in the `./HPO_B/hpob-data/` folder.
 
 ## Environment Setup
 * Install anaconda/miniconda according to the [Installation Instructions](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html "Named link title").
