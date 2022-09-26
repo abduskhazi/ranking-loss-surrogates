@@ -75,7 +75,7 @@ def get_batch_HPBO_DeepSet(meta_data, batch_size, list_size, random_state=None):
 
 
 def get_batch_HPBO_single_DeepSet(meta_train_data, list_size):
-    support_size = int(0.2 * list_size)  # 20  # 5 + np.random.choice(95)  # With 20 it was a good result curve
+    support_size = int(0.2 * list_size)
     data = meta_train_data[np.random.choice(list(meta_train_data.keys()))]
     support_X = []
     support_y = []
@@ -529,7 +529,7 @@ def evaluate_search_space_id(i):
     hpob_hdlr = HPOBHandler(root_dir="./HPO_B/hpob-data/", mode="v3-test")
     keys = get_all_combinations(hpob_hdlr, 100)
     print("Evaluating", i, "of ", len(keys))
-    keys = keys[i:i + 1]  # Only executing the required keys.
+    keys = keys[i:i + 1]  # Only executing the required key.
     performance = evaluate_keys(hpob_hdlr, keys_to_evaluate=keys)
     store_object(performance, result_folder + "/EVAL_KEY_" + str(i))
 
@@ -537,7 +537,7 @@ def evaluate_search_space_id(i):
 def meta_train_on_HPOB(i):
     hpob_hdlr = HPOBHandler(root_dir="./HPO_B/hpob-data/", mode="v3")
 
-    # Pretrain Ranking loss surrogate with a single search spaces i
+    # Pretrain Ranking loss surrogate with a single search space
     for search_space_id in hpob_hdlr.get_search_spaces()[i:i + 1]:
         t_start = time.time()
 

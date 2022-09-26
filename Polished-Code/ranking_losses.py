@@ -60,11 +60,13 @@ def listMLE_weighted(y_pred, y_true, eps=DEFAULT_EPS, padded_value_indicator=PAD
 
     observation_loss[mask] = 0.0
 
+    ####### Weighting extension
     # Weighted ranking because it is more important to get the the first ranks right than the rest.
     weight = np.log(np.arange(observation_loss.shape[-1]) + 2)  # Adding 2 to prevent using log(0) & log(1) as weights.
     weight = np.array(weight, dtype=np.float32)
     weight = torch.from_numpy(weight)[None, :]
     observation_loss = observation_loss / weight
+    #######
 
     return torch.mean(torch.sum(observation_loss, dim=1))
 

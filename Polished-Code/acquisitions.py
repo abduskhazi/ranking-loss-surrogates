@@ -58,7 +58,7 @@ def UCB_rank(input, incumbent, DRE):
 
     _, _, X_query = input[0], input[1], input[2]
 
-    # Calculating the UCB of all all inputs.
+    # Calculating the UCB of all inputs.
     score_list = []
     for nn in DRE.sc:
         score_list += [nn(X_query).detach().numpy().flatten()]
@@ -94,7 +94,7 @@ def EI_rank(input, incumbent, DRE):
     for nn in DRE.sc:
         score_list += [nn(X_query).detach().numpy().flatten()]
 
-    # Rank them and return the ei score according to ranks.
+    # Rank and return the ei score according to ranks.
     score_list = np.stack(score_list)
     ranks = scipy.stats.rankdata(score_list, axis=-1)
     mean_rank = np.mean(ranks, axis=0)

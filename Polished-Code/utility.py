@@ -16,7 +16,9 @@ def load_object(obj_name):
 
 
 def get_all_combinations(hpob_hdlr, n_trials):
-    # A total of 430 combinations are present in the HPO-B dataset if all seeds are used.
+    # Total combinations -
+    #   430 combinations for HPO-B test dataset
+    #   456 combinations for the HPO-B validation dataset.
     seed_list = ["test0", "test1", "test2", "test3", "test4"]
     evaluation_list = []
     for search_space in hpob_hdlr.get_search_spaces():
