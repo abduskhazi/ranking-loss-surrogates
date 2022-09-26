@@ -1,4 +1,4 @@
-# Ranking Loss Surrogates
+# Deep Ranking Ensembles
 Repository for Deep Ranking Ensembles for Hyperparameter Optimization (ICLR 2023 Conference Paper942).
 
 # Setup
