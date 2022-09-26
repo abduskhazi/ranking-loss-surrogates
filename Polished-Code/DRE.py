@@ -134,8 +134,7 @@ def get_batch_HPBO_single(meta_train_data, batch_size, slate_length):
     return torch.stack(query_X), torch.stack(query_y)
 
 
-# Defining our ranking model as a DNN.
-# Keeping the model simple for now.
+# Defining our scoring model as a DNN.
 class Scorer(nn.Module):
     # Output dimension by default is 1 as we need a real valued score.
     def __init__(self, input_dim=1):
@@ -222,7 +221,7 @@ class DeepSet(nn.Module):
         # Pool operation: Aggregate all the outputs to a single output.
         #                 i.e across size of support set
         # Using mean as the validation error instead of sum
-        # because the cardinality should be irrelevant
+        # because the model should be agnostic to any given support set cardinality
         x = torch.mean(x, dim=-2)
 
         # Decoder: Decode the latent output to result
@@ -260,7 +259,7 @@ class DeepRankingEnsemble(nn.Module):
             sc_list = []
             for i in range(M):
                 sc_list += [Scorer(input_dim=16 + in_dim)]
-        # For easing saving and loading from hard disk
+        # Using Module List for easing saving and loading from hard disk
         return nn.ModuleList(sc_list), ds_embedder
 
     def save(self):
@@ -393,6 +392,11 @@ class DeepRankingEnsemble(nn.Module):
         for nn in self.sc:
             self.fine_tune_single(nn, X_obs, y_obs, epochs, lr)
 
+    # The difference between forward and forward_separate_deep_set is in the
+    # returned output.
+    #     forward - Returns mean of the predicted scores.
+    #     forward_separate_deep_set - Returns the list of scores predicted by
+    #                                 the neural networks in the ensemble.
     def forward(self, input):
         s_X, s_y, q_X = input
 
