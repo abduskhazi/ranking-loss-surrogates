@@ -60,8 +60,6 @@ def get_batch_HPBO_DeepSet(meta_data, batch_size, list_size, random_state=None):
 
     # Sample all tasks and form a high dimensional tensor of size
     #   (tasks, batch_size, list_size, input_dim)
-    #   Suggestion : Take a tensor batch_size, list_size, input_dim for one gradient step.
-    #   For segregation. https://numpy.org/doc/stable/reference/generated/numpy.setdiff1d.html
     for data_task_id in meta_data.keys():
         data = meta_data[data_task_id]
         X = data["X"]
@@ -112,8 +110,6 @@ def get_batch_HPBO(meta_data, batch_size, list_size, random_state=None):
 
     # Sample all tasks and form a high dimensional tensor of size
     #   (tasks, batch_size, list_size, input_dim)
-    #   Suggestion : Take a tensor batch_size, list_size, input_dim for one gradient step.
-    #   For segregation. https://numpy.org/doc/stable/reference/generated/numpy.setdiff1d.html
     for data_task_id in meta_data.keys():
         data = meta_data[data_task_id]
         X = data["X"]
