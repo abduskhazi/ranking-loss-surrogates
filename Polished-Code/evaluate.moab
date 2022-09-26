@@ -1,0 +1,14 @@
+#!/bin/bash
+#MSUB -l nodes=1:ppn=1
+#MSUB -l walltime=05:00:00
+#MSUB -N DRE_Evaluate_M1_Avg
+#MSUB -e $HOME/thesis/ranking-loss-surrogates/Polished-Code/logs/eval_${MOAB_JOBID}.e
+#MSUB -o $HOME/thesis/ranking-loss-surrogates/Polished-Code/logs/eval_${MOAB_JOBID}.o
+#MSUB -v DESCRIPTION="DRE Evaluation M = 1 with average acquisition function"
+
+source $HOME/miniconda3/etc/profile.d/conda.sh
+conda activate thesis
+echo $DESCRIPTION
+
+cd $HOME/thesis/ranking-loss-surrogates/Polished-Code/
+python DRE.py --evaluate --eval_index $MOAB_JOBARRAYINDEX --deep_set --M 1 --acq_func avg --result_folder ./results_M1/  
