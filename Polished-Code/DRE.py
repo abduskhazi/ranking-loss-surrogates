@@ -230,9 +230,9 @@ class DeepSet(nn.Module):
         return x
 
 
-class DeepRankerEnsemble(nn.Module):
+class DeepRankingEnsemble(nn.Module):
     def __init__(self, input_dim, ssid, M, loading=False):
-        super(DeepRankerEnsemble, self).__init__()
+        super(DeepRankingEnsemble, self).__init__()
         self.ssid = ssid
         self.M = M
         self.loading = loading
@@ -254,7 +254,7 @@ class DeepRankerEnsemble(nn.Module):
         for i in range(M):
             sc_list += [Scorer(input_dim=in_dim)]
         # Re-structure our module if deep set is enabled.
-        if parser.parse_args().deep_set:
+        if parser.parse_args().meta_features:
             ds_embedder = DeepSet(input_dim=in_dim + 1, latent_dim=32, output_dim=16)
             sc_list = []
             for i in range(M):
@@ -373,7 +373,7 @@ class DeepRankerEnsemble(nn.Module):
             optimizer.zero_grad()
 
             prediction = nn.forward(X_obs)
-            loss = nn.generate_loss(prediction, y_obs)
+            loss = generate_loss(prediction, y_obs)
             loss.backward()
 
             optimizer.step()
@@ -488,16 +488,16 @@ class DeepRankerEnsemble(nn.Module):
 
         # Doing reloads from the saved model for every fine tuning.
         # For non transfer case loading = false ==> DRE randomly initialized.
-        restarted_model = DeepRankerEnsemble(input_dim=self.input_dim,
+        restarted_model = DeepRankingEnsemble(input_dim=self.input_dim,
                                               ssid=self.ssid,
                                               M=self.M,
                                               loading=self.loading)
-        if cli_args.deep_set:
+        if cli_args.meta_features:
             restarted_model.fine_tune_together(X_obs, y_obs, epochs=1000, lr=learning_rate)
         else:
             restarted_model.fine_tune_separate(X_obs, y_obs, epochs=1000, lr=learning_rate)
 
-        f = get_acuisition_func(cli_args.acq_func, cli_args.deep_set)
+        f = get_acuisition_func(cli_args.acq_func, cli_args.meta_features)
         scores = f((X_obs, y_obs, X_pen), self.incumbent, restarted_model)
         idx = np.argmax(scores)
         self.incumbent = X_pen[idx]
@@ -515,7 +515,7 @@ def evaluate_keys(hpob_hdlr, keys_to_evaluate):
     for key in keys_to_evaluate:
         search_space, dataset, _, _ = key
         input_dim = get_input_dim(hpob_hdlr.meta_test_data[search_space])
-        method = DeepRankerEnsemble(input_dim=input_dim,
+        method = DeepRankingEnsemble(input_dim=input_dim,
                                      ssid=search_space,
                                      M=cli_args.M,
                                      loading=loading)
@@ -538,7 +538,7 @@ def meta_train_on_HPOB(i):
     hpob_hdlr = HPOBHandler(root_dir="./HPO_B/hpob-data/", mode="v3")
 
     # Pretrain Ranking loss surrogate with a single search space
-    for search_space_id in hpob_hdlr.get_search_spaces()[i:i + 1]:
+    for search_space_id in sorted(hpob_hdlr.get_search_spaces())[i:i + 1]:
         t_start = time.time()
 
         meta_train_data = hpob_hdlr.meta_train_data[search_space_id]
@@ -557,11 +557,11 @@ def meta_train_on_HPOB(i):
         list_size = 100
         lr = cli_args.lr_training
 
-        rl_surrogate = DeepRankerEnsemble(input_dim=input_dim,
+        rl_surrogate = DeepRankingEnsemble(input_dim=input_dim,
                                            ssid=search_space_id,
                                            M=cli_args.M,
                                            loading=False)
-        if cli_args.deep_set:
+        if cli_args.meta_features:
             loss_list, val_loss_list = \
                 rl_surrogate.train_model_together(meta_train_data, meta_val_data, epochs, batch_size, list_size, lr)
         else:
@@ -605,8 +605,8 @@ if __name__ == '__main__':
                              "'listwise', 'pairwise', 'pointwise'].")
     parser.add_argument("--lr_training", type=float, default=0.001,
                         help="The learning rate for the meta-training.")
-    parser.add_argument("--deep_set", action="store_true", default=False,
-                        help="Switch to enable deep set in the model.")
+    parser.add_argument("--meta_features", action="store_true", default=False,
+                        help="Switch to enable the use of meta-features which is obtained by using deep set in the model.")
     parser.add_argument("--layers", type=int, default=4,
                         help="The number of layers in the neural network.")
     parser.add_argument("--M", type=int, default=10,

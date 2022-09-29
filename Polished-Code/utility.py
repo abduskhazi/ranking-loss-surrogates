@@ -21,8 +21,8 @@ def get_all_combinations(hpob_hdlr, n_trials):
     #   456 combinations for the HPO-B validation dataset.
     seed_list = ["test0", "test1", "test2", "test3", "test4"]
     evaluation_list = []
-    for search_space in hpob_hdlr.get_search_spaces():
-        for dataset in hpob_hdlr.get_datasets(search_space):
+    for search_space in sorted(hpob_hdlr.get_search_spaces()):
+        for dataset in sorted(hpob_hdlr.get_datasets(search_space)):
             for seed in seed_list:
                 evaluation_list += [(search_space, dataset, seed, n_trials)]
 
